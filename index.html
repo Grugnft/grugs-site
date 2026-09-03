@@ -120,6 +120,15 @@ header.nav {
 }
 .sound-btn:hover { color: var(--torch); border-color: var(--torch); }
 .sound-btn.on { color: var(--torch); border-color: var(--torch); }
+.sound-btn.hint {
+  animation: sound-hint 1.6s ease-in-out 3;
+  color: var(--torch);
+  border-color: var(--torch);
+}
+@keyframes sound-hint {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232,161,71,0.0); transform: scale(1); }
+  50%      { box-shadow: 0 0 0 8px rgba(232,161,71,0.4); transform: scale(1.12); }
+}
 .connect-btn {
   padding: 8px 14px;
   background: var(--torch);
@@ -511,36 +520,37 @@ main { --pad-y: 40px; --pad-x: 32px; }
 .walker.talking .walk-cycle { animation-play-state: paused; }
 .walker.talking { animation-play-state: paused; }
 
-/* Fight: attacker + target both pause walk during the encounter. */
+/* Fight: pause the walker's walk-across (keeps left: preserved on resume) */
 .walker.fighting { animation-play-state: paused; }
 .walker.fighting .walk-cycle { animation-play-state: paused; }
+.walker.hitting, .walker.hurt { z-index: 8; }
 
-/* Attacker: two-frame swing — wind-up, then strike toward the target. */
-.walker.hitting {
+/* IMPORTANT: fight transforms live on .walk-wrap (a child) so they don't
+   REPLACE the walker's walk-across animation. Applying `animation:` on the
+   walker itself kills walk-across and it restarts from left:-60px when the
+   class is removed → the walker "teleports" to the edge. Keeping the animation
+   on the child means walk-across just pauses in place and resumes cleanly. */
+.walker.hitting .walk-wrap {
   animation: grug-swing 640ms ease-in-out;
   transform-origin: 50% 90%;
-  z-index: 8; /* above fire so the impact reads */
 }
+.walker.rtl.hitting .walk-wrap { animation: grug-swing-rtl 640ms ease-in-out; }
+.walker.hurt .walk-wrap { animation: grug-hurt 640ms ease-out; }
+.walker.rtl.hurt .walk-wrap { animation: grug-hurt-rtl 640ms ease-out; }
+
 @keyframes grug-swing {
   0%   { transform: translateX(0) rotate(0deg); }
-  35%  { transform: translateX(-4px) rotate(-6deg); }  /* wind up back */
-  55%  { transform: translateX(14px) rotate(10deg); }  /* strike forward */
+  35%  { transform: translateX(-4px) rotate(-6deg); }
+  55%  { transform: translateX(14px) rotate(10deg); }
   75%  { transform: translateX(10px) rotate(4deg); }
   100% { transform: translateX(0) rotate(0deg); }
 }
-.walker.rtl.hitting { animation: grug-swing-rtl 640ms ease-in-out; }
 @keyframes grug-swing-rtl {
   0%   { transform: translateX(0) rotate(0deg); }
   35%  { transform: translateX(4px) rotate(6deg); }
   55%  { transform: translateX(-14px) rotate(-10deg); }
   75%  { transform: translateX(-10px) rotate(-4deg); }
   100% { transform: translateX(0) rotate(0deg); }
-}
-
-/* Target: pushed back + wobble + brief flash */
-.walker.hurt {
-  animation: grug-hurt 640ms ease-out;
-  z-index: 8;
 }
 @keyframes grug-hurt {
   0%   { transform: translateX(0) translateY(0); filter: none; }
@@ -551,7 +561,6 @@ main { --pad-y: 40px; --pad-x: 32px; }
   85%  { transform: translateX(6px)  translateY(0); }
   100% { transform: translateX(0)    translateY(0); }
 }
-.walker.rtl.hurt { animation: grug-hurt-rtl 640ms ease-out; }
 @keyframes grug-hurt-rtl {
   0%   { transform: translateX(0) translateY(0); filter: none; }
   30%  { transform: translateX(0) translateY(0); }
@@ -560,6 +569,34 @@ main { --pad-y: 40px; --pad-x: 32px; }
   70%  { transform: translateX(-14px) translateY(-2px); filter: none; }
   85%  { transform: translateX(-6px)  translateY(0); }
   100% { transform: translateX(0)     translateY(0); }
+}
+
+/* ============ GRAB & DROP ============
+   Grab any walker with your mouse or a finger; drop them anywhere.
+   Pointer down on a walker → paused + follows cursor.
+   Release → falls to ground with a squish, resumes walking. */
+.walker { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.walker.grabbed {
+  cursor: grabbing;
+  animation-play-state: paused;
+  z-index: 40;
+  filter: drop-shadow(0 6px 8px rgba(0,0,0,0.55)) brightness(1.05);
+  transition: filter 0.12s ease;
+}
+.walker.grabbed .walk-cycle { animation-play-state: paused; }
+.walker.grabbed .walk-wrap { transform: scale(1.06); transition: transform 0.15s; }
+.walker.dropping {
+  transition: transform 320ms cubic-bezier(0.55, 0.05, 0.7, 1);
+  animation-play-state: paused;
+}
+.walker.landed .walk-wrap {
+  animation: grug-landed 420ms ease-out;
+}
+@keyframes grug-landed {
+  0%   { transform: scaleY(0.65) scaleX(1.18) translateY(4px); }
+  40%  { transform: scaleY(1.10) scaleX(0.92) translateY(-3px); }
+  70%  { transform: scaleY(0.96) scaleX(1.03) translateY(0); }
+  100% { transform: scaleY(1)    scaleX(1)    translateY(0); }
 }
 
 /* Impact FX — dust puff + THWACK, injected at the midpoint between two walkers */
@@ -3221,7 +3258,7 @@ function scheduleChat(scene, minMs = 3500, maxMs = 8500) {
     // Only run when the scene's containing tab is active
     const view = scene.closest('.view');
     if (view && view.classList.contains('active')) {
-      const walkers = Array.from(scene.querySelectorAll('.walker:not(.talking)'));
+      const walkers = Array.from(scene.querySelectorAll('.walker:not(.talking):not(.grabbed):not(.dropping):not(.landed):not(.fighting)'));
       if (walkers.length >= 2) {
         // Pick two walkers close-ish to each other in horizontal position for realism
         walkers.sort((a, b) => {
@@ -3715,7 +3752,7 @@ class SoundKit {
     if (!Ctx) return;
     this.ctx = new Ctx();
     this.master = this.ctx.createGain();
-    this.master.gain.value = 0.25;
+    this.master.gain.value = 0.45;
     this.master.connect(this.ctx.destination);
   }
   toggle() {
@@ -3742,17 +3779,17 @@ class SoundKit {
     this.crackleNode.buffer = buf; this.crackleNode.loop = true;
     const filt = this.ctx.createBiquadFilter();
     filt.type = 'highpass'; filt.frequency.value = 300;
-    const g = this.ctx.createGain(); g.gain.value = 0.12;
+    const g = this.ctx.createGain(); g.gain.value = 0.22;
     this.crackleNode.connect(filt).connect(g).connect(this.master);
     this.crackleNode.start();
-    // Random pops (fire crackle bursts)
+    // Random pops (fire crackle bursts) — more frequent + louder
     this.popTimer = setInterval(() => {
-      if (!this.muted && Math.random() < 0.45) this.pop();
-    }, 600);
-    // Occasional grug grunt
+      if (!this.muted && Math.random() < 0.65) this.pop();
+    }, 500);
+    // Occasional grug grunt — ambient tribe murmur
     this.gruntTimer = setInterval(() => {
-      if (!this.muted && Math.random() < 0.35) this.grunt();
-    }, 6000);
+      if (!this.muted && Math.random() < 0.5) this.grunt();
+    }, 4200);
   }
   stopAmbient() {
     if (this.crackleNode) { try { this.crackleNode.stop(); } catch(e){} this.crackleNode = null; }
@@ -3836,14 +3873,138 @@ class SoundKit {
 }
 const sound = new SoundKit();
 
+/* ============================================================
+   GRAB & DROP — pick up any walker like a Pocket God pygmy
+   Pointer down → follow cursor; release → drop with a squish.
+   Uses transform for drag; on release we compute the walker's
+   new x and set an animation-delay so walk-across resumes from
+   there instead of teleporting back to the left edge.
+   ============================================================ */
+const GRUG_GRAB_SAYS = ['grug!', 'aiee!', 'uh?', 'no touch!', 'grug fly?'];
+const GRUG_DROP_SAYS = ['ooof.', 'grug ok.', 'ground good.', 'why?', 'grug dizzy.', 'again?'];
+let __drag = null;
+
+function walkerCurrentLeft(walker) {
+  const scene = walker.parentElement;
+  const w = walker.getBoundingClientRect();
+  const s = scene.getBoundingClientRect();
+  // Undo any current transform so we get the raw animation-driven left.
+  // Since we always clear transform before dragging, this equals w.left - s.left.
+  return w.left - s.left;
+}
+
+function setWalkerAnimTimeForX(walker, targetX) {
+  const scene = walker.parentElement;
+  const sw = scene.getBoundingClientRect().width;
+  const total = sw + 80; // walk-across spans left:-60px → 100%+20px
+  const dur = parseFloat(walker.style.animationDuration) || 26;
+  const isRtl = walker.classList.contains('rtl');
+  let frac = (targetX + 60) / total;
+  if (isRtl) frac = 1 - frac;
+  frac = Math.max(0.001, Math.min(0.999, frac));
+  walker.style.animationDelay = (-frac * dur) + 's';
+}
+
+function grugGrab(walker, e) {
+  if (!walker || walker.classList.contains('fighting')) return;
+  if (walker.classList.contains('hitting') || walker.classList.contains('hurt')) return;
+  e.preventDefault();
+  const scene = walker.parentElement;
+  const sRect = scene.getBoundingClientRect();
+  const wRect = walker.getBoundingClientRect();
+  // Anchor: where inside the walker the cursor grabbed
+  const anchorX = e.clientX - wRect.left;
+  const anchorY = e.clientY - wRect.top;
+  // Snapshot walker's current visual left before we start transforming
+  const baseLeft = wRect.left - sRect.left;
+  const baseBottom = sRect.bottom - wRect.bottom;
+  walker.classList.remove('landed', 'dropping');
+  walker.classList.add('grabbed');
+  walker.style.transform = 'translate(0px, 0px)';
+  try { walker.setPointerCapture(e.pointerId); } catch (_) {}
+  __drag = {
+    walker, scene, sRect,
+    startClientX: e.clientX, startClientY: e.clientY,
+    anchorX, anchorY, baseLeft, baseBottom,
+    pointerId: e.pointerId,
+    moved: false,
+  };
+  try { sound.grunt(); } catch (_) {}
+  if (Math.random() < 0.75) {
+    const say = GRUG_GRAB_SAYS[Math.floor(Math.random() * GRUG_GRAB_SAYS.length)];
+    chatBubble(walker, say, 900);
+  }
+}
+
+function grugDragMove(e) {
+  if (!__drag) return;
+  const dx = e.clientX - __drag.startClientX;
+  const dy = e.clientY - __drag.startClientY;
+  if (Math.abs(dx) > 2 || Math.abs(dy) > 2) __drag.moved = true;
+  __drag.walker.style.transform = `translate(${dx}px, ${dy}px)`;
+}
+
+function grugDrop(e) {
+  if (!__drag) return;
+  const d = __drag;
+  __drag = null;
+  const w = d.walker;
+  w.classList.remove('grabbed');
+  const clientX = e.clientX ?? d.startClientX;
+  const clientY = e.clientY ?? d.startClientY;
+  const dx = clientX - d.startClientX;
+  // Drop-to-ground: keep horizontal drift, snap vertical back to baseline
+  w.classList.add('dropping');
+  w.style.transform = `translate(${dx}px, 0px)`;
+  // Was this a tap (not a real drag)? Just play a little bubble and reset.
+  const wasTap = !d.moved;
+  setTimeout(() => {
+    w.classList.remove('dropping');
+    w.classList.add('landed');
+    if (!wasTap) { try { sound.logThud(); } catch (_) {} }
+    // Reposition the walker so walk-across resumes from where we dropped them
+    const newLeft = Math.max(-60, Math.min(d.sRect.width + 20, d.baseLeft + dx));
+    setWalkerAnimTimeForX(w, newLeft);
+    // Clear the transform in the same frame we set the animation-delay so there's no snap
+    requestAnimationFrame(() => {
+      w.style.transform = '';
+    });
+    if (!wasTap && Math.random() < 0.7) {
+      const say = GRUG_DROP_SAYS[Math.floor(Math.random() * GRUG_DROP_SAYS.length)];
+      setTimeout(() => chatBubble(w, say, 1400), 260);
+    }
+    setTimeout(() => w.classList.remove('landed'), 460);
+  }, 320);
+}
+
+document.addEventListener('pointerdown', (e) => {
+  const walker = e.target.closest && e.target.closest('.walker');
+  if (walker) grugGrab(walker, e);
+}, { passive: false });
+document.addEventListener('pointermove', grugDragMove, { passive: true });
+document.addEventListener('pointerup', grugDrop, { passive: true });
+document.addEventListener('pointercancel', grugDrop, { passive: true });
+
 const soundBtn = document.getElementById('sound-btn');
 if (soundBtn) {
   soundBtn.addEventListener('click', () => {
+    soundBtn.classList.remove('hint');
     const on = sound.toggle();
     soundBtn.classList.toggle('on', on);
     soundBtn.querySelector('.mute-x').hidden = on;
     soundBtn.querySelector('.sound-waves').hidden = !on;
   });
+  // First-visit hint: pulse the sound icon 3x after the page settles.
+  // Skip on repeat visits or if user has already toggled it.
+  try {
+    if (!localStorage.getItem('grugs_sound_seen_v1')) {
+      setTimeout(() => {
+        soundBtn.classList.add('hint');
+        localStorage.setItem('grugs_sound_seen_v1', '1');
+      }, 1600);
+      setTimeout(() => soundBtn.classList.remove('hint'), 1600 + 1600 * 3 + 200);
+    }
+  } catch (e) {}
 }
 
 /* ============================================================
@@ -4056,6 +4217,25 @@ const WL_THRESHOLD = 10;
 ------------------------------------------------------------------------- */
 const WL_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzmAg4FlakCjGLBJ1mxFhvTPluJrT1RVKX2cnzEQi-QnMXGMo1KW1qqxatVrs_E_8p7fQ/exec';
 
+/* Compact "Browser/OS" string for the sheet — no PII, no fingerprint-heavy UA. */
+function shortUA() {
+  const ua = navigator.userAgent || '';
+  let browser = 'Other';
+  if (/Edg\//.test(ua)) browser = 'Edge';
+  else if (/Chrome\//.test(ua) && !/Chromium/.test(ua)) browser = 'Chrome';
+  else if (/Firefox\//.test(ua)) browser = 'Firefox';
+  else if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) browser = 'Safari';
+  else if (/OPR\//.test(ua)) browser = 'Opera';
+  else if (/Brave/.test(ua)) browser = 'Brave';
+  let os = 'Other';
+  if (/Windows/.test(ua)) os = 'Windows';
+  else if (/Mac OS X/.test(ua) && !/Mobile/.test(ua)) os = 'Mac';
+  else if (/iPhone|iPad|iPod/.test(ua)) os = 'iOS';
+  else if (/Android/.test(ua)) os = 'Android';
+  else if (/Linux/.test(ua)) os = 'Linux';
+  return browser + '/' + os;
+}
+
 async function wlPostToBackend(addr, count) {
   if (!WL_WEBHOOK_URL) return { sent: false, reason: 'no webhook configured' };
   try {
@@ -4070,7 +4250,7 @@ async function wlPostToBackend(addr, count) {
         wallet: addr,
         smashes: count,
         timestampMs: Date.now(),
-        userAgent: navigator.userAgent.slice(0, 200),
+        userAgent: shortUA(),
         source: 'grugs.site',
       }),
     });
