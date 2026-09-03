@@ -1,0 +1,3953 @@
+<title>Grugs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --stone: #1A140F;
+  --stone-2: #241A12;
+  --wall: #2B1F17;
+  --wall-2: #3A2A1E;
+  --torch: #E8A147;
+  --torch-hot: #FFC864;
+  --torch-peak: #FFF4C0;
+  --ember: #D14B2F;
+  --ember-hot: #F26A47;
+  --ember-deep: #7C2718;
+  --bone: #EDE1CE;
+  --bone-dim: #B8AA95;
+  --ash: #6B584A;
+  --moss: #7A9B5C;
+}
+
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(232,161,71,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 90%, rgba(209,75,47,0.05) 0%, transparent 40%),
+    var(--stone);
+  color: var(--bone);
+  font-family: 'VT323', ui-monospace, monospace;
+  font-size: 22px;
+  line-height: 1.35;
+  padding-bottom: 72px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ================ NAV ================ */
+header.nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 14px 32px;
+  gap: 16px;
+  background: linear-gradient(to bottom, rgba(26,20,15,0.98), rgba(26,20,15,0.90));
+  border-bottom: 3px double var(--wall-2);
+  backdrop-filter: blur(6px);
+}
+.wordmark {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 20px;
+  color: var(--torch);
+  letter-spacing: 2px;
+  text-shadow: 0 0 14px rgba(232,161,71,0.35);
+  cursor: pointer;
+  user-select: none;
+  justify-self: start;
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+  justify-self: center;
+}
+.tab {
+  padding: 8px 16px;
+  color: var(--bone-dim);
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: transparent;
+  font-family: 'VT323', ui-monospace, monospace;
+  font-size: 20px;
+  letter-spacing: 1px;
+  text-transform: lowercase;
+}
+.tab:hover { color: var(--bone); border-color: var(--wall-2); }
+.tab.active {
+  color: var(--stone);
+  background: var(--torch);
+  border-color: var(--torch);
+}
+.nav-right {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.chain-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 2px solid var(--wall-2);
+  color: var(--bone-dim);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.chain-badge::before {
+  content: "";
+  width: 8px; height: 8px;
+  background: var(--moss);
+  box-shadow: 0 0 6px var(--moss);
+}
+.sound-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: transparent;
+  color: var(--bone-dim);
+  border: 2px solid var(--wall-2);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.sound-btn:hover { color: var(--torch); border-color: var(--torch); }
+.sound-btn.on { color: var(--torch); border-color: var(--torch); }
+.connect-btn {
+  padding: 8px 14px;
+  background: var(--torch);
+  color: var(--stone);
+  border: none;
+  border-bottom: 4px solid #8A5A20;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.06s;
+}
+.connect-btn:hover { filter: brightness(1.1); }
+.connect-btn:active { transform: translateY(2px); border-bottom-width: 2px; }
+.connect-btn.connected {
+  background: var(--stone-2);
+  color: var(--moss);
+  border: 2px solid var(--moss);
+  border-bottom: 4px solid #4a6a3a;
+}
+
+main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
+
+.view { display: none; }
+.view.active { display: block; }
+
+/* ================ HERO ================ */
+.hero-scene {
+  position: relative;
+  height: calc(100vh - 68px);
+  min-height: 640px;
+  overflow: hidden;
+  border-bottom: 3px double var(--wall-2);
+  /* Break out of main's padding + max-width */
+  margin-top: calc(-1 * var(--pad-y, 40px));
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-bottom: 48px;
+  background:
+    radial-gradient(ellipse at 50% 92%, rgba(232,161,71,0.28) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 60%, rgba(232,161,71,0.06) 0%, transparent 40%),
+    radial-gradient(ellipse at 85% 60%, rgba(232,161,71,0.06) 0%, transparent 40%),
+    linear-gradient(to bottom, #0a0604 0%, #14100a 55%, #1e160e 100%);
+}
+.hero-overlay {
+  position: relative;
+  z-index: 5;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 32px 24px 0;
+  text-align: center;
+  pointer-events: none;
+}
+.hero-overlay .cta, .hero-overlay button { pointer-events: auto; }
+.hero-title {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: clamp(56px, 13vw, 168px);
+  color: var(--bone);
+  letter-spacing: 8px;
+  margin: 0;
+  text-wrap: balance;
+  text-shadow:
+    5px 5px 0 var(--ember),
+    10px 10px 0 rgba(0,0,0,0.55);
+}
+.tagline {
+  font-size: clamp(24px, 3vw, 34px);
+  color: var(--torch);
+  margin: 12px 0 4px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 12px rgba(232,161,71,0.35);
+}
+.sub-tag {
+  font-size: clamp(18px, 1.8vw, 22px);
+  color: var(--bone-dim);
+  margin: 0;
+  letter-spacing: 1px;
+}
+.hero-ctas {
+  display: flex;
+  gap: 20px;
+  margin-top: 56px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.cta-lg {
+  padding: 26px 48px;
+  font-size: 18px;
+  letter-spacing: 4px;
+}
+.cta-bar {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  padding: 44px 20px;
+  margin-top: -50px;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 10;
+  flex-wrap: wrap;
+  background: linear-gradient(to bottom, transparent 0%, rgba(20,15,10,0.7) 45%, transparent 100%);
+}
+.scroll-hint {
+  position: absolute;
+  bottom: 18px;
+  right: 24px;
+  z-index: 5;
+  color: var(--bone-dim);
+  font-size: 16px;
+  letter-spacing: 2px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  opacity: 0.7;
+  animation: hint-bounce 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+.scroll-hint .arrow { font-size: 18px; color: var(--torch); }
+@keyframes hint-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
+}
+main { --pad-y: 40px; --pad-x: 32px; }
+@media (max-width: 900px) { main { --pad-y: 24px; --pad-x: 16px; } }
+
+/* Cave scene */
+.cave-scene {
+  position: relative;
+  height: 260px;
+  margin: 0 auto 24px;
+  max-width: 900px;
+  overflow: hidden;
+  border-top: 2px solid var(--wall-2);
+  border-bottom: 2px solid var(--wall-2);
+  background:
+    radial-gradient(ellipse at 50% 90%, rgba(232,161,71,0.14) 0%, transparent 50%),
+    linear-gradient(to bottom, #0e0906 0%, #1a1108 60%, #241a12 100%);
+}
+.cave-wall-detail {
+  position: absolute;
+  inset: 0;
+  opacity: 0.22;
+  background-image:
+    /* Big rock pockmarks */
+    radial-gradient(ellipse 10px 6px at 15% 25%, #3a2a1e 60%, transparent 70%),
+    radial-gradient(ellipse 14px 8px at 78% 55%, #3a2a1e 60%, transparent 70%),
+    radial-gradient(ellipse 6px 4px at 42% 15%, #3a2a1e 60%, transparent 70%),
+    radial-gradient(ellipse 10px 6px at 90% 20%, #3a2a1e 60%, transparent 70%),
+    radial-gradient(ellipse 8px 5px at 8% 65%, #3a2a1e 60%, transparent 70%),
+    /* Small speckles */
+    radial-gradient(circle at 30% 40%, #2a1a12 1px, transparent 2px),
+    radial-gradient(circle at 55% 30%, #2a1a12 1px, transparent 2px),
+    radial-gradient(circle at 70% 70%, #2a1a12 1px, transparent 2px),
+    radial-gradient(circle at 22% 80%, #2a1a12 1px, transparent 2px),
+    radial-gradient(circle at 88% 88%, #2a1a12 1px, transparent 2px);
+  pointer-events: none;
+}
+
+/* Cobwebs in the corners — pixel-art SVG background */
+.cave-cobweb {
+  position: absolute;
+  top: 0;
+  width: 120px;
+  height: 90px;
+  z-index: 3;
+  opacity: 0.6;
+  pointer-events: none;
+  color: rgba(200,180,140,0.35);
+}
+.cave-cobweb.left { left: 0; }
+.cave-cobweb.right { right: 0; transform: scaleX(-1); }
+
+/* Stalactites hanging from the ceiling */
+.stalactite {
+  position: absolute;
+  top: 0;
+  width: 24px;
+  z-index: 2;
+  pointer-events: none;
+}
+.stalactite svg { display: block; width: 100%; height: auto; }
+
+/* Cave paintings on side walls */
+.cave-painting {
+  position: absolute;
+  z-index: 2;
+  opacity: 0.55;
+  pointer-events: none;
+  color: #8a3818;
+}
+.cave-painting.left  { left: 3vw; bottom: 100px; }
+.cave-painting.right { right: 3vw; bottom: 120px; }
+.cave-painting svg { display: block; image-rendering: pixelated; }
+
+/* Dust motes drifting in torch light */
+.cave-dust {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.4;
+}
+.dust-mote {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: rgba(240,210,150,0.6);
+  border-radius: 50%;
+  animation: dust-drift 8s linear infinite;
+  opacity: 0;
+}
+@keyframes dust-drift {
+  0%   { opacity: 0; transform: translate(0, 0); }
+  20%  { opacity: 0.55; }
+  80%  { opacity: 0.4; }
+  100% { opacity: 0; transform: translate(30px, -140px); }
+}
+.cave-floor {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 32px;
+  background:
+    linear-gradient(to bottom, var(--wall) 0%, var(--stone) 100%);
+  border-top: 2px solid var(--wall-2);
+  z-index: 2;
+}
+.cave-floor::before {
+  content: "";
+  position: absolute;
+  inset: 4px 0 auto 0;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, transparent 0 14px, var(--wall-2) 14px 16px);
+}
+
+/* Wall torches */
+.wall-torch {
+  position: absolute;
+  top: 14px;
+  width: 16px;
+  height: 70px;
+  z-index: 2;
+}
+.wall-torch.left      { left: 4vw; top: 24px; }
+.wall-torch.right     { right: 4vw; top: 24px; }
+.wall-torch.far-left  { left: 22vw; top: 120px; opacity: 0.7; transform: scale(0.85); }
+.wall-torch.far-right { right: 22vw; top: 120px; opacity: 0.7; transform: scale(0.85); }
+.wall-torch .stick { position: absolute; bottom: 0; left: 6px; width: 4px; height: 50px; background: #4a2810; }
+.wall-torch .bracket { position: absolute; bottom: 32px; left: 4px; width: 8px; height: 4px; background: #5a3020; }
+.wall-torch .flame { position: absolute; top: 0; left: 4px; width: 8px; height: 22px; background: var(--torch); animation: torch-flick 0.32s infinite alternate; }
+.wall-torch .flame-inner { position: absolute; top: 6px; left: 6px; width: 4px; height: 12px; background: var(--torch-hot); animation: torch-flick 0.28s infinite alternate; }
+.wall-torch .glow {
+  position: absolute; top: -8px; left: -16px; width: 40px; height: 40px;
+  background: radial-gradient(circle, rgba(232,161,71,0.35) 0%, transparent 65%);
+  pointer-events: none;
+  animation: glow-pulse 1.2s infinite alternate ease-in-out;
+}
+@keyframes torch-flick {
+  0%   { opacity: 0.9; transform: scaleY(0.94) scaleX(1.02); }
+  100% { opacity: 1;   transform: scaleY(1.10) scaleX(0.96); }
+}
+@keyframes glow-pulse {
+  0%   { opacity: 0.75; transform: scale(1); }
+  100% { opacity: 1;    transform: scale(1.1); }
+}
+
+/* Central fire */
+.fire-wrap {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 150px;
+  z-index: 3;
+  pointer-events: none;
+}
+.fire-wrap.fire-big {
+  width: 340px;
+  height: 380px;
+  bottom: 12px;
+}
+.fire-wrap.fire-big .fire-svg {
+  width: 340px;
+  height: 370px;
+}
+.fire-wrap.fire-big .fire-glow {
+  width: 640px;
+  height: 440px;
+  bottom: -80px;
+}
+/* Extra ground shadow so the logs feel planted */
+.fire-wrap.fire-big::after {
+  content: "";
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 26px;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.35) 45%, transparent 70%);
+  z-index: -1;
+  pointer-events: none;
+}
+.fire-glow {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  height: 220px;
+  background:
+    radial-gradient(ellipse at center bottom, rgba(255,196,100,0.42) 0%, rgba(232,161,71,0.22) 25%, rgba(209,75,47,0.10) 50%, transparent 75%);
+  animation: glow-pulse 1.15s infinite alternate ease-in-out;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.fire-svg {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 130px;
+  image-rendering: pixelated;
+}
+/* Fire: single unified breathing animation — no fighting layers */
+.fire-flame {
+  transform-origin: 50% 100%;
+  animation: flame-breathe 0.42s ease-in-out infinite alternate;
+}
+@keyframes flame-breathe {
+  0%   { transform: scaleY(0.96) scaleX(1.02); }
+  100% { transform: scaleY(1.06) scaleX(0.97); }
+}
+.fire-spark {
+  animation: spark-rise 2.1s ease-out infinite;
+  opacity: 0;
+}
+.fire-spark.s2 { animation-duration: 2.6s; animation-delay: 0.4s; }
+.fire-spark.s3 { animation-duration: 1.9s; animation-delay: 1.1s; }
+.fire-spark.s4 { animation-duration: 2.3s; animation-delay: 1.7s; }
+.fire-spark.s5 { animation-duration: 2.8s; animation-delay: 0.8s; }
+@keyframes spark-rise {
+  0%   { opacity: 0; transform: translateY(4px) translateX(0); }
+  15%  { opacity: 1; }
+  70%  { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-14px) translateX(var(--sx, 2px)); }
+}
+
+/* Ember particles */
+.ember-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--torch);
+  animation: rise 3s ease-out infinite;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+.ember-particle.hot { background: var(--torch-hot); box-shadow: 0 0 4px var(--torch); }
+@keyframes rise {
+  0%   { opacity: 0; transform: translateY(0) translateX(0); }
+  15%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-160px) translateX(var(--drift, 12px)); }
+}
+
+/* Walking grugs — 4-frame cycle, LTR or RTL */
+.walker {
+  position: absolute;
+  bottom: 32px;
+  width: 56px;
+  height: 76px;
+  z-index: 3;
+  overflow: visible;
+  animation: walk-across 26s linear infinite;
+}
+.walk-wrap {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+.walker.talking .walk-cycle { animation-play-state: paused; }
+.walker.talking { animation-play-state: paused; }
+.walk-cycle {
+  display: flex;
+  width: 400%;
+  height: 100%;
+  animation: walk-cycle 0.5s steps(4) infinite;
+}
+.wf { flex: 0 0 25%; height: 100%; }
+.wf svg { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+.walker.rtl .wf svg { transform: scaleX(-1); }
+
+/* Speech bubbles */
+.speech-bubble {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-bottom: 12px;
+  padding: 6px 10px;
+  background: var(--bone);
+  color: var(--stone);
+  border: 3px solid var(--stone);
+  font-family: 'VT323', ui-monospace, monospace;
+  font-size: 18px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  z-index: 20;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: bubble-in 0.25s ease-out;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+}
+.speech-bubble::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border: 5px solid transparent;
+  border-top-color: var(--bone);
+}
+.speech-bubble::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -7px;
+  margin-top: 0;
+  border: 7px solid transparent;
+  border-top-color: var(--stone);
+}
+@keyframes bubble-in {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes walk-across {
+  0%   { left: -60px; }
+  100% { left: calc(100% + 20px); }
+}
+@keyframes walk-cycle {
+  0%   { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* CTA */
+.cta {
+  display: inline-block;
+  margin: 32px 8px 0;
+  padding: 22px 40px;
+  background: var(--ember);
+  color: var(--bone);
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 16px;
+  letter-spacing: 3px;
+  border: none;
+  cursor: pointer;
+  border-bottom: 6px solid var(--ember-deep);
+  transition: filter 0.15s, transform 0.06s, background 0.15s;
+}
+.cta:hover { filter: brightness(1.12); background: var(--ember-hot); }
+.cta:active { transform: translateY(2px); border-bottom-width: 4px; }
+.cta-secondary {
+  background: transparent;
+  color: var(--torch);
+  border: 3px solid var(--torch);
+  border-bottom: 6px solid #8A5A20;
+}
+.cta-secondary:hover { background: var(--torch); color: var(--stone); }
+
+/* ================ CHAMBERS ================ */
+section.chamber { margin-top: 72px; }
+.chamber-title {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 22px;
+  color: var(--torch);
+  letter-spacing: 3px;
+  margin: 0 0 28px;
+  text-transform: lowercase;
+}
+.chamber-title::before { content: "▸ "; color: var(--ember); }
+
+/* Pillars */
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.pillar {
+  padding: 28px 24px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-left: 6px solid var(--torch);
+  transition: transform 0.2s, border-color 0.2s;
+}
+.pillar:hover { transform: translateY(-3px); border-left-color: var(--ember); }
+.pillar h3 {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 13px;
+  color: var(--torch);
+  letter-spacing: 2px;
+  margin: 0 0 16px;
+}
+.pillar p {
+  color: var(--bone-dim);
+  font-size: 22px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ============ RUG RADAR (utility teaser) ============ */
+.rug-radar {
+  padding: 44px 40px;
+  background:
+    linear-gradient(180deg, rgba(232,161,71,0.05) 0%, transparent 100%),
+    var(--stone-2);
+  border: 3px solid var(--wall-2);
+  border-top: 6px solid var(--moss);
+  position: relative;
+  overflow: hidden;
+}
+.rug-radar::before {
+  content: "COMING SOON";
+  position: absolute;
+  top: 20px;
+  right: -40px;
+  padding: 6px 50px;
+  background: var(--moss);
+  color: var(--bone);
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  transform: rotate(35deg);
+  box-shadow: 0 3px 0 rgba(0,0,0,0.3);
+}
+.rr-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 12px;
+}
+.rr-radar-icon {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+.rr-radar-icon svg { width: 100%; height: 100%; image-rendering: pixelated; }
+.rr-title {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 22px;
+  color: var(--torch);
+  letter-spacing: 3px;
+  margin: 0;
+}
+.rr-tagline {
+  color: var(--bone);
+  font-size: 22px;
+  margin: 0 0 24px;
+  max-width: 680px;
+}
+.rr-tagline b { color: var(--torch); }
+.rr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 28px 0;
+}
+.rr-card {
+  padding: 18px 20px;
+  background: var(--stone);
+  border: 2px solid var(--wall-2);
+  border-left: 5px solid var(--moss);
+}
+.rr-card.red    { border-left-color: #e83030; }
+.rr-card.yellow { border-left-color: #e8a147; }
+.rr-card.green  { border-left-color: #6a8a48; }
+.rr-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.rr-name {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--bone);
+  letter-spacing: 1px;
+}
+.rr-score {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+.rr-score.red    { color: #ff5a4a; }
+.rr-score.yellow { color: #ffb040; }
+.rr-score.green  { color: #8ac560; }
+.rr-verdict {
+  font-size: 13px;
+  color: var(--bone-dim);
+  line-height: 1.5;
+  margin: 6px 0 10px;
+}
+.rr-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.rr-flag {
+  padding: 3px 8px;
+  background: var(--wall);
+  color: var(--bone-dim);
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--wall-2);
+}
+.rr-flag.warn { background: #3a2010; color: #ffb040; border-color: #8a4820; }
+.rr-flag.danger { background: #401010; color: #ff8080; border-color: #802020; }
+.rr-flag.ok { background: #1a2818; color: #8ac560; border-color: #2a4020; }
+.rr-access {
+  padding: 22px 24px;
+  background: var(--stone);
+  border: 2px dashed var(--torch);
+  text-align: center;
+  margin-top: 24px;
+}
+.rr-access b { color: var(--torch); }
+.rr-access-lock {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 20px;
+}
+@media (max-width: 900px) {
+  .rr-grid { grid-template-columns: 1fr; }
+}
+
+/* Manifesto */
+.manifesto {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 44px 40px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  text-align: center;
+  position: relative;
+}
+.manifesto::before, .manifesto::after {
+  content: "◆";
+  position: absolute;
+  color: var(--ember);
+  font-size: 18px;
+}
+.manifesto::before { top: 10px; left: 14px; }
+.manifesto::after { bottom: 10px; right: 14px; }
+.manifesto p {
+  font-size: 28px;
+  line-height: 1.55;
+  margin: 0 0 18px;
+  color: var(--bone);
+}
+.manifesto p:last-child { margin: 0; }
+
+/* ================ HUD ================ */
+.hud {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 20px;
+  background: rgba(26,20,15,0.96);
+  border-top: 2px solid var(--wall-2);
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  z-index: 15;
+  flex-wrap: wrap;
+  backdrop-filter: blur(6px);
+}
+.hud .stat { display: flex; gap: 8px; color: var(--bone-dim); }
+.hud .stat b { color: var(--torch); font-weight: normal; }
+.hud .stat.phase b { color: var(--moss); }
+
+/* ================ MINT ALTAR (hero-scene-mint) ================ */
+.mint-altar {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 300px;
+  z-index: 3;
+  pointer-events: none;
+}
+.mint-altar::before {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  height: 32px;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, transparent 65%);
+  pointer-events: none;
+}
+.altar-stone {
+  position: absolute;
+  bottom: 0;
+  left: 22px;
+  right: 22px;
+  height: 62px;
+  background:
+    linear-gradient(to bottom, #5a3d28 0%, #3a2818 55%, #2a1808 100%);
+  border: 3px solid #1a0e05;
+  box-shadow: inset 0 3px 0 rgba(255,255,255,0.06), inset 0 -3px 0 rgba(0,0,0,0.4);
+}
+.altar-stone::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: -8px;
+  right: -8px;
+  height: 14px;
+  background: #6a4a30;
+  border: 3px solid #1a0e05;
+}
+.altar-stone::after {
+  /* pixel-y speckle */
+  content: "";
+  position: absolute;
+  top: 12px; left: 12px;
+  width: 4px; height: 4px;
+  background: #6a4028;
+  box-shadow:
+    16px 6px 0 #6a4028,
+    38px 10px 0 #6a4028,
+    64px 4px 0 #6a4028,
+    26px 22px 0 #6a4028,
+    54px 28px 0 #6a4028,
+    82px 18px 0 #6a4028;
+}
+.altar-grug {
+  position: absolute;
+  bottom: 68px;
+  left: 0;
+  right: 0;
+  height: 230px;
+  display: flex;
+  justify-content: center;
+  transition: opacity 0.4s ease;
+}
+.altar-grug svg { height: 100%; width: auto; image-rendering: pixelated; display: block; }
+
+/* Plaque bolted to the stone altar face */
+.altar-plaque {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  background: linear-gradient(to bottom, #c9a24a 0%, #a67810 55%, #7a5808 100%);
+  border: 3px solid #1a0e05;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.25),
+    inset 0 -2px 0 rgba(0,0,0,0.4),
+    3px 3px 0 rgba(0,0,0,0.55);
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  text-align: center;
+  min-width: 190px;
+  z-index: 4;
+}
+/* Corner bolts */
+.altar-plaque::before,
+.altar-plaque::after {
+  content: '';
+  position: absolute;
+  width: 4px; height: 4px;
+  background: #1a0e05;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+  border-radius: 50%;
+}
+.altar-plaque::before { top: 3px; left: 4px; }
+.altar-plaque::after  { top: 3px; right: 4px; }
+.plaque-title {
+  font-size: 14px;
+  color: #1a0e05;
+  letter-spacing: 2px;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.25);
+}
+.plaque-sub {
+  font-size: 8px;
+  color: #4a2c08;
+  margin-top: 6px;
+  letter-spacing: 1px;
+}
+
+/* Move the mint overlay text up above the altar */
+.hero-scene-mint .hero-overlay { padding-top: 36px; }
+.hero-scene-mint .tagline { margin: 20px 0 6px; }
+.hero-scene-mint .sub-tag { margin-top: 4px; }
+
+/* Whitelist check */
+.wl-check {
+  padding: 32px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-left: 6px solid var(--ember);
+  text-align: center;
+}
+.wl-status {
+  font-size: 24px;
+  margin: 0 0 16px;
+  color: var(--bone);
+}
+.wl-status b { color: var(--torch); font-weight: normal; }
+.wl-status.ok {
+  border: none;
+  color: var(--bone);
+}
+.wl-status.ok b { color: var(--moss); }
+.wl-status.pending b { color: var(--torch); }
+.wl-check.ok { border-left-color: var(--moss); }
+.wl-hint {
+  font-size: 20px;
+  color: var(--bone-dim);
+  margin: 0;
+  line-height: 1.5;
+}
+.wl-hint b { color: var(--torch); font-weight: normal; }
+
+/* ================ MINT (legacy panel — kept for cross-references) ================ */
+.mint-panel {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 40px;
+  background: var(--stone-2);
+  border: 3px double var(--wall-2);
+  text-align: center;
+}
+.mint-count {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 28px;
+  color: var(--torch);
+  margin: 20px 0 4px;
+}
+.mint-count .of { color: var(--bone-dim); font-size: 20px; }
+.mint-progress {
+  width: 100%;
+  height: 24px;
+  background: var(--stone);
+  border: 2px solid var(--wall-2);
+  position: relative;
+  margin: 16px 0 32px;
+  overflow: hidden;
+}
+.mint-progress-fill {
+  height: 100%;
+  width: 28.47%;
+  background: repeating-linear-gradient(90deg, var(--ember) 0 8px, var(--ember-hot) 8px 10px);
+}
+.mint-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 20px 0 28px;
+  text-align: left;
+}
+.mint-fact {
+  padding: 14px 16px;
+  background: var(--wall);
+  border: 2px solid var(--wall-2);
+}
+.mint-fact .lbl {
+  display: block;
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 10px;
+  color: var(--torch);
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.mint-fact .val { font-size: 22px; color: var(--bone); }
+.mint-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.mint-note { font-size: 18px; color: var(--ash); margin-top: 32px; }
+
+.preview-strip {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0 28px;
+  flex-wrap: wrap;
+}
+.preview-strip .grug-mini {
+  width: 78px;
+  height: 104px;
+  background: var(--stone);
+  border: 2px solid var(--wall-2);
+  overflow: hidden;
+}
+.preview-strip .grug-mini svg { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+
+/* ================ LOGS ================ */
+.cave-scene.tall { height: 400px; }
+.log-pile-standalone {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 620px;
+  height: 240px;
+  z-index: 3;
+  pointer-events: none;
+}
+.log-pile-standalone::before {
+  content: "";
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 720px;
+  height: 60px;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.4) 0%, transparent 60%);
+  pointer-events: none;
+}
+.logs-info-bar {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 40px;
+  align-items: center;
+  padding: 28px 40px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-top: none;
+  margin-top: -2px;
+}
+.logs-info-left { text-align: center; }
+.logs-info-right p { margin: 0; }
+.log {
+  position: absolute;
+  overflow: visible;
+}
+.log svg { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.log.new-log { animation: log-drop 0.6s ease-out; }
+@keyframes log-drop {
+  0%   { transform: translateY(-40px) rotate(-10deg); opacity: 0; }
+  60%  { transform: translateY(4px) rotate(2deg); opacity: 1; }
+  100% { transform: translateY(0) rotate(0); opacity: 1; }
+}
+.log-pile-info h3 {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 16px;
+  color: var(--torch);
+  letter-spacing: 2px;
+  margin: 0 0 12px;
+}
+.log-count {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 40px;
+  color: var(--bone);
+  margin: 8px 0 4px;
+  letter-spacing: 2px;
+}
+.log-goal { color: var(--bone-dim); font-size: 20px; margin: 0 0 20px; }
+.log-desc { color: var(--bone-dim); font-size: 22px; line-height: 1.4; margin: 0; }
+
+/* ================ SMASH ================ */
+.hero-scene-smash .hero-overlay { padding-top: 48px; }
+
+/* Whitelist modal */
+.wl-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.wl-modal.open {
+  display: flex;
+  animation: wl-modal-in 0.3s ease-out;
+}
+.wl-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(2px);
+}
+.wl-modal-box {
+  position: relative;
+  z-index: 1;
+  background: var(--stone-2);
+  border: 3px solid var(--wall-2);
+  border-top: 6px solid var(--torch);
+  padding: 44px 40px 32px;
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.6);
+  transform: translateY(0);
+  animation: wl-modal-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.wl-modal-badge {
+  display: inline-block;
+  margin-bottom: 8px;
+  animation: badge-bob 2s ease-in-out infinite alternate;
+}
+@keyframes badge-bob {
+  from { transform: translateY(0) rotate(-2deg); }
+  to   { transform: translateY(-4px) rotate(2deg); }
+}
+.wl-modal-title {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 28px;
+  color: var(--torch);
+  margin: 0 0 20px;
+  letter-spacing: 2px;
+  text-shadow: 3px 3px 0 rgba(0,0,0,0.5);
+}
+.wl-modal-body {
+  font-size: 20px;
+  color: var(--bone);
+  line-height: 1.55;
+  margin: 0 0 20px;
+}
+.wl-modal-body b { color: var(--torch); }
+.wl-modal-wallet {
+  display: inline-block;
+  padding: 10px 16px;
+  background: var(--stone);
+  border: 2px solid var(--wall-2);
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--moss);
+  letter-spacing: 1px;
+  margin-bottom: 28px;
+  word-break: break-all;
+}
+.wl-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+.wl-modal-actions .cta {
+  width: 100%;
+}
+.wl-modal-fine {
+  margin: 22px 0 0;
+  color: var(--bone-dim);
+  font-size: 14px;
+  line-height: 1.6;
+}
+@keyframes wl-modal-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes wl-modal-pop {
+  from { transform: scale(0.85) translateY(20px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* Whitelist toast (confirmation after submit) */
+.wl-toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 900;
+  padding: 14px 22px;
+  background: var(--moss);
+  color: var(--bone);
+  border: 3px solid #0a1a05;
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  box-shadow: 5px 5px 0 rgba(0,0,0,0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.wl-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Click-to-smash hint — sits beside the machine at its vertical center */
+.smash-hint {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  margin-left: 150px;
+  z-index: 6;
+  pointer-events: none;
+  background: var(--bone);
+  color: var(--stone);
+  padding: 12px 16px;
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.7;
+  border: 3px solid var(--stone);
+  box-shadow: 5px 5px 0 rgba(0,0,0,0.55);
+  text-align: left;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  animation: smash-hint-bob 1.4s ease-in-out infinite alternate;
+}
+.smash-hint-text span {
+  display: block;
+  margin-top: 4px;
+  font-size: 9px;
+  color: #5a4a40;
+  letter-spacing: 0.5px;
+}
+.smash-hint-arrow {
+  position: absolute;
+  left: -22px;
+  top: 50%;
+  margin-top: -10px;
+  width: 0; height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 22px solid var(--bone);
+  filter: drop-shadow(-3px 3px 0 var(--stone));
+}
+.smash-hint.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+@keyframes smash-hint-bob {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(6px, -4px); }
+}
+@media (max-width: 900px) {
+  .smash-hint {
+    bottom: 40px;
+    left: 50%;
+    margin-left: 0;
+    transform: translateX(-50%);
+  }
+  .smash-hint-arrow { display: none; }
+  @keyframes smash-hint-bob {
+    from { transform: translateX(-50%); }
+    to   { transform: translateX(-50%) translateY(-4px); }
+  }
+}
+.hero-scene-smash .machine-wrap {
+  position: absolute;
+  bottom: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  pointer-events: none;
+  margin: 0;
+  min-height: auto;
+  display: block;
+}
+.hero-scene-smash .machine {
+  pointer-events: auto;
+  cursor: pointer;
+  display: block;
+  line-height: 0;
+}
+.hero-scene-smash .machine-wrap::before {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  height: 34px;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* ================ Attackers (grugs swinging at machine) ================ */
+.attacker {
+  position: absolute;
+  bottom: 32px;
+  width: 64px;
+  height: 88px;
+  z-index: 4;
+  transform-origin: bottom center;
+  pointer-events: none;
+}
+.attacker svg { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+.attacker .swing-inner {
+  width: 100%; height: 100%;
+  transform-origin: bottom center;
+  animation: swing 1.1s infinite ease-in-out;
+}
+.attacker.mirrored .swing-inner svg { transform: scaleX(-1); }
+@keyframes swing {
+  0%, 42%, 100% { transform: rotate(0deg); }
+  55%          { transform: rotate(-24deg); }
+  68%          { transform: rotate(18deg); }
+  82%          { transform: rotate(-4deg); }
+}
+
+/* ================ Boss bar / progress ================ */
+.boss-bar {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(720px, calc(100% - 40px));
+  z-index: 6;
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  pointer-events: none;
+}
+.boss-bar-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 10px;
+  color: var(--bone-dim);
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  text-shadow: 0 0 8px rgba(0,0,0,0.85);
+}
+.boss-bar-label .values { color: var(--torch); }
+.boss-bar-label .live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #8ac560;
+  margin-left: 10px;
+  font-size: 9px;
+}
+.boss-bar-label .live::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: #8ac560;
+  border-radius: 50%;
+  animation: live-pulse 1.4s ease-in-out infinite;
+  box-shadow: 0 0 6px #8ac560;
+}
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.7); }
+}
+.boss-bar-track {
+  height: 16px;
+  background: rgba(20,15,10,0.75);
+  border: 2px solid var(--wall-2);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 12px rgba(0,0,0,0.6);
+}
+.boss-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--ember) 0%, var(--torch) 60%, var(--torch-hot) 100%);
+  transition: width 0.6s ease-out;
+  position: relative;
+  box-shadow: 0 0 10px rgba(232,161,71,0.4) inset;
+}
+.boss-bar-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(45deg,
+    transparent 0 5px, rgba(255,255,255,0.10) 5px 7px);
+  animation: bar-shimmer 3s linear infinite;
+}
+@keyframes bar-shimmer {
+  0%   { background-position: 0 0; }
+  100% { background-position: 40px 0; }
+}
+.machine-wrap {
+  position: relative;
+  display: inline-block;
+  margin: 20px 0;
+  min-height: 240px;
+}
+.machine {
+  display: inline-block;
+  animation: nervous 3.2s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+@keyframes nervous {
+  0%, 40%, 100% { transform: translateX(0) rotate(0); }
+  45% { transform: translateX(-3px) rotate(-1deg); }
+  50% { transform: translateX(3px) rotate(1deg); }
+  55% { transform: translateX(-1px) rotate(0); }
+}
+.machine.smashing { animation: smash 0.6s ease-out; }
+@keyframes smash {
+  0%   { transform: scale(1) rotate(0); filter: brightness(1); }
+  10%  { transform: scale(1.20) rotate(-10deg); filter: brightness(1.6); }
+  30%  { transform: scale(0.6) rotate(15deg); filter: brightness(0.4); }
+  60%  { transform: scale(1.05) rotate(-3deg); filter: brightness(1.1); }
+  100% { transform: scale(1) rotate(0); filter: brightness(1); }
+}
+.smash-particle {
+  position: absolute;
+  width: 8px; height: 8px;
+  background: var(--bone-dim);
+  border: 1px solid var(--wall);
+  pointer-events: none;
+  z-index: 6;
+}
+.smash-count {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 20px;
+  color: var(--moss);
+  margin: 28px 0 8px;
+  letter-spacing: 2px;
+}
+.smash-motto { color: var(--bone-dim); font-size: 20px; margin: 0; }
+
+/* ================ GRUG GRID / CARDS ================ */
+.grug-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 32px;
+}
+.grug-grid.empty {
+  display: block;
+}
+.empty-grugs {
+  text-align: center;
+  padding: 60px 24px;
+  background: var(--stone-2);
+  border: 2px dashed var(--wall-2);
+  color: var(--bone-dim);
+}
+.empty-grugs-icon {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 48px;
+  color: var(--torch);
+  background: var(--stone);
+  border: 3px solid var(--wall-2);
+  text-shadow: 3px 3px 0 rgba(0,0,0,0.5);
+}
+.empty-grugs-title {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 18px;
+  color: var(--bone);
+  margin: 0 0 8px;
+  letter-spacing: 1px;
+}
+.empty-grugs-body {
+  font-size: 20px;
+  margin: 0;
+  color: var(--bone-dim);
+}
+.grug-card {
+  padding: 14px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  text-align: center;
+  transition: transform 0.15s, border-color 0.15s;
+  position: relative;
+}
+.grug-card:hover {
+  border-color: var(--torch);
+  transform: translateY(-2px);
+}
+.grug-portrait {
+  aspect-ratio: 3 / 4;
+  background: var(--stone);
+  border: 2px solid var(--wall-2);
+  margin-bottom: 12px;
+  overflow: hidden;
+  position: relative;
+}
+.grug-portrait svg {
+  width: 100%; height: 100%;
+  image-rendering: pixelated;
+  display: block;
+  transition: transform 0.25s;
+}
+.grug-card.busy .grug-portrait svg { animation: grug-walk 1.4s ease-in-out; }
+@keyframes grug-walk {
+  0%   { transform: translateX(0); }
+  40%  { transform: translateX(60%); opacity: 0.4; }
+  60%  { transform: translateX(60%); opacity: 0; }
+  70%  { transform: translateX(-60%); opacity: 0; }
+  80%  { transform: translateX(-60%); opacity: 0.4; }
+  100% { transform: translateX(0); }
+}
+.grug-card.smashing .grug-portrait svg { animation: grug-swing 0.55s ease-in-out; }
+@keyframes grug-swing {
+  0%   { transform: rotate(0); }
+  20%  { transform: rotate(-14deg); }
+  50%  { transform: rotate(18deg); }
+  75%  { transform: rotate(-6deg); }
+  100% { transform: rotate(0); }
+}
+.floating-plus {
+  position: absolute;
+  top: 30%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 22px;
+  color: var(--torch);
+  text-shadow: 0 0 8px rgba(232,161,71,0.8);
+  pointer-events: none;
+  animation: float-up 1.2s ease-out forwards;
+  z-index: 3;
+}
+.floating-plus.moss { color: var(--moss); text-shadow: 0 0 8px rgba(122,155,92,0.8); }
+@keyframes float-up {
+  0%   { opacity: 0; transform: translate(-50%, 0); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -60px); }
+}
+.grug-id {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 10px;
+  color: var(--torch);
+  letter-spacing: 1px;
+}
+.grug-name { color: var(--bone); font-size: 22px; margin: 4px 0 8px; letter-spacing: 1px; }
+.grug-meta { color: var(--bone-dim); font-size: 18px; margin: 0 0 12px; }
+.grug-meta b { color: var(--torch); font-weight: normal; }
+.grug-action {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: var(--wall);
+  color: var(--bone);
+  border: 2px solid var(--wall-2);
+  cursor: pointer;
+  font-family: 'VT323', ui-monospace, monospace;
+  font-size: 19px;
+  letter-spacing: 1px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.grug-action:hover:not(:disabled) {
+  background: var(--torch);
+  color: var(--stone);
+  border-color: var(--torch);
+}
+.grug-action.smash:hover:not(:disabled) {
+  background: var(--ember);
+  color: var(--bone);
+  border-color: var(--ember);
+}
+.grug-action:disabled { color: var(--ash); cursor: not-allowed; }
+
+/* Board */
+.board { margin-top: 48px; }
+.board-list {
+  border: 2px solid var(--wall-2);
+  background: var(--stone-2);
+}
+.board-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 100px;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--wall-2);
+  font-size: 20px;
+}
+.board-row:last-child { border-bottom: none; }
+.board-row.head {
+  background: var(--wall);
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 10px;
+  color: var(--torch);
+  letter-spacing: 2px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.board-row.you { background: rgba(232,161,71,0.08); border-left: 4px solid var(--torch); padding-left: 16px; }
+.rank { color: var(--bone-dim); font-variant-numeric: tabular-nums; }
+.addr { color: var(--bone); font-family: 'VT323', monospace; }
+.count { text-align: right; color: var(--torch); font-variant-numeric: tabular-nums; }
+
+/* Schedule chips */
+.chip-row { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+.chip {
+  padding: 12px 20px;
+  background: var(--wall);
+  border: 2px solid var(--wall-2);
+  color: var(--bone-dim);
+  font-size: 20px;
+  letter-spacing: 1px;
+}
+.chip.today { background: var(--torch); border-color: var(--torch); color: var(--stone); font-family: 'Press Start 2P', monospace; font-size: 12px; }
+
+/* Rule list */
+.rule-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 22px;
+  color: var(--bone-dim);
+}
+.rule-list li {
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--wall-2);
+}
+.rule-list li:last-child { border-bottom: none; }
+.rule-list li::before { content: "▸ "; color: var(--ember); }
+
+/* Responsive */
+@media (max-width: 900px) {
+  header.nav { grid-template-columns: 1fr; justify-items: center; gap: 8px; padding: 12px 16px; }
+  .wordmark, .tabs, .nav-right { justify-self: center; }
+  .nav-right { flex-wrap: wrap; justify-content: center; }
+  .tabs { flex-wrap: wrap; justify-content: center; }
+  .tab { font-size: 18px; padding: 6px 12px; }
+  main { padding: 24px 16px; }
+  .hero-scene { min-height: 620px; height: calc(100vh - 130px); }
+  .hero-overlay { padding-top: 40px; }
+  .hero-title { letter-spacing: 4px; }
+  .hero-ctas { margin-top: 32px; gap: 12px; }
+  .cta-lg { padding: 18px 26px; font-size: 13px; letter-spacing: 2px; }
+  .cta-bar { gap: 12px; padding: 32px 16px; }
+  .scroll-hint { display: none; }
+  .wall-torch.far-left, .wall-torch.far-right { display: none; }
+  .cave-scene { height: 220px; }
+  .pillars { grid-template-columns: 1fr; }
+  .log-scene { grid-template-columns: 1fr; padding: 24px; }
+  .mint-panel { padding: 32px 20px; }
+  .mint-facts { grid-template-columns: 1fr; }
+  .hud { gap: 14px; font-size: 15px; padding: 10px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition: none !important; }
+}
+
+:focus-visible { outline: 2px solid var(--torch); outline-offset: 3px; }
+</style>
+
+<header class="nav">
+  <div class="wordmark" onclick="showTab('home')">GRUGS</div>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="home">home</button>
+    <button class="tab" data-tab="mint">get grug</button>
+    <button class="tab" data-tab="logs">logs</button>
+    <button class="tab" data-tab="smash">smash machine</button>
+  </nav>
+  <div class="nav-right">
+    <div class="chain-badge">RHC</div>
+    <button class="sound-btn" id="sound-btn" title="sound">
+      <svg viewBox="0 0 16 16" width="16" height="16" style="image-rendering:pixelated" aria-hidden="true">
+        <rect x="1" y="6" width="3" height="4" fill="currentColor"/>
+        <rect x="4" y="4" width="2" height="8" fill="currentColor"/>
+        <rect x="6" y="2" width="2" height="12" fill="currentColor"/>
+        <g class="mute-x">
+          <rect x="10" y="5" width="1" height="1" fill="currentColor"/>
+          <rect x="11" y="6" width="1" height="1" fill="currentColor"/>
+          <rect x="12" y="7" width="1" height="1" fill="currentColor"/>
+          <rect x="11" y="8" width="1" height="1" fill="currentColor"/>
+          <rect x="10" y="9" width="1" height="1" fill="currentColor"/>
+          <rect x="12" y="5" width="1" height="1" fill="currentColor"/>
+          <rect x="13" y="6" width="1" height="1" fill="currentColor"/>
+          <rect x="13" y="8" width="1" height="1" fill="currentColor"/>
+          <rect x="12" y="9" width="1" height="1" fill="currentColor"/>
+        </g>
+        <g class="sound-waves" hidden>
+          <rect x="9"  y="7" width="1" height="2" fill="currentColor"/>
+          <rect x="11" y="6" width="1" height="4" fill="currentColor"/>
+          <rect x="13" y="5" width="1" height="6" fill="currentColor"/>
+        </g>
+      </svg>
+    </button>
+    <button class="connect-btn" id="connect-btn">CONNECT GRUG</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- HOME -->
+  <section id="home" class="view active">
+    <div class="hero-scene" id="hero-scene" aria-labelledby="hero-title">
+      <div class="cave-wall-detail"></div>
+
+      <div class="wall-torch far-left">
+        <div class="glow"></div>
+        <div class="stick"></div>
+        <div class="bracket"></div>
+        <div class="flame"></div>
+        <div class="flame-inner"></div>
+      </div>
+      <div class="wall-torch left">
+        <div class="glow"></div>
+        <div class="stick"></div>
+        <div class="bracket"></div>
+        <div class="flame"></div>
+        <div class="flame-inner"></div>
+      </div>
+      <div class="wall-torch right">
+        <div class="glow"></div>
+        <div class="stick"></div>
+        <div class="bracket"></div>
+        <div class="flame"></div>
+        <div class="flame-inner"></div>
+      </div>
+      <div class="wall-torch far-right">
+        <div class="glow"></div>
+        <div class="stick"></div>
+        <div class="bracket"></div>
+        <div class="flame"></div>
+        <div class="flame-inner"></div>
+      </div>
+
+      <div class="cave-floor"></div>
+
+        <div class="fire-wrap fire-big">
+          <div class="fire-glow"></div>
+          <svg class="fire-svg" viewBox="0 0 28 34" preserveAspectRatio="xMidYMax meet">
+            <!-- Ground shadow -->
+            <ellipse cx="14" cy="33.5" rx="12" ry="0.8" fill="#000" opacity="0.75"/>
+
+            <!-- Back log with wood-grain end caps -->
+            <rect x="2"  y="29" width="24" height="4" fill="#3a1e0e"/>
+            <rect x="2"  y="29" width="24" height="1" fill="#5a2f14"/>
+            <rect x="2"  y="32" width="24" height="1" fill="#0f0704"/>
+            <rect x="2"  y="30" width="1"  height="2" fill="#2a1408"/>
+            <rect x="25" y="30" width="1"  height="2" fill="#2a1408"/>
+
+            <!-- Front log stubs (angled forward) -->
+            <rect x="0"  y="31" width="10" height="3" fill="#4a2818"/>
+            <rect x="0"  y="31" width="10" height="1" fill="#6a3820"/>
+            <rect x="0"  y="33" width="10" height="1" fill="#0f0704"/>
+            <rect x="0"  y="32" width="1"  height="1" fill="#8a5828"/>
+            <rect x="18" y="31" width="10" height="3" fill="#4a2818"/>
+            <rect x="18" y="31" width="10" height="1" fill="#6a3820"/>
+            <rect x="18" y="33" width="10" height="1" fill="#0f0704"/>
+            <rect x="27" y="32" width="1"  height="1" fill="#8a5828"/>
+
+            <!-- Glowing ember bed atop the logs -->
+            <rect x="4"  y="28" width="20" height="1" fill="#c73820"/>
+            <rect x="6"  y="27" width="16" height="1" fill="#ff8020"/>
+            <rect x="9"  y="26" width="10" height="1" fill="#ffb040"/>
+            <rect x="12" y="25" width="4"  height="1" fill="#fff4c0"/>
+
+            <!-- MAIN FLAME — chunky pixel-art teardrop, one breathing shape -->
+            <g class="fire-flame">
+              <!-- Outer RED silhouette — organic teardrop shape -->
+              <rect x="13" y="4"  width="2" height="1" fill="#B93820"/>
+              <rect x="12" y="5"  width="4" height="1" fill="#C73820"/>
+              <rect x="11" y="6"  width="6" height="1" fill="#D14B2F"/>
+              <rect x="11" y="7"  width="6" height="1" fill="#D14B2F"/>
+              <rect x="10" y="8"  width="8" height="1" fill="#D14B2F"/>
+              <rect x="10" y="9"  width="8" height="1" fill="#D14B2F"/>
+              <rect x="9"  y="10" width="10" height="1" fill="#D14B2F"/>
+              <rect x="9"  y="11" width="10" height="1" fill="#D14B2F"/>
+              <rect x="8"  y="12" width="12" height="1" fill="#D14B2F"/>
+              <rect x="7"  y="13" width="14" height="1" fill="#D14B2F"/>
+              <rect x="7"  y="14" width="14" height="1" fill="#D14B2F"/>
+              <rect x="6"  y="15" width="16" height="1" fill="#D14B2F"/>
+              <rect x="5"  y="16" width="18" height="1" fill="#D14B2F"/>
+              <rect x="5"  y="17" width="18" height="1" fill="#D14B2F"/>
+              <rect x="4"  y="18" width="20" height="1" fill="#D14B2F"/>
+              <rect x="4"  y="19" width="20" height="1" fill="#D14B2F"/>
+              <rect x="3"  y="20" width="22" height="1" fill="#D14B2F"/>
+              <rect x="3"  y="21" width="22" height="1" fill="#C73820"/>
+              <rect x="4"  y="22" width="20" height="1" fill="#C73820"/>
+              <rect x="5"  y="23" width="18" height="1" fill="#B93820"/>
+              <rect x="7"  y="24" width="14" height="1" fill="#B93820"/>
+
+              <!-- Side flame tongues (organic asymmetry) -->
+              <rect x="1"  y="19" width="2" height="1" fill="#C73820" opacity="0.85"/>
+              <rect x="1"  y="20" width="2" height="1" fill="#C73820" opacity="0.9"/>
+              <rect x="2"  y="21" width="1" height="1" fill="#B93820" opacity="0.6"/>
+              <rect x="25" y="18" width="2" height="1" fill="#C73820" opacity="0.85"/>
+              <rect x="25" y="19" width="2" height="1" fill="#D14B2F" opacity="0.9"/>
+              <rect x="26" y="20" width="1" height="1" fill="#C73820" opacity="0.7"/>
+              <!-- Little licking flame near right side (asymmetric bulge) -->
+              <rect x="23" y="16" width="1" height="1" fill="#D14B2F" opacity="0.75"/>
+              <rect x="23" y="17" width="1" height="1" fill="#D14B2F" opacity="0.85"/>
+
+              <!-- ORANGE mid band -->
+              <rect x="12" y="8"  width="4"  height="1" fill="#E8A147"/>
+              <rect x="12" y="9"  width="4"  height="1" fill="#E8A147"/>
+              <rect x="11" y="10" width="6"  height="1" fill="#E8A147"/>
+              <rect x="11" y="11" width="6"  height="1" fill="#E8A147"/>
+              <rect x="10" y="12" width="8"  height="1" fill="#E8A147"/>
+              <rect x="9"  y="13" width="10" height="1" fill="#E8A147"/>
+              <rect x="9"  y="14" width="10" height="1" fill="#E88A2F"/>
+              <rect x="8"  y="15" width="12" height="1" fill="#E88A2F"/>
+              <rect x="7"  y="16" width="14" height="1" fill="#E88A2F"/>
+              <rect x="7"  y="17" width="14" height="1" fill="#E88A2F"/>
+              <rect x="6"  y="18" width="16" height="1" fill="#E8721F"/>
+              <rect x="6"  y="19" width="16" height="1" fill="#E8721F"/>
+              <rect x="5"  y="20" width="18" height="1" fill="#E8721F"/>
+              <rect x="6"  y="21" width="16" height="1" fill="#E8721F"/>
+              <rect x="7"  y="22" width="14" height="1" fill="#E8721F"/>
+              <rect x="8"  y="23" width="12" height="1" fill="#E8721F"/>
+
+              <!-- YELLOW inner -->
+              <rect x="13" y="12" width="2"  height="1" fill="#FFC864"/>
+              <rect x="12" y="13" width="4"  height="1" fill="#FFD070"/>
+              <rect x="11" y="14" width="6"  height="1" fill="#FFD070"/>
+              <rect x="10" y="15" width="8"  height="1" fill="#FFD070"/>
+              <rect x="9"  y="16" width="10" height="1" fill="#FFD070"/>
+              <rect x="9"  y="17" width="10" height="1" fill="#FFC864"/>
+              <rect x="8"  y="18" width="12" height="1" fill="#FFC864"/>
+              <rect x="8"  y="19" width="12" height="1" fill="#FFC864"/>
+              <rect x="9"  y="20" width="10" height="1" fill="#FFC864"/>
+              <rect x="10" y="21" width="8"  height="1" fill="#FFC864"/>
+              <rect x="11" y="22" width="6"  height="1" fill="#FFC864"/>
+
+              <!-- WHITE-HOT core -->
+              <rect x="13" y="15" width="2" height="1" fill="#FFF4C0"/>
+              <rect x="12" y="16" width="4" height="1" fill="#FFF8DC"/>
+              <rect x="11" y="17" width="6" height="1" fill="#FFF8DC"/>
+              <rect x="11" y="18" width="6" height="1" fill="#FFF8DC"/>
+              <rect x="11" y="19" width="6" height="1" fill="#FFF8DC"/>
+              <rect x="12" y="20" width="4" height="1" fill="#FFF4C0"/>
+              <rect x="13" y="21" width="2" height="1" fill="#FFF4C0"/>
+            </g>
+
+            <!-- Rising sparks (independent particles) -->
+            <rect class="fire-spark"    x="6"  y="12" width="1" height="1" fill="#ffb400" style="--sx:-2px"/>
+            <rect class="fire-spark s2" x="21" y="10" width="1" height="1" fill="#ff8a20" style="--sx:2px"/>
+            <rect class="fire-spark s3" x="14" y="3"  width="1" height="1" fill="#ffc864" style="--sx:-1px"/>
+            <rect class="fire-spark s4" x="9"  y="4"  width="1" height="1" fill="#ff6a1a" style="--sx:3px"/>
+            <rect class="fire-spark s5" x="19" y="6"  width="1" height="1" fill="#ffb400" style="--sx:-2px"/>
+          </svg>
+        </div>
+
+      <!-- walking grugs slotted in via JS -->
+
+      <div class="hero-overlay">
+        <h1 id="hero-title" class="hero-title">GRUGS</h1>
+        <p class="tagline">no rug. only grug.</p>
+        <p class="sub-tag">10,000 caveman. anti-machine. anti-rug. on chain.</p>
+      </div>
+
+      <div class="scroll-hint" aria-hidden="true">
+        <span>more below</span>
+        <span class="arrow">▼</span>
+      </div>
+    </div>
+
+    <!-- CTA bar right below the hero, above the first chamber -->
+    <div class="cta-bar">
+      <button class="cta cta-lg" onclick="showTab('mint')">GET GRUG</button>
+      <button class="cta cta-secondary cta-lg" onclick="showTab('logs')">LOGS</button>
+    </div>
+
+    <section class="chamber">
+      <h2 class="chamber-title">grug do what</h2>
+      <div class="pillars">
+        <div class="pillar">
+          <h3>get grug</h3>
+          <p>grug come to cave. grug now tribe. small rock, big grug.</p>
+        </div>
+        <div class="pillar">
+          <h3>get log</h3>
+          <p>grug walk to pile. grug bring log back. tribe count wood together.</p>
+        </div>
+        <div class="pillar">
+          <h3>smash machine</h3>
+          <p>machine make bad. grug hit machine. grug feel better after.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="chamber rug-radar">
+      <div class="rr-header">
+        <div class="rr-radar-icon">
+          <svg viewBox="0 0 32 32">
+            <!-- Radar sweep: circle with grid + rotating line -->
+            <rect x="2" y="2" width="28" height="28" fill="#0f1a10" stroke="#3a5a3a" stroke-width="1"/>
+            <!-- Radar rings -->
+            <circle cx="16" cy="16" r="12" fill="none" stroke="#2a4a2a" stroke-width="0.5"/>
+            <circle cx="16" cy="16" r="8"  fill="none" stroke="#2a4a2a" stroke-width="0.5"/>
+            <circle cx="16" cy="16" r="4"  fill="none" stroke="#2a4a2a" stroke-width="0.5"/>
+            <!-- Crosshair -->
+            <line x1="16" y1="4" x2="16" y2="28" stroke="#2a4a2a" stroke-width="0.5"/>
+            <line x1="4" y1="16" x2="28" y2="16" stroke="#2a4a2a" stroke-width="0.5"/>
+            <!-- Rotating sweep -->
+            <g transform-origin="16px 16px">
+              <path d="M16,16 L16,4 A12,12 0 0,1 26.4,10 Z" fill="#5aca5a" opacity="0.4">
+                <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="3s" repeatCount="indefinite"/>
+              </path>
+            </g>
+            <!-- Blips -->
+            <rect x="20" y="8"  width="1" height="1" fill="#ff5a4a"/>
+            <rect x="10" y="20" width="1" height="1" fill="#ffb040"/>
+            <rect x="22" y="22" width="1" height="1" fill="#8ac560"/>
+            <!-- Center dot -->
+            <rect x="15" y="15" width="2" height="2" fill="#8ac560"/>
+          </svg>
+        </div>
+        <h2 class="rr-title">RUG RADAR</h2>
+      </div>
+      <p class="rr-tagline">
+        grug tool. grug see rug from mile away. every new mint on Robinhood chain get
+        <b>score out of 100</b>. red mean bad. green mean maybe okay. grug still hate machine.
+      </p>
+
+      <div class="rr-grid">
+        <div class="rr-card red">
+          <div class="rr-card-head">
+            <span class="rr-name">MOON APES</span>
+            <span class="rr-score red">14 / 100</span>
+          </div>
+          <p class="rr-verdict">contract owner can mint infinite. team wallet 40%. copy of last rug.</p>
+          <div class="rr-flags">
+            <span class="rr-flag danger">owner mints</span>
+            <span class="rr-flag danger">team 40%</span>
+            <span class="rr-flag warn">no doxx</span>
+          </div>
+        </div>
+        <div class="rr-card yellow">
+          <div class="rr-card-head">
+            <span class="rr-name">QUANTUM ORBS</span>
+            <span class="rr-score yellow">52 / 100</span>
+          </div>
+          <p class="rr-verdict">contract okay. team half-doxx. twitter age 6 days. promises "yield".</p>
+          <div class="rr-flags">
+            <span class="rr-flag warn">young twitter</span>
+            <span class="rr-flag warn">yield claim</span>
+            <span class="rr-flag ok">contract clean</span>
+          </div>
+        </div>
+        <div class="rr-card green">
+          <div class="rr-card-head">
+            <span class="rr-name">STONE CATS</span>
+            <span class="rr-score green">81 / 100</span>
+          </div>
+          <p class="rr-verdict">renounced owner. doxxed team. no promises. real art. mint at cost.</p>
+          <div class="rr-flags">
+            <span class="rr-flag ok">renounced</span>
+            <span class="rr-flag ok">doxxed</span>
+            <span class="rr-flag ok">no yield</span>
+          </div>
+        </div>
+      </div>
+
+      <p style="color: var(--bone-dim); font-size: 18px; line-height: 1.6; max-width: 720px;">
+        grug scan look at: contract owner, mint limits, team wallet split, twitter age &amp;
+        engagement, whitelist share, similar contracts (copy detect), yield promises,
+        website age, payment splits. each thing add or take from score.
+      </p>
+
+      <div class="rr-access">
+        <span class="rr-access-lock">🔒</span>
+        <b>hold 5+ grug</b> to use rug radar when it live. one wallet, one scan-per-day free. more scan cost log.
+      </div>
+    </section>
+
+    <section class="chamber">
+      <h2 class="chamber-title">grug word</h2>
+      <div class="manifesto">
+        <p>grug not promise moon.</p>
+        <p>grug not promise yield.</p>
+        <p>grug not promise stock.</p>
+        <p style="color: var(--torch); margin-top: 24px;">grug promise grug.</p>
+        <p style="color: var(--bone-dim); font-size: 20px; margin-top: 28px;">tribe make own thing. tribe watch machine burn.</p>
+      </div>
+    </section>
+
+    <section class="chamber">
+      <h2 class="chamber-title">meet the tribe</h2>
+      <div class="grug-grid" id="tribe-grid"></div>
+    </section>
+  </section>
+
+  <!-- MINT -->
+  <section id="mint" class="view">
+    <div class="hero-scene hero-scene-mint" id="mint-scene" aria-hidden="true">
+      <div class="boss-bar">
+        <div class="boss-bar-label">
+          <span class="label">tribe <span class="live">LIVE</span></span>
+          <span class="values"><span id="mint-bar-count">2,847</span> / 10,000</span>
+        </div>
+        <div class="boss-bar-track">
+          <div class="boss-bar-fill" id="mint-bar-fill" style="width: 28.47%"></div>
+        </div>
+      </div>
+      <div class="cave-wall-detail"></div>
+      <div class="wall-torch far-left">
+        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
+      </div>
+      <div class="wall-torch left">
+        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
+      </div>
+      <div class="wall-torch right">
+        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
+      </div>
+      <div class="wall-torch far-right">
+        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
+      </div>
+      <div class="cave-floor"></div>
+
+      <!-- The star: a rotating grug on a stone altar -->
+      <div class="mint-altar" id="mint-altar">
+        <div class="altar-grug" id="altar-grug"></div>
+        <div class="altar-stone"></div>
+        <div class="altar-plaque">
+          <div class="plaque-title">GRUG OF LEGEND</div>
+          <div class="plaque-sub">one of hundred rarest</div>
+        </div>
+      </div>
+
+      <!-- Walkers via JS -->
+
+      <div class="hero-overlay">
+        <h1 class="hero-title">GRUG</h1>
+        <p class="tagline">free with smash. easy for grug.</p>
+        <p class="sub-tag"><span id="mint-count-inline">2,847</span> of 10,000 grug in cave.</p>
+      </div>
+    </div>
+
+    <div class="cta-bar">
+      <button class="cta cta-lg" onclick="scrollToWL()">CHECK WHITELIST</button>
+      <button class="cta cta-secondary cta-lg" onclick="mockMint('public')">MINT PUBLIC</button>
+    </div>
+
+    <section class="chamber" id="wl-chamber" style="max-width: 780px; margin-left: auto; margin-right: auto;">
+      <h2 class="chamber-title">are you in tribe?</h2>
+      <div class="wl-check">
+        <p id="wl-status" class="wl-status pending">grug not know you. connect wallet.</p>
+        <p class="wl-hint">
+          smash <b id="wl-threshold">10</b> machines get you into tribe. grug remember every smash.
+          go to smash machine page. hit machine. come back to see if grug like you.
+        </p>
+        <button class="cta" id="wl-chamber-action" style="margin-top: 20px; min-width: 260px;">GO SMASH MACHINE</button>
+      </div>
+    </section>
+
+    <section class="chamber" style="max-width: 780px; margin-left: auto; margin-right: auto;">
+      <h2 class="chamber-title">how mint work</h2>
+      <div class="mint-facts">
+        <div class="mint-fact">
+          <span class="lbl">whitelist</span>
+          <span class="val">free · 1 per wallet · earned by smash</span>
+        </div>
+        <div class="mint-fact">
+          <span class="lbl">public</span>
+          <span class="val">0.001 ETH · 10 per tx</span>
+        </div>
+        <div class="mint-fact">
+          <span class="lbl">chain</span>
+          <span class="val">robinhood chain</span>
+        </div>
+        <div class="mint-fact">
+          <span class="lbl">reveal</span>
+          <span class="val">after mint end</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="chamber" style="max-width: 780px; margin-left: auto; margin-right: auto;">
+      <h2 class="chamber-title">grug rule</h2>
+      <ul class="rule-list">
+        <li>small creator fee on trade. keep grug fire lit.</li>
+        <li>no promise. no yield. no stock. just grug.</li>
+        <li>team wallet small. dev grug not greedy.</li>
+        <li>contract clear. tribe can read on chain.</li>
+      </ul>
+    </section>
+  </section>
+
+  <!-- LOGS -->
+  <section id="logs" class="view">
+    <div class="hero-scene hero-scene-logs" id="logs-scene" aria-hidden="true">
+      <div class="boss-bar">
+        <div class="boss-bar-label">
+          <span class="label">wood pile <span class="live">LIVE</span></span>
+          <span class="values"><span id="log-bar-count">1,203</span> / 10,000</span>
+        </div>
+        <div class="boss-bar-track">
+          <div class="boss-bar-fill" id="log-bar-fill" style="width: 12.03%"></div>
+        </div>
+      </div>
+      <div class="cave-wall-detail"></div>
+      <div class="wall-torch far-left">
+        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
+      </div>
+      <div class="wall-torch left">
+        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
+      </div>
+      <div class="wall-torch right">
+        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
+      </div>
+      <div class="wall-torch far-right">
+        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
+      </div>
+      <div class="cave-floor"></div>
+
+      <!-- The star: the log pile -->
+      <div class="log-pile-standalone" id="log-pile"></div>
+
+      <!-- Walkers spawned by JS (with logs) -->
+
+      <!-- Overlay text -->
+      <div class="hero-overlay">
+        <h1 class="hero-title">LOGS</h1>
+        <p class="tagline">the wood pile grow slow.</p>
+        <p class="sub-tag"><span id="log-count">1,203</span> logs · 10,000 to next thing.</p>
+      </div>
+    </div>
+
+    <section class="chamber">
+      <h2 class="chamber-title">your grugs</h2>
+      <div class="grug-grid" id="grugs-log-grid"></div>
+    </section>
+
+    <section class="chamber board">
+      <h2 class="chamber-title">the log board</h2>
+      <div class="board-list">
+        <div class="board-row head">
+          <div class="rank">rank</div>
+          <div class="addr">wallet</div>
+          <div class="count">logs</div>
+        </div>
+        <div class="board-row"><div class="rank">1</div><div class="addr">chief.grug</div><div class="count">847</div></div>
+        <div class="board-row"><div class="rank">2</div><div class="addr">woodguy.eth</div><div class="count">811</div></div>
+        <div class="board-row"><div class="rank">3</div><div class="addr">0x1a44…ef22</div><div class="count">742</div></div>
+        <div class="board-row"><div class="rank">4</div><div class="addr">0xbe10…9c33</div><div class="count">619</div></div>
+        <div class="board-row"><div class="rank">5</div><div class="addr">stone.grug</div><div class="count">508</div></div>
+        <div class="board-row you"><div class="rank">42</div><div class="addr">you</div><div class="count">46</div></div>
+      </div>
+      <p style="color: var(--ash); font-size: 18px; margin-top: 12px; text-align: center;">top fetcher get title on cave wall. forever.</p>
+    </section>
+  </section>
+
+  <!-- SMASH -->
+  <section id="smash" class="view">
+    <div class="hero-scene hero-scene-smash" id="smash-scene" aria-hidden="true">
+      <div class="cave-wall-detail"></div>
+      <div class="wall-torch far-left">
+        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
+      </div>
+      <div class="wall-torch left">
+        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
+      </div>
+      <div class="wall-torch right">
+        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
+      </div>
+      <div class="wall-torch far-right">
+        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
+      </div>
+      <div class="cave-floor"></div>
+
+      <!-- The star: the machine -->
+      <div class="machine-wrap" id="machine-wrap">
+        <div class="machine" id="machine">
+          <svg width="260" height="240" viewBox="0 0 48 44" style="image-rendering: pixelated;">
+            <!-- Feet -->
+            <rect x="8"  y="42" width="6" height="2" fill="#2a2a2a"/>
+            <rect x="34" y="42" width="6" height="2" fill="#2a2a2a"/>
+            <rect x="8"  y="41" width="6" height="1" fill="#3a3a3a"/>
+            <rect x="34" y="41" width="6" height="1" fill="#3a3a3a"/>
+
+            <!-- Base / keyboard tray -->
+            <rect x="5"  y="36" width="38" height="6" fill="#5a5a5a" stroke="#2a2a2a" stroke-width="0.5"/>
+            <rect x="5"  y="36" width="38" height="1" fill="#7a7a7a"/>
+            <rect x="5"  y="41" width="38" height="1" fill="#3a3a3a"/>
+            <!-- Fake keyboard keys -->
+            <rect x="8"  y="38" width="2" height="2" fill="#3a3a3a"/>
+            <rect x="11" y="38" width="2" height="2" fill="#3a3a3a"/>
+            <rect x="14" y="38" width="2" height="2" fill="#3a3a3a"/>
+            <rect x="17" y="38" width="2" height="2" fill="#3a3a3a"/>
+            <rect x="20" y="38" width="8" height="2" fill="#3a3a3a"/>
+            <rect x="29" y="38" width="2" height="2" fill="#3a3a3a"/>
+            <rect x="32" y="38" width="2" height="2" fill="#3a3a3a"/>
+            <rect x="35" y="38" width="2" height="2" fill="#3a3a3a"/>
+            <rect x="38" y="38" width="2" height="2" fill="#3a3a3a"/>
+
+            <!-- Neck / stand -->
+            <rect x="20" y="34" width="8" height="2" fill="#4a4a4a"/>
+            <rect x="22" y="32" width="4" height="2" fill="#4a4a4a"/>
+
+            <!-- Monitor body -->
+            <rect x="4"  y="4"  width="40" height="28" fill="#8a8a8a" stroke="#3a3a3a" stroke-width="1"/>
+            <!-- Bezel highlights -->
+            <rect x="4"  y="4"  width="40" height="1" fill="#b8b8b8"/>
+            <rect x="4"  y="4"  width="1"  height="28" fill="#b8b8b8"/>
+            <rect x="43" y="4"  width="1"  height="28" fill="#5a5a5a"/>
+            <rect x="4"  y="31" width="40" height="1" fill="#5a5a5a"/>
+            <!-- Panel screws (4 corners) -->
+            <rect x="6"  y="6"  width="1" height="1" fill="#3a3a3a"/>
+            <rect x="41" y="6"  width="1" height="1" fill="#3a3a3a"/>
+            <rect x="6"  y="29" width="1" height="1" fill="#3a3a3a"/>
+            <rect x="41" y="29" width="1" height="1" fill="#3a3a3a"/>
+
+            <!-- Vents on the right side -->
+            <rect x="38" y="9"  width="4" height="1" fill="#5a5a5a"/>
+            <rect x="38" y="11" width="4" height="1" fill="#5a5a5a"/>
+            <rect x="38" y="13" width="4" height="1" fill="#5a5a5a"/>
+
+            <!-- Indicator lights (red + green) -->
+            <rect x="7" y="10" width="1" height="1" fill="#e83030"/>
+            <rect x="7" y="12" width="1" height="1" fill="#30e830">
+              <animate attributeName="fill" values="#30e830;#0a3010;#30e830" dur="1.6s" repeatCount="indefinite"/>
+            </rect>
+
+            <!-- CRT SCREEN inset -->
+            <rect x="9" y="9" width="26" height="18" fill="#0e1a0e"/>
+            <rect x="9" y="9" width="26" height="1"  fill="#5a6a5a"/>
+            <rect x="9" y="9" width="1"  height="18" fill="#5a6a5a"/>
+            <!-- Scanline shimmer -->
+            <rect x="10" y="10" width="24" height="1" fill="#1a2a1a" opacity="0.55"/>
+            <rect x="10" y="14" width="24" height="1" fill="#1a2a1a" opacity="0.5"/>
+            <rect x="10" y="18" width="24" height="1" fill="#1a2a1a" opacity="0.5"/>
+            <rect x="10" y="22" width="24" height="1" fill="#1a2a1a" opacity="0.55"/>
+            <!-- BEEP BOOP text in the terminal -->
+            <text x="11" y="15" fill="#5aca5a" font-size="4" font-family="'Press Start 2P', ui-monospace, monospace">BEEP</text>
+            <text x="11" y="21" fill="#5aca5a" font-size="4" font-family="'Press Start 2P', ui-monospace, monospace">BOOP</text>
+            <text x="11" y="26" fill="#5aca5a" font-size="4" font-family="'Press Start 2P', ui-monospace, monospace">BEEP</text>
+            <rect x="27" y="24" width="2" height="1" fill="#5aca5a">
+              <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>
+            </rect>
+
+            <!-- Crack marks (damage from all the grug smashing) -->
+            <g stroke="#1a1a1a" stroke-width="0.4" fill="none" opacity="0.7">
+              <polyline points="16,4 17,6 15,9 17,11"/>
+              <polyline points="32,30 34,28 33,26"/>
+            </g>
+
+            <!-- Little brand nameplate under the screen -->
+            <rect x="18" y="29" width="12" height="2" fill="#3a3a3a"/>
+            <rect x="19" y="30" width="10" height="1" fill="#7a7a7a"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Walkers via JS -->
+
+      <!-- Click-to-smash hint (auto-dismiss on first machine click) -->
+      <div class="smash-hint" id="smash-hint">
+        <div class="smash-hint-arrow"></div>
+        <div class="smash-hint-text">CLICK TO SMASH<br><span>every click = tribe points</span></div>
+      </div>
+
+      <div class="hero-overlay">
+        <h1 class="hero-title">SMASH</h1>
+        <p class="tagline">machine make grug angry.</p>
+        <p class="sub-tag"><span id="my-smash-count">0</span> smash by you. <span id="wl-smash-remaining">10</span> more for tribe.</p>
+      </div>
+    </div>
+
+    <section class="chamber">
+      <h2 class="chamber-title">what machine today</h2>
+      <p style="color: var(--bone-dim); font-size: 22px; max-width: 720px;">
+        every day different machine. big light. money box. talky rock. thing that go beep.
+        grug not know what any of these do. grug just know they make bad noise.
+      </p>
+      <div class="chip-row">
+        <div class="chip">mon · noisy paper thing</div>
+        <div class="chip">tue · money box</div>
+        <div class="chip">wed · talky rock</div>
+        <div class="chip">thu · humming rock</div>
+        <div class="chip today">today · big light</div>
+      </div>
+      <p style="color: var(--bone-dim); font-size: 20px; max-width: 720px; margin-top: 28px; padding-top: 20px; border-top: 1px dashed var(--wall-2);">
+        grug not take machine home. grug not use machine. grug hit machine, walk away.
+        machine sit in cave. machine still make beep. grug not care.
+        <span style="display:block; margin-top: 10px; color: var(--torch);">machine no rug grug. machine just sit.</span>
+      </p>
+    </section>
+  </section>
+
+</main>
+
+<footer class="hud">
+  <div class="stat"><span>tribe</span><b id="hud-tribe">2,847</b></div>
+  <div class="stat"><span>logs</span><b id="hud-logs">1,203</b></div>
+  <div class="stat"><span>machines smashed</span><b id="hud-smash">14,271</b></div>
+  <div class="stat phase"><span>phase</span><b>0 — release</b></div>
+</footer>
+
+<!-- Whitelist registration modal — triggered when a wallet crosses 10 smashes -->
+<div class="wl-modal" id="wl-modal" aria-hidden="true">
+  <div class="wl-modal-backdrop" onclick="wlModalClose()"></div>
+  <div class="wl-modal-box" role="dialog" aria-labelledby="wl-modal-title">
+    <div class="wl-modal-badge">
+      <svg viewBox="0 0 32 32" width="72" height="72" style="image-rendering:pixelated">
+        <rect x="6"  y="4"  width="20" height="24" fill="#e8a147" stroke="#1a0e05" stroke-width="1"/>
+        <rect x="9"  y="8"  width="14" height="1"  fill="#1a0e05"/>
+        <rect x="9"  y="11" width="14" height="1"  fill="#1a0e05"/>
+        <rect x="9"  y="14" width="10" height="1"  fill="#1a0e05"/>
+        <rect x="9"  y="17" width="14" height="1"  fill="#1a0e05"/>
+        <rect x="9"  y="20" width="8"  height="1"  fill="#1a0e05"/>
+        <rect x="20" y="20" width="6"  height="6"  fill="#c73820" stroke="#1a0e05" stroke-width="1"/>
+        <rect x="22" y="22" width="2"  height="2"  fill="#fff4c0"/>
+      </svg>
+    </div>
+    <h2 id="wl-modal-title" class="wl-modal-title">GRUG SEE YOU</h2>
+    <p class="wl-modal-body">
+      you smash <b id="wl-modal-count">10</b> machines. grug want you in tribe.<br>
+      grug write your wallet on cave wall.
+    </p>
+    <div class="wl-modal-wallet" id="wl-modal-wallet">0x0000…0000</div>
+    <div class="wl-modal-actions">
+      <button class="cta cta-lg" id="wl-modal-submit">SUBMIT WALLET FOR WHITELIST</button>
+      <button class="cta cta-secondary" onclick="wlModalClose()">not yet</button>
+    </div>
+    <p class="wl-modal-fine">
+      one wallet per grug. cannot un-submit. on-chain when contract go live.
+    </p>
+  </div>
+</div>
+
+<!-- Small toast for post-registration confirmation -->
+<div class="wl-toast" id="wl-toast" aria-hidden="true">
+  <b>wallet in tribe.</b> grug remember you.
+</div>
+
+<script>
+/* ============================================================
+   GRUG RENDERER — ported from scripts/grug-body.mjs
+   Renders any trait combination as SVG at runtime.
+   ============================================================ */
+const W = 24, H = 32, SCALE = 20;
+const P = {
+  darkBlueBlack: '#12182a', darkBlueMid: '#1e2840',
+  moonBg: '#1a2438', moonMid: '#22304a', moonRim: '#c8d4e8',
+  ochreWall: '#7a5030', ochreDark: '#4a2c18', ochrePaint: '#2a1408',
+  waterTeal: '#1a3a48', waterMid: '#2a4e60', waterDrop: '#8ac8e0',
+  iceBlue: '#6a8aa0', iceMid: '#4a6a80', iceHighlight: '#c8d8e8',
+  redRock: '#6a2820', redRockMid: '#4a1810', redRockDark: '#2a1008',
+  stormGrey: '#3a3a44', stormMid: '#2a2a32', stormFlash: '#f8f4d8',
+  mossGreen: '#2a4028', mossDark: '#182818', mossLight: '#6a8a48',
+  sunsetOrange: '#8a4020', sunsetPink: '#a04a4a', sunsetPurple: '#3a2848',
+  fireGlow: '#ffb400', fireGlowFaint: '#8a5a10', fireBase: '#2a1408',
+  caveBackDark: '#1a1108', caveBackMid: '#2a1c10',
+  skinPale: '#c69a7b', skinMid: '#a67658', skinDark: '#7a4f34', skinAsh: '#8a6a54',
+  hairBlack: '#241a12', hairBlackHi: '#3a2a1c',
+  hairBrown: '#4a2c18', hairBrownHi: '#6a4028',
+  hairGrey: '#5a4a40', hairGreyHi: '#8a7a70',
+  hairRed: '#6a2810', hairRedHi: '#a04020',
+  furBrown: '#4d3020', furGrey: '#5a5048', furWhite: '#b8a898', furBlack: '#161010',
+  leafGreen: '#3a6a2c', bonePale: '#d8c8a8', clayRed: '#8a2820',
+  mudRed: '#8a2820', mudWhite: '#d8c8b0', mudBlack: '#0a0505', mudOchre: '#c88a30',
+  toothWhite: '#e8dcc0', eyeWhite: '#e8d8c0', eyeBlack: '#0a0505',
+  rockGrey: '#6a5c50', boneWhite: '#d8c8a8', stickBrown: '#4a3020',
+  gold: '#f4c542', goldDark: '#a67810',
+  berryRed: '#a01818', fishSilver: '#8ab0c0',
+};
+const SKIN = { pale: P.skinPale, mid: P.skinMid, dark: P.skinDark, ash: P.skinAsh };
+const HAIR = {
+  black: [P.hairBlack, P.hairBlackHi], brown: [P.hairBrown, P.hairBrownHi],
+  grey: [P.hairGrey, P.hairGreyHi], red: [P.hairRed, P.hairRedHi]
+};
+const PELT_COLOR = {
+  'brown pelt': P.furBrown, 'grey pelt': P.furGrey,
+  'black pelt': P.furBlack, 'white pelt': P.furWhite
+};
+const px = (x, y, w, h, c) =>
+  `<rect x="${x*SCALE}" y="${y*SCALE}" width="${w*SCALE}" height="${h*SCALE}" fill="${c}" shape-rendering="crispEdges"/>`;
+const darker = (hex, amt=32) => {
+  const r = Math.max(0, parseInt(hex.slice(1,3),16)-amt);
+  const g = Math.max(0, parseInt(hex.slice(3,5),16)-amt);
+  const b = Math.max(0, parseInt(hex.slice(5,7),16)-amt);
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+};
+const lighter = (hex, amt=24) => {
+  const r = Math.min(255, parseInt(hex.slice(1,3),16)+amt);
+  const g = Math.min(255, parseInt(hex.slice(3,5),16)+amt);
+  const b = Math.min(255, parseInt(hex.slice(5,7),16)+amt);
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+};
+
+function drawBackground(t) {
+  const parts = [];
+  const fills = {
+    'cold cave': [P.darkBlueBlack, P.darkBlueMid],
+    'moonlit cave': [P.moonBg, P.moonMid],
+    'cave paintings': [P.ochreWall, P.ochreDark],
+    'dripping water': [P.waterTeal, P.waterMid],
+    'fire glow': [P.fireBase, P.caveBackMid],
+    'ice cave': [P.iceMid, lighter(P.iceMid, 20)],
+    'red rock': [P.redRockMid, P.redRock],
+    'storm cave': [P.stormMid, P.stormGrey],
+    'moss cave': [P.mossDark, P.mossGreen],
+    'sunset mouth': [P.sunsetPurple, P.sunsetOrange],
+  };
+  const [base, mid] = fills[t.background] || fills['cold cave'];
+  parts.push(`<rect width="${W*SCALE}" height="${H*SCALE}" fill="${base}"/>`);
+  const rocks = [[0,0,4,3],[20,0,4,4],[0,28,3,4],[21,29,3,3],[10,0,3,2],[6,1,2,2],[16,2,2,2]];
+  for (const [x,y,w,h] of rocks) parts.push(px(x,y,w,h,mid));
+  const rim = lighter(base, 16);
+  parts.push(px(5,4,14,3,rim));
+  parts.push(px(4,7,16,1,rim));
+  if (t.background === 'fire glow') {
+    parts.push(px(0,22,W,10,P.fireGlowFaint));
+    parts.push(px(0,26,W,6,P.fireGlow));
+  } else if (t.background === 'moonlit cave') {
+    parts.push(px(18,1,4,4,P.moonRim));
+    parts.push(px(17,2,1,2,P.moonRim));
+    parts.push(px(22,2,1,2,P.moonRim));
+  } else if (t.background === 'cave paintings') {
+    parts.push(px(2,4,1,2,P.ochrePaint)); parts.push(px(2,6,1,4,P.ochrePaint));
+    parts.push(px(1,7,3,1,P.ochrePaint)); parts.push(px(2,10,1,3,P.ochrePaint));
+    parts.push(px(19,10,4,3,P.ochrePaint));
+  }
+  return parts.join('');
+}
+
+function drawHead(t) {
+  const parts = [];
+  const hx = 7, hy = 8, hw = 10, hh = 12;
+  const skin = SKIN[t.skin];
+  parts.push(px(hx,hy,hw,hh,skin));
+  parts.push(px(hx,hy+hh-1,hw,1,darker(skin,20)));
+  parts.push(px(hx,hy,1,hh,darker(skin,20)));
+  parts.push(px(hx+hw-1,hy,1,hh,darker(skin,20)));
+
+  const bc = darker(skin,64);
+  if (t.brow === 'heavy' || t.brow === 'ultra heavy') parts.push(px(hx+1,hy+2,hw-2,1,bc));
+  if (t.brow === 'ultra heavy' || t.brow === 'unibrow') parts.push(px(hx+1,hy+3,hw-2,1,bc));
+
+  const eyeY = hy + 4;
+  if (t.eyes === 'wide') {
+    parts.push(px(hx+2,eyeY,2,2,P.eyeWhite));
+    parts.push(px(hx+6,eyeY,2,2,P.eyeWhite));
+    parts.push(px(hx+3,eyeY,1,1,P.eyeBlack));
+    parts.push(px(hx+7,eyeY,1,1,P.eyeBlack));
+  } else if (t.eyes === 'small') {
+    parts.push(px(hx+3,eyeY,1,1,P.eyeBlack));
+    parts.push(px(hx+7,eyeY,1,1,P.eyeBlack));
+  } else {
+    parts.push(px(hx+2,eyeY+1,2,1,P.eyeBlack));
+    parts.push(px(hx+6,eyeY+1,2,1,P.eyeBlack));
+  }
+  parts.push(px(hx+4,hy+6,2,2,darker(skin)));
+  parts.push(px(hx+4,hy+6,1,1,darker(skin,48)));
+
+  const mY = hy + 9;
+  if (t.mouth === 'grunt') parts.push(px(hx+3,mY,4,1,P.mudBlack));
+  else if (t.mouth === 'yell') {
+    parts.push(px(hx+3,mY,4,2,P.mudBlack));
+    if (t.teeth !== 'none') parts.push(px(hx+4,mY,2,1,P.toothWhite));
+  } else if (t.mouth === 'oh') parts.push(px(hx+4,mY,2,2,P.mudBlack));
+  else parts.push(px(hx+3,mY+1,4,1,P.mudBlack));
+
+  if (t.teeth === 'one') parts.push(px(hx+5,mY+1,1,1,P.toothWhite));
+  else if (t.teeth === 'some') {
+    parts.push(px(hx+4,mY+1,1,1,P.toothWhite));
+    parts.push(px(hx+6,mY+1,1,1,P.toothWhite));
+  } else if (t.teeth === 'all') parts.push(px(hx+3,mY+1,4,1,P.toothWhite));
+
+  if (t.facePaint === 'red stripe') parts.push(px(hx+1,hy+6,hw-2,1,P.mudRed));
+  else if (t.facePaint === 'ochre line') parts.push(px(hx,hy+5,hw,1,P.mudOchre));
+  else if (t.facePaint === 'black dots') {
+    parts.push(px(hx+2,hy+7,1,1,P.mudBlack));
+    parts.push(px(hx+5,hy+7,1,1,P.mudBlack));
+    parts.push(px(hx+8,hy+7,1,1,P.mudBlack));
+  } else if (t.facePaint === 'white handprint') {
+    parts.push(px(hx+2,hy+5,1,3,P.mudWhite));
+    parts.push(px(hx+3,hy+5,1,4,P.mudWhite));
+    parts.push(px(hx+4,hy+5,1,3,P.mudWhite));
+  }
+  return parts.join('');
+}
+
+function drawHair(t) {
+  if (t.hairStyle === 'bald') return '';
+  const [c, hi] = HAIR[t.hairColor];
+  const hx = 7, hy = 8;
+  const parts = [];
+  if (t.hairStyle === 'wild') {
+    parts.push(px(hx-1,hy-2,12,3,c));
+    parts.push(px(hx-2,hy-1,2,4,c));
+    parts.push(px(hx+10,hy-1,2,4,c));
+    parts.push(px(hx+1,hy-3,2,1,c));
+    parts.push(px(hx+7,hy-3,2,1,c));
+    parts.push(px(hx+2,hy-2,1,1,hi));
+  } else if (t.hairStyle === 'matted') {
+    parts.push(px(hx-1,hy-1,12,3,c));
+    parts.push(px(hx-1,hy+2,1,5,c));
+    parts.push(px(hx+10,hy+2,1,5,c));
+    parts.push(px(hx+2,hy,2,1,hi));
+  } else if (t.hairStyle === 'spiky') {
+    parts.push(px(hx-1,hy-1,12,1,c));
+    for (let i = 0; i < 6; i++) parts.push(px(hx-1+i*2,hy-3,1,2,c));
+    parts.push(px(hx+1,hy-2,1,1,hi));
+  } else if (t.hairStyle === 'tuft') {
+    parts.push(px(hx+3,hy-3,4,3,c));
+    parts.push(px(hx+2,hy-1,6,1,c));
+    parts.push(px(hx+4,hy-2,1,1,hi));
+  } else if (t.hairStyle === 'mohawk') {
+    parts.push(px(hx+4,hy-4,2,6,c));
+    parts.push(px(hx+3,hy-3,1,1,c));
+    parts.push(px(hx+6,hy-3,1,1,c));
+    parts.push(px(hx+4,hy-3,1,1,hi));
+  }
+  return parts.join('');
+}
+
+function drawHat(t) {
+  const h = t.hat;
+  if (h === 'none') return '';
+  const parts = [];
+  if (h === 'leaf') {
+    parts.push(px(9,6,6,2,P.leafGreen));
+    parts.push(px(10,5,4,1,P.leafGreen));
+    parts.push(px(11,4,2,1,P.leafGreen));
+  } else if (h === 'straw thatch') {
+    parts.push(px(6,7,12,2,P.mudOchre));
+    parts.push(px(7,5,10,2,P.mudOchre));
+    parts.push(px(8,4,8,1,P.mudOchre));
+  } else if (h === 'skull cap') {
+    parts.push(px(7,7,10,2,P.bonePale));
+    parts.push(px(8,5,8,2,P.bonePale));
+    parts.push(px(9,6,2,1,P.mudBlack));
+    parts.push(px(13,6,2,1,P.mudBlack));
+  } else if (h === 'fur cap') {
+    parts.push(px(6,7,12,2,P.furBrown));
+    parts.push(px(7,4,10,3,P.furBrown));
+    parts.push(px(8,3,8,1,P.furBrown));
+  } else if (h === 'bone crown') {
+    parts.push(px(6,8,12,1,P.bonePale));
+    parts.push(px(6,7,12,1,P.bonePale));
+    parts.push(px(7,5,1,2,P.bonePale));
+    parts.push(px(10,4,1,3,P.bonePale));
+    parts.push(px(13,4,1,3,P.bonePale));
+    parts.push(px(16,5,1,2,P.bonePale));
+  } else if (h === 'feather') {
+    parts.push(px(7,7,10,1,P.stickBrown));
+    parts.push(px(7,8,10,1,darker(P.stickBrown)));
+    parts.push(px(11,2,1,6,P.hairRed));
+    parts.push(px(10,3,1,3,P.hairRed));
+    parts.push(px(12,3,1,3,P.hairRed));
+  } else if (h === 'antlers') {
+    parts.push(px(7,7,10,1,P.stickBrown));
+    parts.push(px(7,8,10,1,darker(P.stickBrown)));
+    parts.push(px(5,2,1,5,P.bonePale));
+    parts.push(px(3,4,2,1,P.bonePale));
+    parts.push(px(4,6,2,1,P.bonePale));
+    parts.push(px(18,2,1,5,P.bonePale));
+    parts.push(px(19,4,2,1,P.bonePale));
+    parts.push(px(18,6,2,1,P.bonePale));
+  } else if (h === 'mammoth tusk') {
+    parts.push(px(7,8,10,1,P.stickBrown));
+    parts.push(px(5,7,14,1,P.bonePale));
+    parts.push(px(4,6,2,1,P.bonePale));
+    parts.push(px(18,6,2,1,P.bonePale));
+  } else if (h === 'golden crown') {
+    parts.push(px(6,7,12,2,P.gold));
+    parts.push(px(6,5,1,2,P.gold));
+    parts.push(px(9,4,1,3,P.gold));
+    parts.push(px(12,3,1,4,P.gold));
+    parts.push(px(15,4,1,3,P.gold));
+    parts.push(px(17,5,1,2,P.gold));
+    parts.push(px(7,8,10,1,P.goldDark));
+    parts.push(px(12,4,1,1,'#fff8d0'));
+  }
+  return parts.join('');
+}
+
+function drawItemAt(item, ax, ay) {
+  const parts = [];
+  if (item === 'club') {
+    parts.push(px(ax-1,ay-8,2,10,P.stickBrown));
+    parts.push(px(ax-2,ay-10,4,3,P.rockGrey));
+  } else if (item === 'rock') {
+    parts.push(px(ax-2,ay-3,4,4,P.rockGrey));
+  } else if (item === 'bone') {
+    parts.push(px(ax-1,ay-9,2,10,P.boneWhite));
+    parts.push(px(ax-2,ay-10,4,2,P.boneWhite));
+    parts.push(px(ax-2,ay-1,4,2,P.boneWhite));
+  } else if (item === 'stick') {
+    parts.push(px(ax,ay-11,1,12,P.stickBrown));
+  } else if (item === 'torch') {
+    parts.push(px(ax,ay-7,1,8,P.stickBrown));
+    parts.push(px(ax-1,ay-11,3,4,P.fireGlow));
+    parts.push(px(ax,ay-13,1,2,P.fireGlow));
+  } else if (item === 'spear') {
+    parts.push(px(ax,ay-9,1,10,P.stickBrown));
+    parts.push(px(ax-1,ay-12,3,2,P.rockGrey));
+    parts.push(px(ax,ay-13,1,1,P.rockGrey));
+  } else if (item === 'berry basket') {
+    parts.push(px(ax-2,ay-3,5,4,P.stickBrown));
+    parts.push(px(ax-1,ay-5,4,1,P.berryRed));
+    parts.push(px(ax,ay-6,2,1,P.berryRed));
+  } else if (item === 'fish') {
+    parts.push(px(ax-2,ay-2,4,3,P.fishSilver));
+    parts.push(px(ax+2,ay-3,1,5,P.fishSilver));
+    parts.push(px(ax-1,ay-1,1,1,P.eyeBlack));
+  } else if (item === 'mammoth tooth') {
+    parts.push(px(ax-2,ay-7,5,8,P.bonePale));
+    parts.push(px(ax,ay-4,2,3,darker(P.bonePale)));
+  } else if (item === 'pet rock') {
+    parts.push(px(ax-2,ay-3,4,4,P.rockGrey));
+    parts.push(px(ax-1,ay-2,1,1,P.eyeBlack));
+    parts.push(px(ax+1,ay-2,1,1,P.eyeBlack));
+    parts.push(px(ax-1,ay,3,1,P.mudBlack));
+  } else if (item === 'drumstick') {
+    parts.push(px(ax-2,ay-6,5,4,P.mudRed));
+    parts.push(px(ax,ay-2,1,4,P.bonePale));
+    parts.push(px(ax-1,ay+1,3,1,P.bonePale));
+  } else if (item === 'shiny rock') {
+    parts.push(px(ax-2,ay-3,4,4,P.gold));
+    parts.push(px(ax-1,ay-3,1,1,'#fff8d0'));
+  } else if (item === '__log__') {
+    // A stubby log carried horizontally at the hand
+    parts.push(px(ax-3,ay-2,6,3,'#4a2818'));
+    parts.push(px(ax-3,ay-2,6,1,'#6a4028'));
+    parts.push(px(ax-3,ay,1,1,'#2a1808'));
+    parts.push(px(ax+2,ay,1,1,'#2a1808'));
+    parts.push(px(ax-3,ay-1,1,1,'#3a1e10'));
+    parts.push(px(ax+2,ay-1,1,1,'#3a1e10'));
+  }
+  return parts.join('');
+}
+
+function clothingFill(t) {
+  const c = t.clothing;
+  if (c === 'naked') return { fill: SKIN[t.skin], notch: false };
+  if (c === 'leaf wrap') return { fill: P.leafGreen, notch: true };
+  if (c === 'bone armor') return { fill: P.bonePale, notch: false, ribs: true };
+  if (c === 'tribal painted') return { fill: SKIN[t.skin], notch: false, paint: true };
+  return { fill: PELT_COLOR[c] || P.furBrown, notch: true };
+}
+
+function drawBody(t, walkPhase = null) {
+  const legs = t.legs || 'bare';
+  const parts = [];
+  const skin = SKIN[t.skin];
+  const sShade = darker(skin);
+  const sDeep = darker(skin, 48);
+  const cf = clothingFill(t);
+
+  parts.push(px(11,20,2,1,skin));
+  parts.push(px(11,20,1,1,sShade));
+  parts.push(px(8,21,8,1,skin));
+  parts.push(px(6,22,12,1,skin));
+  parts.push(px(8,21,1,1,sShade));
+  parts.push(px(15,21,1,1,sShade));
+
+  parts.push(px(5,23,14,4,cf.fill));
+  parts.push(px(5,23,14,1,lighter(cf.fill,12)));
+  parts.push(px(5,23,1,4,lighter(cf.fill,8)));
+  parts.push(px(18,23,1,4,darker(cf.fill,12)));
+
+  if (cf.ribs) for (let y=24; y<=26; y+=2) parts.push(px(5,y,14,1,darker(cf.fill)));
+  if (cf.paint) {
+    parts.push(px(7,24,3,1,P.clayRed));
+    parts.push(px(13,25,4,1,P.clayRed));
+    parts.push(px(9,26,2,1,P.mudWhite));
+  }
+
+  if (cf.notch) {
+    for (const [x,w] of [[5,2],[8,3],[12,2],[15,3]]) parts.push(px(x,27,w,1,cf.fill));
+  }
+  parts.push(px(7,27,3,2,skin));
+  parts.push(px(14,27,3,2,skin));
+  parts.push(px(7,28,1,1,sShade));
+  parts.push(px(14,28,1,1,sShade));
+  parts.push(px(9,27,1,1,sShade));
+  parts.push(px(16,27,1,1,sShade));
+  // Feet — swap based on walk phase (null = neutral standing)
+  if (walkPhase === 1) {
+    // Left foot forward + lifted, right foot back planted
+    parts.push(px(7,28,5,1,skin));
+    parts.push(px(7,29,5,1,sDeep));
+    parts.push(px(12,29,5,1,skin));
+    parts.push(px(12,30,5,1,sDeep));
+  } else if (walkPhase === 3) {
+    // Right foot forward + lifted, left foot back planted
+    parts.push(px(5,29,5,1,skin));
+    parts.push(px(5,30,5,1,sDeep));
+    parts.push(px(14,28,5,1,skin));
+    parts.push(px(14,29,5,1,sDeep));
+  } else {
+    // Neutral (phase 0/2 or null)
+    parts.push(px(6,29,5,1,skin));
+    parts.push(px(13,29,5,1,skin));
+    parts.push(px(6,30,5,1,sDeep));
+    parts.push(px(13,30,5,1,sDeep));
+  }
+
+  parts.push(px(4,23,1,4,skin));
+  parts.push(px(3,25,2,3,skin));
+  parts.push(px(3,25,1,3,sShade));
+  parts.push(px(4,27,1,1,sDeep));
+
+  if (t.item !== 'none' && t.item) {
+    parts.push(px(19,23,1,2,skin));
+    parts.push(px(19,25,2,1,skin));
+    parts.push(px(20,22,2,4,skin));
+    parts.push(px(20,21,2,1,skin));
+    parts.push(px(20,21,1,4,lighter(skin,8)));
+    parts.push(drawItemAt(t.item, 21, 21));
+  } else {
+    parts.push(px(19,23,1,4,skin));
+    parts.push(px(19,25,2,3,skin));
+    parts.push(px(20,25,1,3,sShade));
+    parts.push(px(19,27,1,1,sDeep));
+  }
+  return parts.join('');
+}
+
+function renderGrug(t) {
+  const body = drawBackground(t) + drawBody(t) + drawHead(t) + drawHair(t) + drawHat(t);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W*SCALE} ${H*SCALE}" preserveAspectRatio="xMidYMid meet" style="image-rendering:pixelated;display:block">${body}</svg>`;
+}
+// Character-only render — no cave background. For walkers on the site.
+function renderGrugSprite(t) {
+  const body = drawBody(t) + drawHead(t) + drawHair(t) + drawHat(t);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W*SCALE} ${H*SCALE}" preserveAspectRatio="xMidYMax meet" style="image-rendering:pixelated;display:block;overflow:visible">${body}</svg>`;
+}
+// Grug carrying a log (log slung at the hand position)
+function renderGrugWithLog(t) {
+  const withLog = { ...t, item: '__log__' };
+  const body = drawBody(withLog) + drawHead(withLog) + drawHair(withLog) + drawHat(withLog);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W*SCALE} ${H*SCALE}" preserveAspectRatio="xMidYMax meet" style="image-rendering:pixelated;display:block;overflow:visible">${body}</svg>`;
+}
+// Walking sprite — returns a 4-frame walk cycle wrapper.
+// CSS animates translateX(0 → -100%) with steps(4) to flip between frames.
+function renderGrugWalking(t, opts = {}) {
+  const { withLog = false } = opts;
+  const traits = withLog ? { ...t, item: '__log__' } : t;
+  const frames = [0, 1, 2, 3].map(phase => {
+    const body = drawBody(traits, phase) + drawHead(traits) + drawHair(traits) + drawHat(traits);
+    return `<div class="wf"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W*SCALE} ${H*SCALE}" preserveAspectRatio="xMidYMax meet" style="image-rendering:pixelated;display:block;width:100%;height:100%;overflow:visible">${body}</svg></div>`;
+  });
+  return `<div class="walk-wrap"><div class="walk-cycle">${frames.join('')}</div></div>`;
+}
+
+/* ============================================================
+   RANDOM GRUG (weighted)
+   ============================================================ */
+const POOLS = {
+  skin: [['pale',25],['mid',35],['dark',30],['ash',10]],
+  brow: [['heavy',55],['ultra heavy',35],['unibrow',10]],
+  eyes: [['small',45],['wide',40],['squint',15]],
+  mouth: [['closed',40],['grunt',35],['oh',15],['yell',10]],
+  teeth: [['some',45],['one',30],['all',15],['none',10]],
+  facePaint: [['none',50],['red stripe',20],['ochre line',15],['black dots',10],['white handprint',5]],
+  hairColor: [['black',40],['brown',35],['grey',15],['red',10]],
+  hairStyle: [['wild',30],['matted',25],['tuft',18],['spiky',14],['mohawk',8],['bald',5]],
+  hat: [['none',45],['leaf',15],['straw thatch',10],['skull cap',8],['fur cap',7],['bone crown',5],['feather',4],['antlers',3],['mammoth tusk',2],['golden crown',1]],
+  clothing: [['brown pelt',30],['grey pelt',25],['black pelt',15],['leaf wrap',12],['white pelt',8],['bone armor',6],['tribal painted',3],['naked',1]],
+  item: [['none',20],['club',15],['stick',12],['rock',10],['bone',9],['torch',7],['spear',6],['berry basket',5],['fish',5],['mammoth tooth',4],['pet rock',4],['drumstick',2],['shiny rock',1]],
+  background: [['cold cave',50],['moonlit cave',20],['cave paintings',15],['dripping water',8],['fire glow',7]],
+};
+
+function pickWeighted(pool) {
+  const total = pool.reduce((s, [,w]) => s+w, 0);
+  let r = Math.random() * total;
+  for (const [val, w] of pool) {
+    r -= w;
+    if (r <= 0) return val;
+  }
+  return pool[0][0];
+}
+function randomGrug() {
+  const t = {};
+  for (const k of Object.keys(POOLS)) t[k] = pickWeighted(POOLS[k]);
+  if (t.hairStyle === 'mohawk' && t.hat === 'antlers') t.hat = 'feather';
+  if (t.hairStyle === 'mohawk' && t.hat === 'bone crown') t.hat = 'skull cap';
+  if (t.item === 'shiny rock' && t.hat === 'golden crown') t.item = 'rock';
+  return t;
+}
+
+/* ============================================================
+   SITE STATE
+   ============================================================ */
+const NAMES = ['sticky','stone','big','ug','glug','oog','rok','moss','mud','flint','ash','ember','tuk','bonk','klop'];
+function makeGrug(seed) {
+  const traits = randomGrug();
+  const id = '#' + String(Math.floor(1 + Math.random()*9999)).padStart(4,'0');
+  const name = Math.random() < 0.7 ? NAMES[Math.floor(Math.random()*NAMES.length)] : '(no name)';
+  return { id, name, traits, logs: Math.floor(Math.random()*30), smashes: Math.floor(Math.random()*30), ready: true };
+}
+// Sample tribe (shown on home page — random showcase, not user-owned)
+const grugs = Array.from({length: 4}, () => makeGrug());
+// User's actual wallet contents — starts empty until real wallet is wired
+let walletGrugs = [];
+
+/* ============================================================
+   LEGENDARY GRUGS — top 100 by rarity score
+   Generate a large candidate pool, sort by inverse-weight rarity,
+   keep the 100 rarest to rotate through on the mint altar.
+   ============================================================ */
+const RARITY_WEIGHTS = {
+  skin:      {'pale':25,'mid':35,'dark':30,'ash':10},
+  brow:      {'heavy':55,'ultra heavy':35,'unibrow':10},
+  eyes:      {'small':45,'wide':40,'squint':15},
+  mouth:     {'closed':40,'grunt':35,'oh':15,'yell':10},
+  teeth:     {'some':45,'one':30,'all':15,'none':10},
+  facePaint: {'none':50,'red stripe':20,'ochre line':15,'black dots':10,'white handprint':5},
+  hairColor: {'black':40,'brown':35,'grey':15,'red':10},
+  hairStyle: {'wild':30,'matted':25,'tuft':18,'spiky':14,'mohawk':8,'bald':5},
+  hat:       {'none':45,'leaf':15,'straw thatch':10,'skull cap':8,'fur cap':7,'bone crown':5,'feather':4,'antlers':3,'mammoth tusk':2,'golden crown':1},
+  clothing:  {'brown pelt':30,'grey pelt':25,'black pelt':15,'leaf wrap':12,'white pelt':8,'bone armor':6,'tribal painted':3,'naked':1},
+  item:      {'none':20,'club':15,'stick':12,'rock':10,'bone':9,'torch':7,'spear':6,'berry basket':5,'fish':5,'mammoth tooth':4,'pet rock':4,'drumstick':2,'shiny rock':1},
+  background:{'cold cave':50,'moonlit cave':20,'cave paintings':15,'dripping water':8,'fire glow':7},
+};
+function rarityScore(t) {
+  let s = 0;
+  for (const k of Object.keys(RARITY_WEIGHTS)) {
+    const w = RARITY_WEIGHTS[k][t[k]];
+    if (w) s += 1 / w;
+  }
+  return s;
+}
+function computeLegendaryGrugs() {
+  const candidates = [];
+  for (let i = 0; i < 3000; i++) {
+    const t = randomGrug();
+    candidates.push({ traits: t, score: rarityScore(t), id: 1 + Math.floor(Math.random() * 9999) });
+  }
+  candidates.sort((a, b) => b.score - a.score);
+  return candidates.slice(0, 100);
+}
+const LEGENDARY_GRUGS = computeLegendaryGrugs();
+
+/* ============================================================
+   TAB SYSTEM
+   ============================================================ */
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === id));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === id));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+
+/* ============================================================
+   CARD RENDER
+   ============================================================ */
+function cardHTML(g, i, action) {
+  const svg = renderGrug(g.traits);
+  const metric = action === 'fetch'
+    ? `logs fetched: <b>${g.logs}</b>`
+    : `machines smashed: <b>${g.smashes}</b>`;
+  const btnLabel = g.ready
+    ? (action === 'fetch' ? 'send fetch log' : 'send smash machine')
+    : 'grug tired. wait.';
+  const btnClass = action === 'smash' ? 'grug-action smash' : 'grug-action';
+  return `
+    <div class="grug-card" data-index="${i}" data-action-owner="${action}">
+      <div class="grug-portrait">${svg}</div>
+      <div class="grug-id">grug ${g.id}</div>
+      <div class="grug-name">${g.name}</div>
+      <p class="grug-meta">${metric}</p>
+      <button class="${btnClass}" ${!g.ready ? 'disabled' : ''} data-index="${i}" data-action="${action}">
+        ${btnLabel}
+      </button>
+    </div>
+  `;
+}
+function tribeCardHTML(g, i) {
+  return `
+    <div class="grug-card">
+      <div class="grug-portrait">${renderGrug(g.traits)}</div>
+      <div class="grug-id">grug ${g.id}</div>
+      <div class="grug-name">${g.name}</div>
+      <p class="grug-meta">${g.logs} logs · ${g.smashes} smashes</p>
+    </div>
+  `;
+}
+function emptyGrugsHTML() {
+  const connected = document.getElementById('connect-btn')?.dataset.connected;
+  if (!connected) {
+    return `
+      <div class="empty-grugs">
+        <div class="empty-grugs-icon">?</div>
+        <p class="empty-grugs-title">grug not know you.</p>
+        <p class="empty-grugs-body">connect wallet. grug then see grug you own.</p>
+      </div>`;
+  }
+  return `
+    <div class="empty-grugs">
+      <div class="empty-grugs-icon">0</div>
+      <p class="empty-grugs-title">no grug in cave.</p>
+      <p class="empty-grugs-body">you have no grug yet. get grug to see grug here.</p>
+      <button class="cta cta-secondary" style="margin-top: 18px;" onclick="showTab('mint')">GET GRUG</button>
+    </div>`;
+}
+function renderGrids() {
+  const tribe = document.getElementById('tribe-grid');
+  const logGrid = document.getElementById('grugs-log-grid');
+  if (tribe) tribe.innerHTML = grugs.map((g, i) => tribeCardHTML(g, i)).join('');
+  if (logGrid) {
+    if (walletGrugs.length === 0) {
+      logGrid.innerHTML = emptyGrugsHTML();
+      logGrid.classList.add('empty');
+    } else {
+      logGrid.classList.remove('empty');
+      logGrid.innerHTML = walletGrugs.map((g, i) => cardHTML(g, i, 'fetch')).join('');
+    }
+  }
+}
+
+/* ============================================================
+   MINT PREVIEW STRIP (6 mini grugs)
+   ============================================================ */
+function renderMintPreview() {
+  const el = document.getElementById('mint-preview');
+  if (!el) return;
+  const previews = Array.from({length: 6}, () => randomGrug());
+  el.innerHTML = previews.map(t => `<div class="grug-mini">${renderGrug(t)}</div>`).join('');
+}
+
+/* ============================================================
+   INTERACTIONS
+   ============================================================ */
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.grug-action[data-action]');
+  if (!btn || btn.disabled) return;
+  const i = parseInt(btn.dataset.index, 10);
+  const action = btn.dataset.action;
+  // Fetch cards now come from the user's wallet inventory
+  const g = action === 'fetch' ? walletGrugs[i] : grugs[i];
+  if (!g) return;
+  const card = btn.closest('.grug-card');
+
+  if (action === 'fetch') {
+    // Animate grug walking off
+    card.classList.add('busy');
+    spawnFloat(card, '+1 log', 'torch');
+    setTimeout(() => card.classList.remove('busy'), 1400);
+    // Log-thud sound plays when the log lands
+    setTimeout(() => sound.logThud(), 900);
+
+    g.logs += 1;
+    g.ready = false;
+    setTimeout(() => { g.ready = true; renderGrids(); }, 5000);
+
+    const el = document.getElementById('log-count');
+    if (el) {
+      const cur = parseInt(el.textContent.replace(/,/g,''),10);
+      const next = cur + 1;
+      el.textContent = next.toLocaleString();
+      document.getElementById('hud-logs').textContent = next.toLocaleString();
+      const barCount = document.getElementById('log-bar-count');
+      const barFill = document.getElementById('log-bar-fill');
+      if (barCount) barCount.textContent = next.toLocaleString();
+      if (barFill) barFill.style.width = Math.min(100, next / 10000 * 100).toFixed(2) + '%';
+      addLogToPile();
+    }
+  }
+  if (action === 'smash') {
+    card.classList.add('smashing');
+    setTimeout(() => card.classList.remove('smashing'), 550);
+    spawnFloat(card, '+1 smash', 'moss');
+    sound.smash();
+    wlRecordSmash();
+
+    g.smashes += 1;
+    const m = document.getElementById('machine');
+    if (m) {
+      m.classList.remove('smashing');
+      void m.offsetWidth;
+      m.classList.add('smashing');
+      spawnSmashParticles();
+      setTimeout(() => m.classList.remove('smashing'), 600);
+    }
+    // Update counts
+    const sel = document.getElementById('smash-count');
+    if (sel) {
+      const cur = parseInt(sel.textContent.replace(/,/g,''),10);
+      const next = cur + 1;
+      sel.textContent = next.toLocaleString();
+      const barCount = document.getElementById('smash-bar-count');
+      const barFill = document.getElementById('smash-bar-fill');
+      if (barCount) barCount.textContent = next.toLocaleString();
+      if (barFill) barFill.style.width = Math.min(100, next / 20000 * 100).toFixed(2) + '%';
+    }
+    const hud = document.getElementById('hud-smash');
+    if (hud) {
+      const cur = parseInt(hud.textContent.replace(/,/g,''),10);
+      hud.textContent = (cur+1).toLocaleString();
+    }
+  }
+  renderGrids();
+});
+
+function spawnFloat(card, text, cls='torch') {
+  const f = document.createElement('div');
+  f.className = 'floating-plus ' + (cls === 'moss' ? 'moss' : '');
+  f.textContent = text;
+  card.appendChild(f);
+  setTimeout(() => f.remove(), 1200);
+}
+
+function spawnSmashParticles() {
+  const wrap = document.getElementById('machine-wrap');
+  if (!wrap) return;
+  const centerX = wrap.offsetWidth / 2;
+  const centerY = wrap.offsetHeight / 2;
+  for (let i = 0; i < 10; i++) {
+    const p = document.createElement('div');
+    p.className = 'smash-particle';
+    p.style.left = centerX + 'px';
+    p.style.top = centerY + 'px';
+    const angle = (Math.PI * 2) * (i / 10);
+    const dist = 60 + Math.random() * 40;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    p.style.transition = 'transform 0.6s ease-out, opacity 0.6s ease-out';
+    wrap.appendChild(p);
+    requestAnimationFrame(() => {
+      p.style.transform = `translate(${dx}px, ${dy}px) rotate(${Math.random()*360}deg)`;
+      p.style.opacity = '0';
+    });
+    setTimeout(() => p.remove(), 700);
+  }
+}
+
+function mockMint(kind) {
+  if (kind === 'wl') alert('grug check tribe list. you not in yet. put twitter and wallet in form.');
+  else alert('grug wallet not connect. grug not know who you are yet.');
+}
+
+/* ============================================================
+   WALKERS — spawn random-timed grug sprites (no cave frame)
+   ============================================================ */
+function spawnWalkers(container, count, opts = {}) {
+  const { withLogChance = 0, mixedDepth = true } = opts;
+  for (let i = 0; i < count; i++) {
+    const g = document.createElement('div');
+    g.className = 'walker';
+    const dur = 20 + Math.random() * 14;
+    const delay = -Math.random() * dur;
+    g.style.animationDuration = dur + 's';
+    g.style.animationDelay = delay + 's';
+    if (Math.random() > 0.5) {
+      g.classList.add('rtl');
+      g.style.animationDirection = 'reverse';
+    }
+    // Depth: some walk in front of focal object (fire/pile/machine), some behind.
+    // Grug behind the pile is obscured when it passes; grug in front walks across it.
+    if (mixedDepth) {
+      g.style.zIndex = Math.random() < 0.4 ? 5 : 2;
+    }
+    const traits = randomGrug();
+    const withLog = Math.random() < withLogChance;
+    g.innerHTML = renderGrugWalking(traits, { withLog });
+    container.appendChild(g);
+  }
+}
+
+/* ============================================================
+   SPEECH BUBBLES — random walker interactions
+   ============================================================ */
+const GRUG_SAYS = [
+  'grug!', 'hate machine!', 'cave warm.', 'want log.',
+  'grug tired.', 'you see fire?', 'rock friend.', 'grug hungry.',
+  'no machine!', 'big brain.', 'grug sleep.', 'tribe good.',
+  'ugh.', 'grug make fire?', 'why beep?', 'grug find rock.',
+  'no yield.', 'log heavy.', 'grug smart.', 'grug not smart.',
+  'today good day.', 'machine bad.', 'grug like grug.',
+];
+function chatBubble(walker, text, holdMs = 2400) {
+  if (!walker || walker.classList.contains('talking')) return;
+  walker.classList.add('talking');
+  const wrap = walker.querySelector('.walk-wrap') || walker;
+  const bubble = document.createElement('div');
+  bubble.className = 'speech-bubble';
+  bubble.textContent = text;
+  walker.appendChild(bubble);
+  setTimeout(() => {
+    bubble.remove();
+    walker.classList.remove('talking');
+  }, holdMs);
+}
+function scheduleChat(scene, minMs = 6000, maxMs = 14000) {
+  if (!scene) return;
+  const tick = () => {
+    // Only run when the scene's containing tab is active
+    const view = scene.closest('.view');
+    if (view && view.classList.contains('active')) {
+      const walkers = Array.from(scene.querySelectorAll('.walker:not(.talking)'));
+      if (walkers.length >= 2) {
+        // Pick two walkers close-ish to each other in horizontal position for realism
+        walkers.sort((a, b) => {
+          const ax = a.getBoundingClientRect().left;
+          const bx = b.getBoundingClientRect().left;
+          return ax - bx;
+        });
+        // Pick an adjacent pair
+        const i = Math.floor(Math.random() * (walkers.length - 1));
+        const a = walkers[i];
+        const b = walkers[i + 1];
+        // Only chat if they're close enough
+        const ax = a.getBoundingClientRect().left;
+        const bx = b.getBoundingClientRect().left;
+        if (Math.abs(ax - bx) < 200) {
+          const [say1, say2] = pickTwoSayings();
+          chatBubble(a, say1, 2600);
+          setTimeout(() => chatBubble(b, say2, 2200), 900);
+        }
+      }
+    }
+    const next = minMs + Math.random() * (maxMs - minMs);
+    setTimeout(tick, next);
+  };
+  setTimeout(tick, minMs + Math.random() * (maxMs - minMs));
+}
+function pickTwoSayings() {
+  const a = GRUG_SAYS[Math.floor(Math.random() * GRUG_SAYS.length)];
+  let b;
+  do { b = GRUG_SAYS[Math.floor(Math.random() * GRUG_SAYS.length)]; } while (b === a);
+  return [a, b];
+}
+
+/* ============================================================
+   CAVE DECOR — cobwebs, stalactites, paintings, dust motes
+   Applied to every hero scene automatically
+   ============================================================ */
+function cobwebSVG() {
+  return `<svg class="cave-cobweb left" viewBox="0 0 120 90" fill="none" stroke="currentColor" stroke-width="0.8">
+    <path d="M0,0 L120,55"/><path d="M0,0 L115,85"/>
+    <path d="M0,0 L80,90"/><path d="M0,0 L45,90"/>
+    <path d="M0,0 L120,20"/><path d="M0,0 L118,38"/>
+    <path d="M14,5 Q24,20 6,26"/>
+    <path d="M40,10 Q56,36 18,50"/>
+    <path d="M70,20 Q92,55 32,78"/>
+    <path d="M100,32 Q115,72 60,88"/>
+  </svg>`;
+}
+function stalactiteSVG(leftPct, size = 26) {
+  // Uneven jagged stalactite made of pixel rects
+  return `<div class="stalactite" style="left:${leftPct}%;width:${size}px">
+    <svg viewBox="0 0 12 22" preserveAspectRatio="xMidYMin meet">
+      <rect x="2" y="0" width="8" height="3" fill="#2a1a12"/>
+      <rect x="3" y="3" width="6" height="3" fill="#3a2818"/>
+      <rect x="4" y="6" width="4" height="3" fill="#3a2818"/>
+      <rect x="4" y="9" width="4" height="3" fill="#2a1a12"/>
+      <rect x="5" y="12" width="2" height="3" fill="#2a1a12"/>
+      <rect x="5" y="15" width="2" height="2" fill="#4a3020"/>
+      <rect x="5" y="17" width="1" height="1" fill="#5a3a20"/>
+    </svg>
+  </div>`;
+}
+function cavePaintingLeftSVG() {
+  return `<svg class="cave-painting left" width="140" height="80" viewBox="0 0 70 40" style="image-rendering:pixelated">
+    <!-- Red handprint (ochre) -->
+    <g fill="#8a3818">
+      <rect x="2" y="14" width="10" height="8"/>
+      <rect x="3" y="10" width="2" height="4"/>
+      <rect x="6" y="8"  width="2" height="6"/>
+      <rect x="9" y="10" width="2" height="4"/>
+    </g>
+    <!-- Grug stick figure with club -->
+    <g fill="#8a3818">
+      <rect x="22" y="4"  width="4" height="4"/>
+      <rect x="23" y="8"  width="2" height="8"/>
+      <rect x="20" y="10" width="3" height="2"/>
+      <rect x="25" y="10" width="6" height="2"/>
+      <rect x="30" y="8"  width="2" height="6"/>
+      <rect x="20" y="16" width="2" height="6"/>
+      <rect x="25" y="16" width="2" height="6"/>
+    </g>
+    <!-- Mammoth (stick) -->
+    <g fill="#5a2810">
+      <rect x="42" y="18" width="18" height="8"/>
+      <rect x="40" y="20" width="2"  height="4"/>
+      <rect x="60" y="20" width="2"  height="6"/>
+      <rect x="44" y="26" width="2"  height="4"/>
+      <rect x="50" y="26" width="2"  height="4"/>
+      <rect x="56" y="26" width="2"  height="4"/>
+      <rect x="42" y="16" width="4"  height="2"/>
+    </g>
+  </svg>`;
+}
+function cavePaintingRightSVG() {
+  return `<svg class="cave-painting right" width="120" height="70" viewBox="0 0 60 35" style="image-rendering:pixelated">
+    <!-- Sun with rays -->
+    <g fill="#a04020">
+      <rect x="8"  y="8"  width="6" height="6"/>
+      <rect x="10" y="4"  width="2" height="2"/>
+      <rect x="10" y="16" width="2" height="2"/>
+      <rect x="4"  y="10" width="2" height="2"/>
+      <rect x="16" y="10" width="2" height="2"/>
+      <rect x="4"  y="4"  width="2" height="2"/>
+      <rect x="16" y="4"  width="2" height="2"/>
+      <rect x="4"  y="16" width="2" height="2"/>
+      <rect x="16" y="16" width="2" height="2"/>
+    </g>
+    <!-- Two tiny stick people -->
+    <g fill="#8a3818">
+      <rect x="28" y="18" width="2" height="2"/>
+      <rect x="28" y="20" width="2" height="6"/>
+      <rect x="26" y="22" width="2" height="2"/>
+      <rect x="30" y="22" width="2" height="2"/>
+      <rect x="26" y="26" width="2" height="4"/>
+      <rect x="30" y="26" width="2" height="4"/>
+      <rect x="38" y="16" width="2" height="2"/>
+      <rect x="38" y="18" width="2" height="8"/>
+      <rect x="36" y="20" width="2" height="2"/>
+      <rect x="40" y="20" width="2" height="2"/>
+      <rect x="36" y="26" width="2" height="4"/>
+      <rect x="40" y="26" width="2" height="4"/>
+    </g>
+  </svg>`;
+}
+function dustMotesHTML() {
+  const html = [];
+  for (let i = 0; i < 14; i++) {
+    const x = Math.floor(Math.random() * 100);
+    const y = 30 + Math.floor(Math.random() * 60);
+    const delay = (Math.random() * 8).toFixed(1);
+    const dur = (6 + Math.random() * 6).toFixed(1);
+    html.push(`<span class="dust-mote" style="left:${x}%;top:${y}%;animation-delay:${delay}s;animation-duration:${dur}s"></span>`);
+  }
+  return `<div class="cave-dust">${html.join('')}</div>`;
+}
+function decorateScene(scene) {
+  if (!scene || scene.dataset.decorated) return;
+  scene.dataset.decorated = '1';
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+  wrap.innerHTML = `
+    ${cobwebSVG()}
+    ${cobwebSVG().replace('cave-cobweb left', 'cave-cobweb right')}
+    ${stalactiteSVG(18, 22)}
+    ${stalactiteSVG(35, 30)}
+    ${stalactiteSVG(62, 26)}
+    ${stalactiteSVG(84, 24)}
+    ${cavePaintingLeftSVG()}
+    ${cavePaintingRightSVG()}
+    ${dustMotesHTML()}
+  `;
+  // Insert just after cave-wall-detail so torches and focal object stay on top
+  const detail = scene.querySelector('.cave-wall-detail');
+  if (detail) detail.after(wrap);
+  else scene.prepend(wrap);
+}
+
+/* ============================================================
+   HERO CAVE — walking grugs + ember particles
+   ============================================================ */
+const scene = document.getElementById('hero-scene');
+if (scene) {
+  decorateScene(scene);
+  // Walking grugs — 10 sprites walking around the big cave
+  spawnWalkers(scene, 10, { withLogChance: 0.15 });
+  scheduleChat(scene);
+
+  // Ember particles rising from fire
+  function spawnEmbers() {
+    const centerX = scene.offsetWidth / 2;
+    for (let i = 0; i < 12; i++) {
+      const p = document.createElement('div');
+      p.className = 'ember-particle' + (Math.random() > 0.6 ? ' hot' : '');
+      p.style.left = (centerX + (Math.random() * 80 - 40)) + 'px';
+      p.style.bottom = (60 + Math.random()*40) + 'px';
+      p.style.setProperty('--drift', (Math.random()*40-20) + 'px');
+      p.style.animationDelay = (Math.random() * 3) + 's';
+      p.style.animationDuration = (2 + Math.random() * 2) + 's';
+      scene.appendChild(p);
+    }
+  }
+  spawnEmbers();
+}
+
+/* ============================================================
+   LOG PILE — pyramid stack of pixel-art logs
+   ============================================================ */
+function logSvg(w, h) {
+  const cap = Math.min(10, Math.floor(w * 0.18));
+  const cy = h / 2;
+  const ringR1 = Math.max(2, h * 0.30);
+  const ringR2 = Math.max(1, h * 0.16);
+  const speck1x = Math.floor(w * 0.35);
+  const speck2x = Math.floor(w * 0.62);
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated;display:block;width:100%;height:100%">
+    <!-- body -->
+    <rect x="0" y="0" width="${w}" height="${h}" fill="#4a2818"/>
+    <!-- top light -->
+    <rect x="0" y="0" width="${w}" height="3" fill="#7a4d30"/>
+    <rect x="0" y="3" width="${w}" height="1" fill="#5a3520"/>
+    <!-- bottom shadow -->
+    <rect x="0" y="${h-3}" width="${w}" height="3" fill="#2a1408"/>
+    <!-- bark specks -->
+    <rect x="${speck1x}" y="6" width="2" height="1" fill="#2a1408"/>
+    <rect x="${speck2x}" y="9" width="1" height="2" fill="#2a1408"/>
+    <rect x="${speck1x+10}" y="12" width="2" height="1" fill="#2a1408"/>
+    <!-- left end cap -->
+    <rect x="0" y="0" width="${cap}" height="${h}" fill="#2a1408"/>
+    <circle cx="${cap/2}" cy="${cy}" r="${ringR1}" fill="#4a2818" stroke="#6a3820" stroke-width="0.5"/>
+    <circle cx="${cap/2}" cy="${cy}" r="${ringR2}" fill="#3a1e10" stroke="#5a3018" stroke-width="0.5"/>
+    <circle cx="${cap/2}" cy="${cy}" r="1" fill="#6a4028"/>
+    <!-- right end cap -->
+    <rect x="${w-cap}" y="0" width="${cap}" height="${h}" fill="#2a1408"/>
+    <circle cx="${w-cap/2}" cy="${cy}" r="${ringR1}" fill="#4a2818" stroke="#6a3820" stroke-width="0.5"/>
+    <circle cx="${w-cap/2}" cy="${cy}" r="${ringR2}" fill="#3a1e10" stroke="#5a3018" stroke-width="0.5"/>
+    <circle cx="${w-cap/2}" cy="${cy}" r="1" fill="#6a4028"/>
+    <!-- border -->
+    <rect x="0" y="0" width="${w}" height="${h}" fill="none" stroke="#1a0e05" stroke-width="1"/>
+  </svg>`;
+}
+function placeLog(container, x, y, w, h, cls='log') {
+  const log = document.createElement('div');
+  log.className = cls;
+  log.style.left = x + 'px';
+  log.style.top = y + 'px';
+  log.style.width = w + 'px';
+  log.style.height = h + 'px';
+  log.innerHTML = logSvg(w, h);
+  container.appendChild(log);
+  return log;
+}
+
+const pileEl = document.getElementById('log-pile');
+if (pileEl) {
+  // Bigger stack for the full-page log scene
+  // Container is now full width — place logs in a large pyramid at bottom-center
+  const pileW = pileEl.clientWidth || 600;
+  const cx = pileW / 2;
+  // Log widths and per-row offsets, tapering
+  const rows = [
+    // Bottom row — 6 wide logs (bottom touches container bottom at y=214)
+    { y: 214, logs: [[-260,90,26],[-170,86,26],[-82,94,26],[8,88,26],[98,92,26],[190,86,26]] },
+    // Row 5
+    { y: 188, logs: [[-230,92,26],[-135,86,26],[-45,90,26],[46,88,26],[136,84,26]] },
+    // Row 4
+    { y: 162, logs: [[-190,84,24],[-102,88,24],[-10,92,24],[86,82,24]] },
+    // Row 3
+    { y: 138, logs: [[-150,80,24],[-64,86,24],[26,80,24]] },
+    // Row 2
+    { y: 116, logs: [[-100,76,22],[-18,82,22]] },
+    // Top
+    { y:  94, logs: [[-42,80,22]] }
+  ];
+  rows.forEach(row => {
+    row.logs.forEach(([dx, w, h]) => {
+      placeLog(pileEl, cx + dx, row.y, w, h);
+    });
+  });
+}
+function addLogToPile() {
+  if (!pileEl) return;
+  const pileW = pileEl.clientWidth || 600;
+  const cx = pileW / 2;
+  const w = 78 + Math.floor(Math.random() * 20);
+  const dx = -60 + Math.random() * 120;
+  placeLog(pileEl, cx + dx - w/2, 22 + Math.random() * 20, w, 22, 'log new-log');
+}
+
+/* ============================================================
+   LOGS SCENE walkers — many, half carrying logs
+   ============================================================ */
+const logsScene = document.getElementById('logs-scene');
+if (logsScene) {
+  decorateScene(logsScene);
+  spawnWalkers(logsScene, 10, { withLogChance: 0.55 });
+  scheduleChat(logsScene);
+}
+
+/* ============================================================
+   SMASH SCENE walkers + attackers
+   ============================================================ */
+const smashScene = document.getElementById('smash-scene');
+if (smashScene) {
+  decorateScene(smashScene);
+  spawnWalkers(smashScene, 8, { withLogChance: 0 });
+  spawnAttackers(smashScene);
+  scheduleChat(smashScene);
+}
+function spawnAttackers(container) {
+  const rect = container.getBoundingClientRect();
+  const w = rect.width || 1200;
+  // Two attackers flanking the machine at bottom-center
+  const positions = [
+    { xFromCenter: -190, mirrored: false, delay: 0 },
+    { xFromCenter: 130,  mirrored: true,  delay: -0.55 } // offset so strikes alternate
+  ];
+  positions.forEach(pos => {
+    const a = document.createElement('div');
+    a.className = 'attacker' + (pos.mirrored ? ' mirrored' : '');
+    a.style.left = `calc(50% + ${pos.xFromCenter}px)`;
+    const traits = { ...randomGrug(), item: 'club', clothing: 'brown pelt', hairStyle: 'wild' };
+    const inner = document.createElement('div');
+    inner.className = 'swing-inner';
+    inner.style.animationDelay = pos.delay + 's';
+    inner.innerHTML = renderGrugSprite(traits);
+    a.appendChild(inner);
+    container.appendChild(a);
+  });
+  // Fire particle bursts + small shake on each strike (peak around 68% of the 1.1s cycle)
+  setInterval(() => {
+    const machine = document.getElementById('machine');
+    if (machine && document.getElementById('smash').classList.contains('active')) {
+      // Micro-shake
+      machine.style.transform = 'translateX(3px)';
+      setTimeout(() => { machine.style.transform = ''; }, 120);
+      spawnMiniSmashParticles(3);
+    }
+  }, 550);
+}
+function spawnMiniSmashParticles(n = 3) {
+  const wrap = document.getElementById('machine-wrap');
+  if (!wrap) return;
+  const cx = wrap.offsetWidth / 2;
+  const cy = wrap.offsetHeight / 2;
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement('div');
+    p.className = 'smash-particle';
+    p.style.left = cx + 'px';
+    p.style.top = cy + 'px';
+    p.style.width = '4px'; p.style.height = '4px';
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 30 + Math.random() * 20;
+    p.style.transition = 'transform 0.35s ease-out, opacity 0.35s ease-out';
+    wrap.appendChild(p);
+    requestAnimationFrame(() => {
+      p.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
+      p.style.opacity = '0';
+    });
+    setTimeout(() => p.remove(), 400);
+  }
+}
+// Direct click on machine — this is the cookie-clicker smasher
+const bigMachine = document.querySelector('#smash-scene .machine');
+if (bigMachine) {
+  bigMachine.style.cursor = 'pointer';
+  bigMachine.addEventListener('click', () => {
+    bigMachine.classList.remove('smashing');
+    void bigMachine.offsetWidth;
+    bigMachine.classList.add('smashing');
+    sound.smash();
+    spawnSmashParticles();
+    wlRecordSmash();
+    // Dismiss the click-hint once the user has learned it
+    const hint = document.getElementById('smash-hint');
+    if (hint) hint.classList.add('hidden');
+    // Bump the "big" global smash counter in the HUD (community total)
+    const hud = document.getElementById('hud-smash');
+    if (hud) {
+      const cur = parseInt(hud.textContent.replace(/,/g,''),10);
+      hud.textContent = (cur+1).toLocaleString();
+    }
+    setTimeout(() => bigMachine.classList.remove('smashing'), 600);
+  });
+}
+
+/* ============================================================
+   SOUND — procedural via Web Audio API
+   Fire crackle + ambient grunts + smash + log thud.
+   Muted by default (browsers block autoplay).
+   ============================================================ */
+class SoundKit {
+  constructor() {
+    this.ctx = null; this.master = null; this.muted = true;
+    this.crackleNode = null; this.popTimer = null; this.gruntTimer = null;
+  }
+  ensure() {
+    if (this.ctx) return;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    this.ctx = new Ctx();
+    this.master = this.ctx.createGain();
+    this.master.gain.value = 0.25;
+    this.master.connect(this.ctx.destination);
+  }
+  toggle() {
+    this.ensure();
+    if (!this.ctx) return false;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    this.muted = !this.muted;
+    if (!this.muted) this.startAmbient(); else this.stopAmbient();
+    return !this.muted;
+  }
+  startAmbient() {
+    if (this.crackleNode) return;
+    const sr = this.ctx.sampleRate;
+    const bufSize = sr * 3;
+    const buf = this.ctx.createBuffer(1, bufSize, sr);
+    const d = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < bufSize; i++) {
+      const w = Math.random() * 2 - 1;
+      last = (last + 0.02 * w) / 1.02;
+      d[i] = last * 3.2;
+    }
+    this.crackleNode = this.ctx.createBufferSource();
+    this.crackleNode.buffer = buf; this.crackleNode.loop = true;
+    const filt = this.ctx.createBiquadFilter();
+    filt.type = 'highpass'; filt.frequency.value = 300;
+    const g = this.ctx.createGain(); g.gain.value = 0.12;
+    this.crackleNode.connect(filt).connect(g).connect(this.master);
+    this.crackleNode.start();
+    // Random pops (fire crackle bursts)
+    this.popTimer = setInterval(() => {
+      if (!this.muted && Math.random() < 0.45) this.pop();
+    }, 600);
+    // Occasional grug grunt
+    this.gruntTimer = setInterval(() => {
+      if (!this.muted && Math.random() < 0.35) this.grunt();
+    }, 6000);
+  }
+  stopAmbient() {
+    if (this.crackleNode) { try { this.crackleNode.stop(); } catch(e){} this.crackleNode = null; }
+    if (this.popTimer) { clearInterval(this.popTimer); this.popTimer = null; }
+    if (this.gruntTimer) { clearInterval(this.gruntTimer); this.gruntTimer = null; }
+  }
+  pop() {
+    if (this.muted || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const bufSize = Math.floor(this.ctx.sampleRate * 0.06);
+    const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) d[i] = (Math.random()*2-1) * Math.exp(-i / (bufSize*0.25));
+    const src = this.ctx.createBufferSource(); src.buffer = buf;
+    const f = this.ctx.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = 800 + Math.random()*1400; f.Q.value = 4;
+    const g = this.ctx.createGain(); g.gain.value = 0.35;
+    src.connect(f).connect(g).connect(this.master);
+    src.start(now);
+  }
+  grunt() {
+    if (this.muted || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    osc.type = 'square';
+    const startF = 110 + Math.random()*30;
+    osc.frequency.setValueAtTime(startF, now);
+    osc.frequency.exponentialRampToValueAtTime(startF * 0.55, now + 0.28);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.001, now);
+    g.gain.exponentialRampToValueAtTime(0.18, now + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    const f = this.ctx.createBiquadFilter();
+    f.type = 'lowpass'; f.frequency.value = 800;
+    osc.connect(f).connect(g).connect(this.master);
+    osc.start(now); osc.stop(now + 0.32);
+  }
+  smash() {
+    if (this.muted || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    // Metal-ish crash (noise burst through bandpass)
+    const bufSize = Math.floor(this.ctx.sampleRate * 0.35);
+    const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) d[i] = (Math.random()*2-1) * Math.exp(-i / (bufSize*0.4));
+    const src = this.ctx.createBufferSource(); src.buffer = buf;
+    const filt = this.ctx.createBiquadFilter();
+    filt.type = 'bandpass'; filt.frequency.value = 2000; filt.Q.value = 1;
+    const gn = this.ctx.createGain(); gn.gain.value = 0.55;
+    src.connect(filt).connect(gn).connect(this.master);
+    src.start(now);
+    // Low thud layer
+    const osc = this.ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(90, now);
+    osc.frequency.exponentialRampToValueAtTime(35, now + 0.18);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.001, now);
+    g.gain.exponentialRampToValueAtTime(0.6, now + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    osc.connect(g).connect(this.master);
+    osc.start(now); osc.stop(now + 0.22);
+    // Follow-up grunt from the smasher
+    setTimeout(() => this.grunt(), 150);
+  }
+  logThud() {
+    if (this.muted || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(70, now + 0.15);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.001, now);
+    g.gain.exponentialRampToValueAtTime(0.35, now + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    osc.connect(g).connect(this.master);
+    osc.start(now); osc.stop(now + 0.2);
+    setTimeout(() => this.pop(), 60);
+  }
+}
+const sound = new SoundKit();
+
+const soundBtn = document.getElementById('sound-btn');
+if (soundBtn) {
+  soundBtn.addEventListener('click', () => {
+    const on = sound.toggle();
+    soundBtn.classList.toggle('on', on);
+    soundBtn.querySelector('.mute-x').hidden = on;
+    soundBtn.querySelector('.sound-waves').hidden = !on;
+  });
+}
+
+/* ============================================================
+   WALLET CONNECT — mock only; real wiring hooks in later
+   ============================================================ */
+const connectBtn = document.getElementById('connect-btn');
+if (connectBtn) {
+  connectBtn.addEventListener('click', () => {
+    if (connectBtn.dataset.connected) {
+      // Disconnect on second click
+      connectBtn.textContent = 'CONNECT GRUG';
+      connectBtn.classList.remove('connected');
+      delete connectBtn.dataset.connected;
+      return;
+    }
+    // Mock connect — will be swapped for real wallet later
+    const hex = (n) => Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0');
+    const addr = '0x' + hex() + '…' + hex().slice(0,4);
+    connectBtn.textContent = addr.toUpperCase();
+    connectBtn.classList.add('connected');
+    connectBtn.dataset.connected = '1';
+  });
+}
+
+/* ============================================================
+   MINT SCENE — altar with rotating grug + walkers
+   ============================================================ */
+const mintScene = document.getElementById('mint-scene');
+if (mintScene) {
+  decorateScene(mintScene);
+  spawnWalkers(mintScene, 8, { withLogChance: 0 });
+  scheduleChat(mintScene);
+}
+let altarIdx = Math.floor(Math.random() * LEGENDARY_GRUGS.length);
+function refreshAltarGrug() {
+  const el = document.getElementById('altar-grug');
+  if (!el) return;
+  el.style.opacity = '0';
+  setTimeout(() => {
+    const pick = LEGENDARY_GRUGS[altarIdx];
+    el.innerHTML = renderGrugSprite(pick.traits);
+    // Update the plaque with the grug's number
+    const plaqueTitle = document.querySelector('.altar-plaque .plaque-title');
+    const plaqueSub = document.querySelector('.altar-plaque .plaque-sub');
+    if (plaqueTitle) plaqueTitle.textContent = 'GRUG #' + String(pick.id).padStart(4, '0');
+    if (plaqueSub) plaqueSub.textContent = 'legend · ' + (altarIdx + 1) + ' of 100';
+    el.style.opacity = '1';
+    altarIdx = (altarIdx + 1) % LEGENDARY_GRUGS.length;
+  }, 400);
+}
+refreshAltarGrug();
+setInterval(refreshAltarGrug, 6500);
+
+/* ============================================================
+   WHITELIST — smash-machine-to-earn-WL mechanic
+   (localStorage mock for now; contract will replace saveWL later)
+   ============================================================ */
+const WL_KEY = 'grugs_wl_smashes_v1';
+const WL_REG_KEY = 'grugs_wl_registered_v1';
+const WL_THRESHOLD = 10;
+
+/* --- Whitelist backend --------------------------------------------------
+   Every submitted wallet gets POSTed to this URL as JSON. Local storage
+   still keeps a copy on the user's browser as a backup, but this is what
+   YOU (the dev) actually collect at the end to build the WL merkle root.
+
+   Set WL_WEBHOOK_URL to one of:
+
+   1) Google Apps Script Web App (recommended — free, writes to a Sheet):
+      - script.google.com → New Project → paste doPost function that appends
+        to a spreadsheet, deploy as Web App (Anyone can access), copy URL
+   2) Formspree endpoint (https://formspree.io/f/xxxxxxxx) — emails you each
+   3) A serverless function on Vercel / Cloudflare / Deno Deploy
+   4) A Discord webhook — quick and dirty (message every registration)
+
+   Leave empty '' for local-only (nothing sent).
+   The whole flow works either way — the modal + toast + WL state all
+   still happen locally. This is purely for you to collect the submissions.
+------------------------------------------------------------------------- */
+const WL_WEBHOOK_URL = '';
+
+async function wlPostToBackend(addr, count) {
+  if (!WL_WEBHOOK_URL) return { sent: false, reason: 'no webhook configured' };
+  try {
+    const res = await fetch(WL_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'register',
+        wallet: addr,
+        smashes: count,
+        timestampMs: Date.now(),
+        userAgent: navigator.userAgent.slice(0, 200),
+        source: 'grugs.site',
+      }),
+    });
+    return { sent: res.ok, status: res.status };
+  } catch (e) {
+    console.warn('[grugs WL] backend post failed:', e);
+    return { sent: false, error: e.message };
+  }
+}
+
+/*
+   Query the backend to check if a wallet is already registered somewhere
+   (e.g. registered on another device or restored after a browser clear).
+   Backend endpoint should accept a GET with ?wallet=0x…&action=check
+   and return { registered: boolean, smashes: number, registeredAtMs?: number }.
+   Runs automatically on every wallet connect.
+*/
+async function wlCheckBackend(addr) {
+  if (!WL_WEBHOOK_URL || !addr) return null;
+  try {
+    const url = new URL(WL_WEBHOOK_URL);
+    url.searchParams.set('action', 'check');
+    url.searchParams.set('wallet', addr);
+    const res = await fetch(url.toString());
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    console.warn('[grugs WL] backend check failed:', e);
+    return null;
+  }
+}
+
+// Runs after wallet connect — pulls remote WL state into local so a wallet
+// registered on device A shows as registered when they connect on device B.
+async function wlHydrateFromBackend() {
+  const addr = wlCurrentAddr();
+  if (!addr) return;
+  const state = await wlCheckBackend(addr);
+  if (!state) return;
+  let dirty = false;
+  if (typeof state.smashes === 'number') {
+    const d = wlLoad();
+    if ((d[addr] || 0) < state.smashes) {
+      d[addr] = state.smashes;
+      wlSave(d);
+      dirty = true;
+    }
+  }
+  if (state.registered) {
+    const reg = wlRegLoad();
+    if (!reg[addr]) {
+      reg[addr] = { at: state.registeredAtMs || Date.now(), source: 'backend' };
+      wlRegSave(reg);
+      dirty = true;
+    }
+  }
+  if (dirty) wlUpdateStatus();
+}
+
+// Dev helper — expose in the console: `grugsExportWL()` dumps local wallets
+window.grugsExportWL = () => {
+  const reg = JSON.parse(localStorage.getItem(WL_REG_KEY) || '{}');
+  const sm = JSON.parse(localStorage.getItem(WL_KEY) || '{}');
+  const rows = Object.keys(reg).map(a => ({
+    wallet: a, smashes: sm[a] || 0, at: new Date(reg[a].at).toISOString()
+  }));
+  console.table(rows);
+  return rows;
+};
+
+function wlLoad() {
+  try { return JSON.parse(localStorage.getItem(WL_KEY) || '{}'); }
+  catch { return {}; }
+}
+function wlSave(d) {
+  try { localStorage.setItem(WL_KEY, JSON.stringify(d)); } catch {}
+}
+function wlRegLoad() {
+  try { return JSON.parse(localStorage.getItem(WL_REG_KEY) || '{}'); }
+  catch { return {}; }
+}
+function wlRegSave(d) {
+  try { localStorage.setItem(WL_REG_KEY, JSON.stringify(d)); } catch {}
+}
+function wlIsRegistered(addr) {
+  if (!addr) return false;
+  return !!wlRegLoad()[addr];
+}
+function wlRegisterCurrent() {
+  const addr = wlCurrentAddr();
+  if (!addr) return false;
+  if (wlCount() < WL_THRESHOLD) return false;
+  const d = wlRegLoad();
+  d[addr] = { at: Date.now() };
+  wlRegSave(d);
+  // Fire-and-forget POST to the backend (or no-op if unconfigured)
+  wlPostToBackend(addr, wlCount());
+  wlShowToast();
+  wlUpdateStatus();
+  return true;
+}
+function wlCurrentAddr() {
+  const btn = document.getElementById('connect-btn');
+  return btn?.dataset.connected ? btn.textContent : null;
+}
+function wlRecordSmash() {
+  const addr = wlCurrentAddr();
+  if (!addr) return;
+  const d = wlLoad();
+  const before = d[addr] || 0;
+  const after = before + 1;
+  d[addr] = after;
+  wlSave(d);
+  // Show registration modal the moment they cross the threshold (and haven't registered)
+  if (before < WL_THRESHOLD && after >= WL_THRESHOLD && !wlIsRegistered(addr)) {
+    wlModalOpen();
+  }
+  wlUpdateStatus();
+}
+function wlCount() {
+  const addr = wlCurrentAddr();
+  if (!addr) return 0;
+  return wlLoad()[addr] || 0;
+}
+
+/* Modal control */
+function wlModalOpen() {
+  const modal = document.getElementById('wl-modal');
+  if (!modal) return;
+  const addr = wlCurrentAddr();
+  const count = wlCount();
+  document.getElementById('wl-modal-count').textContent = count.toString();
+  document.getElementById('wl-modal-wallet').textContent = addr || '(no wallet)';
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+function wlModalClose() {
+  const modal = document.getElementById('wl-modal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+function wlShowToast() {
+  const t = document.getElementById('wl-toast');
+  if (!t) return;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('wl-modal-submit');
+  if (btn) btn.addEventListener('click', () => {
+    if (wlRegisterCurrent()) wlModalClose();
+  });
+});
+// Register-button handler works even if DOMContentLoaded already fired (script at bottom)
+{
+  const btn = document.getElementById('wl-modal-submit');
+  if (btn && !btn.dataset.wired) {
+    btn.dataset.wired = '1';
+    btn.addEventListener('click', () => { if (wlRegisterCurrent()) wlModalClose(); });
+  }
+}
+function wlUpdateStatus() {
+  const addr = wlCurrentAddr();
+  const count = wlCount();
+  const registered = wlIsRegistered(addr);
+
+  // WL chamber status
+  const el = document.getElementById('wl-status');
+  const wrap = el?.parentElement;
+  const chamberBtn = document.getElementById('wl-chamber-action');
+  if (el) {
+    if (!addr) {
+      el.innerHTML = 'grug not know you. <b>connect wallet</b> first.';
+      el.className = 'wl-status pending';
+      if (wrap) wrap.classList.remove('ok');
+    } else if (registered) {
+      el.innerHTML = `wallet <b>on cave wall</b>. grug see you. <b>you in tribe.</b>`;
+      el.className = 'wl-status ok';
+      if (wrap) wrap.classList.add('ok');
+    } else if (count >= WL_THRESHOLD) {
+      el.innerHTML = `you smash <b>${count}</b> machines. now grug write wallet on cave wall.`;
+      el.className = 'wl-status ok';
+      if (wrap) wrap.classList.add('ok');
+    } else {
+      el.innerHTML = `you smash <b>${count}</b> machines. grug want <b>${WL_THRESHOLD}</b>.`;
+      el.className = 'wl-status pending';
+      if (wrap) wrap.classList.remove('ok');
+    }
+  }
+  // Update the chamber's action button based on state
+  if (chamberBtn) {
+    if (!addr) {
+      chamberBtn.textContent = 'CONNECT WALLET';
+      chamberBtn.onclick = () => document.getElementById('connect-btn')?.click();
+      chamberBtn.disabled = false;
+    } else if (registered) {
+      chamberBtn.textContent = '✓ WALLET REGISTERED';
+      chamberBtn.onclick = null;
+      chamberBtn.disabled = true;
+    } else if (count >= WL_THRESHOLD) {
+      chamberBtn.textContent = 'SUBMIT WALLET FOR WHITELIST';
+      chamberBtn.onclick = () => wlModalOpen();
+      chamberBtn.disabled = false;
+    } else {
+      chamberBtn.textContent = 'GO SMASH MACHINE';
+      chamberBtn.onclick = () => showTab('smash');
+      chamberBtn.disabled = false;
+    }
+  }
+
+  // Smash-page hero sub-tag — rewrite the whole line every time
+  const subTag = document.querySelector('#smash-scene .sub-tag');
+  if (subTag) {
+    const left = Math.max(0, WL_THRESHOLD - count);
+    subTag.innerHTML = !addr
+      ? 'connect wallet. every smash count toward tribe.'
+      : registered
+        ? `wallet in tribe. keep smash for fun.`
+        : (left === 0
+            ? `you smash <b>${count}</b>. now go submit wallet for whitelist.`
+            : `you smash <b>${count}</b>. <b>${left}</b> more for tribe.`);
+  }
+
+  // "Your grugs" empty-state should reflect connect state
+  renderGrids();
+}
+function scrollToWL() {
+  const el = document.getElementById('wl-chamber');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+// Hook: update on connect toggle
+if (connectBtn) {
+  const original = connectBtn.onclick;
+  // We attached via addEventListener earlier; also update on click here
+  connectBtn.addEventListener('click', () => {
+    setTimeout(() => {
+      wlUpdateStatus();
+      // Pull remote WL state — if this wallet already registered on another
+      // device (or the browser was cleared), reflect that immediately.
+      wlHydrateFromBackend();
+    }, 10);
+  });
+}
+wlUpdateStatus();
+
+/* ============================================================
+   INIT
+   ============================================================ */
+renderGrids();
+renderMintPreview();
+</script>
