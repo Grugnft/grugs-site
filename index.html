@@ -1827,6 +1827,92 @@ section.chamber { margin-top: 72px; }
 .addr { color: var(--bone); font-family: 'VT323', monospace; }
 .count { text-align: right; color: var(--torch); font-variant-numeric: tabular-nums; }
 
+/* LOGS TAB — big coming-soon banner at the top of the view */
+.logs-coming-banner {
+  margin: 32px auto 24px;
+  max-width: 900px;
+  padding: 22px 28px;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(232,161,71,0.05) 0 12px,
+      transparent 12px 24px
+    ),
+    linear-gradient(to bottom, #1a1810 0%, #221c12 100%);
+  border: 3px solid var(--torch);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow:
+    0 0 24px rgba(232,161,71,0.25),
+    inset 0 0 40px rgba(0,0,0,0.35);
+  position: relative;
+  overflow: hidden;
+}
+.logs-coming-banner::before,
+.logs-coming-banner::after {
+  content: "";
+  position: absolute;
+  top: -3px; bottom: -3px;
+  width: 8px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--torch) 0 6px,
+    var(--stone) 6px 12px
+  );
+}
+.logs-coming-banner::before { left: -3px; }
+.logs-coming-banner::after  { right: -3px; }
+.lcb-eye {
+  font-size: 44px;
+  line-height: 1;
+  filter: drop-shadow(0 0 12px rgba(232,161,71,0.6));
+  animation: rr-eye-blink 4s infinite;
+  flex-shrink: 0;
+}
+.lcb-body {
+  flex: 1;
+  min-width: 0;
+}
+.lcb-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 22px;
+  color: var(--torch);
+  letter-spacing: 4px;
+  margin-bottom: 6px;
+  text-shadow: 2px 2px 0 #4a2c08;
+}
+.lcb-sub {
+  color: var(--bone-dim);
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  letter-spacing: 1px;
+  line-height: 1.4;
+}
+@media (max-width: 600px) {
+  .logs-coming-banner { flex-direction: column; text-align: center; padding: 18px; }
+  .lcb-title { font-size: 16px; letter-spacing: 2px; }
+  .lcb-sub { font-size: 17px; }
+}
+/* "preview" tag next to chamber titles on the logs tab */
+.preview-tag {
+  display: inline-block;
+  vertical-align: middle;
+  font-family: 'VT323', monospace;
+  font-size: 14px;
+  color: var(--torch);
+  border: 1.5px solid var(--torch);
+  padding: 2px 10px;
+  letter-spacing: 2px;
+  margin-left: 12px;
+  opacity: 0.75;
+}
+.logs-preview .board-list-empty {
+  opacity: 0.55;
+  filter: grayscale(0.5);
+}
+
 /* Log board — "coming soon" note under the mock leaderboard */
 .board-coming-soon {
   margin-top: 20px;
@@ -2331,36 +2417,39 @@ section.chamber { margin-top: 72px; }
       <!-- Overlay text -->
       <div class="hero-overlay">
         <h1 class="hero-title">LOGS</h1>
-        <p class="tagline">the wood pile grow slow.</p>
-        <p class="sub-tag"><span id="log-count">0</span> logs · 10,000 to next thing.</p>
+        <p class="tagline">the wood pile empty.</p>
+        <p class="sub-tag"><span id="log-count">0</span> logs · after mint grug fetch begin.</p>
       </div>
     </div>
 
-    <section class="chamber">
-      <h2 class="chamber-title">your grugs</h2>
+    <!-- Big "coming soon" banner: logs is not live yet -->
+    <div class="logs-coming-banner">
+      <span class="lcb-eye">👁️</span>
+      <div class="lcb-body">
+        <div class="lcb-title">LOGS COMING SOON</div>
+        <div class="lcb-sub">grug fetch mechanic turn on after mint. tribe below is preview. no log real yet.</div>
+      </div>
+    </div>
+
+    <section class="chamber logs-preview">
+      <h2 class="chamber-title">your grugs <span class="preview-tag">preview</span></h2>
       <div class="grug-grid" id="grugs-log-grid"></div>
     </section>
 
-    <section class="chamber board">
-      <h2 class="chamber-title">the log board</h2>
-      <div class="board-list">
+    <section class="chamber board logs-preview">
+      <h2 class="chamber-title">the log board <span class="preview-tag">preview</span></h2>
+      <div class="board-list board-list-empty">
         <div class="board-row head">
           <div class="rank">rank</div>
           <div class="addr">wallet</div>
           <div class="count">logs</div>
         </div>
-        <div class="board-row"><div class="rank">1</div><div class="addr">chief.grug</div><div class="count">847</div></div>
-        <div class="board-row"><div class="rank">2</div><div class="addr">woodguy.eth</div><div class="count">811</div></div>
-        <div class="board-row"><div class="rank">3</div><div class="addr">0x1a44…ef22</div><div class="count">742</div></div>
-        <div class="board-row"><div class="rank">4</div><div class="addr">0xbe10…9c33</div><div class="count">619</div></div>
-        <div class="board-row"><div class="rank">5</div><div class="addr">stone.grug</div><div class="count">508</div></div>
-        <div class="board-row you"><div class="rank">42</div><div class="addr">you</div><div class="count">46</div></div>
+        <div class="board-row"><div class="rank">—</div><div class="addr">no wallet yet</div><div class="count">0</div></div>
+        <div class="board-row"><div class="rank">—</div><div class="addr">no wallet yet</div><div class="count">0</div></div>
+        <div class="board-row"><div class="rank">—</div><div class="addr">no wallet yet</div><div class="count">0</div></div>
+        <div class="board-row you"><div class="rank">—</div><div class="addr">you</div><div class="count">0</div></div>
       </div>
-      <p style="color: var(--ash); font-size: 18px; margin-top: 12px; text-align: center;">top fetcher get title on cave wall. forever.</p>
-      <div class="board-coming-soon">
-        <span class="bcs-eye">👁️</span>
-        <span class="bcs-text"><b>coming soon</b> — real leaderboard go live at mint. board above is grug guess.</span>
-      </div>
+      <p style="color: var(--ash); font-size: 18px; margin-top: 12px; text-align: center;">top fetcher get title on cave wall. forever. (after mint.)</p>
     </section>
   </section>
 
@@ -4177,14 +4266,16 @@ function grugGrab(walker, e) {
   const scene = walker.parentElement;
   const sRect = scene.getBoundingClientRect();
   const wRect = walker.getBoundingClientRect();
-  // Anchor: where inside the walker the cursor grabbed
   const anchorX = e.clientX - wRect.left;
   const anchorY = e.clientY - wRect.top;
-  // Snapshot walker's current visual left before we start transforming
   const baseLeft = wRect.left - sRect.left;
   const baseBottom = sRect.bottom - wRect.bottom;
   walker.classList.remove('landed', 'dropping');
   walker.classList.add('grabbed');
+  // Force paused inline. IMPORTANT: a prior drop set the `animation:` shorthand
+  // inline, which fills in an inline `animation-play-state: running`. Stylesheet
+  // rules can't override inline properties, so we set play-state inline here.
+  walker.style.animationPlayState = 'paused';
   walker.style.transform = 'translate(0px, 0px)';
   try { walker.setPointerCapture(e.pointerId); } catch (_) {}
   __drag = {
@@ -4237,14 +4328,23 @@ function grugDrop(e) {
     frac = Math.max(0.001, Math.min(0.999, frac));
 
     // Force a fresh animation instance so the new delay takes effect.
-    // Chrome silently ignores animation-delay changes on a running animation;
-    // wiping `animation` + reflow + re-setting is the reliable restart trick.
-    w.style.animation = 'none';
-    void w.offsetWidth; // force reflow — this is required
-    w.style.animation = `walk-across ${dur}s linear ${-frac * dur}s infinite ${isRtl ? 'reverse' : 'normal'}`;
+    // Chrome silently ignores animation-delay changes on a running animation.
+    // Trick: cancel via animation-name → reflow → re-let stylesheet apply.
+    // We ONLY touch longhands, never the `animation:` shorthand — the
+    // shorthand fills in an inline `animation-play-state: running` that later
+    // blocks the next .grabbed class from pausing the walker.
+    w.style.animationName = 'none';
+    void w.offsetWidth; // force reflow — required for the restart
+    w.style.animationName = '';                // let stylesheet's walk-across take over
+    w.style.animationDuration = dur + 's';
+    w.style.animationTimingFunction = 'linear';
+    w.style.animationDelay = (-frac * dur) + 's';
+    w.style.animationIterationCount = 'infinite';
+    w.style.animationDirection = isRtl ? 'reverse' : 'normal';
+    w.style.animationPlayState = '';           // clear the paused-inline from grab
 
-    // Now the animation is set to render at exactly newLeft — clear the drag
-    // transform in the same frame so we get no visual snap.
+    // Animation is now positioned at newLeft — clear the drag transform in the
+    // same frame to avoid a snap.
     w.style.transform = '';
     w.classList.remove('dropping');
     w.classList.add('landed');
@@ -4339,18 +4439,21 @@ if (soundBtn) {
 }
 
 /* Auto-enable sound on the first user interaction — the browser blocks
-   AudioContext until then. If the user later mutes via the icon we respect
-   that and never auto-enable again. */
+   AudioContext until then. If the user's first interaction is clicking the
+   sound button itself, we skip auto-enable and let the button's own toggle
+   handle it (otherwise auto-enable would fire first, then the toggle would
+   immediately mute it → user sees "click sound button → nothing happens"). */
 (function autoStartSoundOnFirstInteraction() {
-  let userMutedByChoice = false;
-  if (soundBtn) {
-    soundBtn.addEventListener('click', () => { userMutedByChoice = true; }, { once: true });
-  }
-  const kick = () => {
-    if (userMutedByChoice) return cleanup();
+  const kick = async (e) => {
+    // If they clicked the sound button, let its toggle handle everything.
+    if (e && e.target && e.target.closest && e.target.closest('#sound-btn')) {
+      return cleanup();
+    }
     sound.ensure();
     if (!sound.ctx) return cleanup();
-    if (sound.ctx.state === 'suspended') sound.ctx.resume();
+    if (sound.ctx.state === 'suspended') {
+      try { await sound.ctx.resume(); } catch (_) {}
+    }
     if (sound.muted) {
       sound.muted = false;
       sound.startAmbient();
@@ -4359,11 +4462,11 @@ if (soundBtn) {
     cleanup();
   };
   function cleanup() {
-    ['pointerdown', 'keydown', 'touchstart', 'click'].forEach(ev =>
+    ['pointerdown', 'keydown', 'touchstart'].forEach(ev =>
       document.removeEventListener(ev, kick, true));
   }
-  ['pointerdown', 'keydown', 'touchstart', 'click'].forEach(ev =>
-    document.addEventListener(ev, kick, { capture: true, once: false }));
+  ['pointerdown', 'keydown', 'touchstart'].forEach(ev =>
+    document.addEventListener(ev, kick, { capture: true }));
 })();
 
 /* ============================================================
