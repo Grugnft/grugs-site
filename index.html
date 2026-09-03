@@ -398,7 +398,7 @@ main { --pad-y: 40px; --pad-x: 32px; }
   transform: translateX(-50%);
   width: 120px;
   height: 150px;
-  z-index: 3;
+  z-index: 6;
   pointer-events: none;
 }
 .fire-wrap.fire-big {
@@ -510,6 +510,88 @@ main { --pad-y: 40px; --pad-x: 32px; }
 }
 .walker.talking .walk-cycle { animation-play-state: paused; }
 .walker.talking { animation-play-state: paused; }
+
+/* Fight: attacker + target both pause walk during the encounter. */
+.walker.fighting { animation-play-state: paused; }
+.walker.fighting .walk-cycle { animation-play-state: paused; }
+
+/* Attacker: two-frame swing — wind-up, then strike toward the target. */
+.walker.hitting {
+  animation: grug-swing 640ms ease-in-out;
+  transform-origin: 50% 90%;
+  z-index: 8; /* above fire so the impact reads */
+}
+@keyframes grug-swing {
+  0%   { transform: translateX(0) rotate(0deg); }
+  35%  { transform: translateX(-4px) rotate(-6deg); }  /* wind up back */
+  55%  { transform: translateX(14px) rotate(10deg); }  /* strike forward */
+  75%  { transform: translateX(10px) rotate(4deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+.walker.rtl.hitting { animation: grug-swing-rtl 640ms ease-in-out; }
+@keyframes grug-swing-rtl {
+  0%   { transform: translateX(0) rotate(0deg); }
+  35%  { transform: translateX(4px) rotate(6deg); }
+  55%  { transform: translateX(-14px) rotate(-10deg); }
+  75%  { transform: translateX(-10px) rotate(-4deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+
+/* Target: pushed back + wobble + brief flash */
+.walker.hurt {
+  animation: grug-hurt 640ms ease-out;
+  z-index: 8;
+}
+@keyframes grug-hurt {
+  0%   { transform: translateX(0) translateY(0); filter: none; }
+  30%  { transform: translateX(0) translateY(0); }
+  40%  { transform: translateX(12px) translateY(-3px); filter: brightness(1.6) sepia(0.4); }
+  55%  { transform: translateX(18px) translateY(0);   filter: brightness(1.2); }
+  70%  { transform: translateX(14px) translateY(-2px); filter: none; }
+  85%  { transform: translateX(6px)  translateY(0); }
+  100% { transform: translateX(0)    translateY(0); }
+}
+.walker.rtl.hurt { animation: grug-hurt-rtl 640ms ease-out; }
+@keyframes grug-hurt-rtl {
+  0%   { transform: translateX(0) translateY(0); filter: none; }
+  30%  { transform: translateX(0) translateY(0); }
+  40%  { transform: translateX(-12px) translateY(-3px); filter: brightness(1.6) sepia(0.4); }
+  55%  { transform: translateX(-18px) translateY(0);   filter: brightness(1.2); }
+  70%  { transform: translateX(-14px) translateY(-2px); filter: none; }
+  85%  { transform: translateX(-6px)  translateY(0); }
+  100% { transform: translateX(0)     translateY(0); }
+}
+
+/* Impact FX — dust puff + THWACK, injected at the midpoint between two walkers */
+.hit-fx {
+  position: absolute;
+  bottom: 60px;
+  width: 64px;
+  height: 64px;
+  pointer-events: none;
+  z-index: 9;
+  animation: hit-puff 640ms ease-out forwards;
+  transform: translate(-50%, 0);
+}
+.hit-fx svg { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+.hit-fx .thwack {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-6deg);
+  color: var(--torch-peak, #fff4c0);
+  text-shadow: 2px 2px 0 #7c2718, -1px -1px 0 #7c2718, 1px -1px 0 #7c2718, -1px 1px 0 #7c2718;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+@keyframes hit-puff {
+  0%   { opacity: 0; transform: translate(-50%, 6px) scale(0.4); }
+  20%  { opacity: 1; transform: translate(-50%, 0px)  scale(1.0); }
+  60%  { opacity: 1; transform: translate(-50%, -4px) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -18px) scale(1.4); }
+}
 .walk-cycle {
   display: flex;
   width: 400%;
@@ -1970,8 +2052,8 @@ section.chamber { margin-top: 72px; }
       </p>
 
       <div class="rr-access">
-        <span class="rr-access-lock">🔒</span>
-        <b>hold 5+ grug</b> to use rug radar when it live. one wallet, one scan-per-day free. more scan cost log.
+        <span class="rr-access-lock">🪨</span>
+        <b>hold 5+ grug</b> = free unlimited scans, forever. no rate limit, no scan tax. grug tool for tribe.
       </div>
     </section>
 
@@ -1982,6 +2064,7 @@ section.chamber { margin-top: 72px; }
         <p>grug not promise yield.</p>
         <p>grug not promise stock.</p>
         <p style="color: var(--torch); margin-top: 24px;">grug promise grug.</p>
+        <p style="color: var(--torch); margin-top: 8px;">grug promise rug radar for tribe.</p>
         <p style="color: var(--bone-dim); font-size: 20px; margin-top: 28px;">tribe make own thing. tribe watch machine burn.</p>
       </div>
     </section>
@@ -2039,8 +2122,7 @@ section.chamber { margin-top: 72px; }
     </div>
 
     <div class="cta-bar">
-      <button class="cta cta-lg" onclick="scrollToWL()">CHECK WHITELIST</button>
-      <button class="cta cta-secondary cta-lg" onclick="mockMint('public')">MINT PUBLIC</button>
+      <button class="cta cta-lg" id="mint-cta-main" onclick="onMintCtaClick()">MINT SOON</button>
     </div>
 
     <section class="chamber" id="wl-chamber" style="max-width: 780px; margin-left: auto; margin-right: auto;">
@@ -2072,7 +2154,7 @@ section.chamber { margin-top: 72px; }
         </div>
         <div class="mint-fact">
           <span class="lbl">reveal</span>
-          <span class="val">after mint end</span>
+          <span class="val">instant · your grug at mint</span>
         </div>
       </div>
     </section>
@@ -2081,8 +2163,8 @@ section.chamber { margin-top: 72px; }
       <h2 class="chamber-title">grug rule</h2>
       <ul class="rule-list">
         <li>small creator fee on trade. keep grug fire lit.</li>
-        <li>no promise. no yield. no stock. just grug.</li>
-        <li>team wallet small. dev grug not greedy.</li>
+        <li>no yield. no stock. no roadmap grug can't keep.</li>
+        <li>grug make one tool: rug radar. grug hold, grug scan.</li>
         <li>contract clear. tribe can read on chain.</li>
       </ul>
     </section>
@@ -2342,18 +2424,20 @@ section.chamber { margin-top: 72px; }
    ============================================================ */
 const W = 24, H = 32, SCALE = 20;
 const P = {
-  darkBlueBlack: '#12182a', darkBlueMid: '#1e2840',
-  moonBg: '#1a2438', moonMid: '#22304a', moonRim: '#c8d4e8',
-  ochreWall: '#7a5030', ochreDark: '#4a2c18', ochrePaint: '#2a1408',
-  waterTeal: '#1a3a48', waterMid: '#2a4e60', waterDrop: '#8ac8e0',
-  iceBlue: '#6a8aa0', iceMid: '#4a6a80', iceHighlight: '#c8d8e8',
-  redRock: '#6a2820', redRockMid: '#4a1810', redRockDark: '#2a1008',
-  stormGrey: '#3a3a44', stormMid: '#2a2a32', stormFlash: '#f8f4d8',
-  mossGreen: '#2a4028', mossDark: '#182818', mossLight: '#6a8a48',
-  sunsetOrange: '#8a4020', sunsetPink: '#a04a4a', sunsetPurple: '#3a2848',
-  fireGlow: '#ffb400', fireGlowFaint: '#8a5a10', fireBase: '#2a1408',
-  caveBackDark: '#1a1108', caveBackMid: '#2a1c10',
-  skinPale: '#c69a7b', skinMid: '#a67658', skinDark: '#7a4f34', skinAsh: '#8a6a54',
+  // Polished palette — matches scripts/grug-body.mjs (source of truth for 10k art)
+  darkBlueBlack: '#0a0e1a', darkBlueMid: '#141a2a',
+  moonBg: '#0e1424', moonMid: '#161e2e', moonRim: '#c8d4e8',
+  ochreWall: '#3a2010', ochreDark: '#2a1808', ochrePaint: '#e8a848',
+  waterTeal: '#0e1e28', waterMid: '#1a2e3a', waterDrop: '#8ac8e0',
+  iceBlue: '#3a5060', iceMid: '#2a3a4a', iceHighlight: '#c8d8e8',
+  redRock: '#2a0a08', redRockMid: '#40140a', redRockDark: '#180505',
+  stormGrey: '#20202a', stormMid: '#161620', stormFlash: '#f8f4d8',
+  mossGreen: '#1a2a18', mossDark: '#0e180e', mossLight: '#6a8a48',
+  sunsetOrange: '#3a1810', sunsetPink: '#4a1e2a', sunsetPurple: '#1e1428',
+  fireGlow: '#ffb400', fireGlowFaint: '#8a5a10', fireBase: '#1a0a04',
+  caveBackDark: '#100a04', caveBackMid: '#1a1108',
+  bodyRim: '#0f0806', vignette: '#000000',
+  skinPale: '#d4a486', skinMid: '#b57a52', skinDark: '#6a3820', skinAsh: '#96795e',
   hairBlack: '#241a12', hairBlackHi: '#3a2a1c',
   hairBrown: '#4a2c18', hairBrownHi: '#6a4028',
   hairGrey: '#5a4a40', hairGreyHi: '#8a7a70',
@@ -2721,19 +2805,58 @@ function drawBody(t, walkPhase = null) {
   return parts.join('');
 }
 
+// Body silhouette rim — dark 1px outline so grug pops off any background.
+// Matches scripts/grug-body.mjs drawBodyRim(). Called BEFORE body pixels.
+function drawBodyRim(t) {
+  const parts = [];
+  const rim = P.bodyRim;
+  const hasItem = t.item && t.item !== 'none';
+  // Head sides
+  parts.push(px(6, 8, 1, 12, rim));
+  parts.push(px(17, 8, 1, 12, rim));
+  parts.push(px(5, 12, 1, 3, rim));
+  parts.push(px(18, 12, 1, 3, rim));
+  parts.push(px(7, 7, 10, 1, rim));
+  // Chin + neck
+  parts.push(px(8, 20, 1, 1, rim)); parts.push(px(15, 20, 1, 1, rim));
+  parts.push(px(10, 20, 1, 1, rim)); parts.push(px(13, 20, 1, 1, rim));
+  // Shoulders + torso
+  parts.push(px(6, 21, 1, 1, rim)); parts.push(px(17, 21, 1, 1, rim));
+  parts.push(px(4, 22, 1, 1, rim)); parts.push(px(19, 22, 1, 1, rim));
+  parts.push(px(4, 23, 1, 4, rim)); parts.push(px(19, 23, 1, 4, rim));
+  // Legs
+  parts.push(px(6, 27, 1, 2, rim)); parts.push(px(17, 27, 1, 2, rim));
+  parts.push(px(10, 27, 1, 2, rim)); parts.push(px(13, 27, 1, 2, rim));
+  // Feet
+  parts.push(px(5, 29, 1, 2, rim)); parts.push(px(11, 29, 1, 2, rim));
+  parts.push(px(12, 29, 1, 2, rim)); parts.push(px(18, 29, 1, 2, rim));
+  // Arms (adapt to raised vs hanging)
+  parts.push(px(2, 23, 1, 5, rim));
+  if (hasItem) {
+    parts.push(px(22, 21, 1, 4, rim));
+    parts.push(px(19, 20, 3, 1, rim));
+  } else {
+    parts.push(px(21, 23, 1, 5, rim));
+  }
+  // Ground shadow
+  parts.push(px(4, 31, 16, 1, 'rgba(0,0,0,0.55)'));
+  parts.push(px(5, 30, 14, 1, 'rgba(0,0,0,0.25)'));
+  return parts.join('');
+}
+
 function renderGrug(t) {
-  const body = drawBackground(t) + drawBody(t) + drawHead(t) + drawHair(t) + drawHat(t);
+  const body = drawBackground(t) + drawBodyRim(t) + drawBody(t) + drawHead(t) + drawHair(t) + drawHat(t);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W*SCALE} ${H*SCALE}" preserveAspectRatio="xMidYMid meet" style="image-rendering:pixelated;display:block">${body}</svg>`;
 }
 // Character-only render — no cave background. For walkers on the site.
 function renderGrugSprite(t) {
-  const body = drawBody(t) + drawHead(t) + drawHair(t) + drawHat(t);
+  const body = drawBodyRim(t) + drawBody(t) + drawHead(t) + drawHair(t) + drawHat(t);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W*SCALE} ${H*SCALE}" preserveAspectRatio="xMidYMax meet" style="image-rendering:pixelated;display:block;overflow:visible">${body}</svg>`;
 }
 // Grug carrying a log (log slung at the hand position)
 function renderGrugWithLog(t) {
   const withLog = { ...t, item: '__log__' };
-  const body = drawBody(withLog) + drawHead(withLog) + drawHair(withLog) + drawHat(withLog);
+  const body = drawBodyRim(withLog) + drawBody(withLog) + drawHead(withLog) + drawHair(withLog) + drawHat(withLog);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W*SCALE} ${H*SCALE}" preserveAspectRatio="xMidYMax meet" style="image-rendering:pixelated;display:block;overflow:visible">${body}</svg>`;
 }
 // Walking sprite — returns a 4-frame walk cycle wrapper.
@@ -2742,7 +2865,7 @@ function renderGrugWalking(t, opts = {}) {
   const { withLog = false } = opts;
   const traits = withLog ? { ...t, item: '__log__' } : t;
   const frames = [0, 1, 2, 3].map(phase => {
-    const body = drawBody(traits, phase) + drawHead(traits) + drawHair(traits) + drawHat(traits);
+    const body = drawBodyRim(traits) + drawBody(traits, phase) + drawHead(traits) + drawHair(traits) + drawHat(traits);
     return `<div class="wf"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W*SCALE} ${H*SCALE}" preserveAspectRatio="xMidYMax meet" style="image-rendering:pixelated;display:block;width:100%;height:100%;overflow:visible">${body}</svg></div>`;
   });
   return `<div class="walk-wrap"><div class="walk-cycle">${frames.join('')}</div></div>`;
@@ -3109,9 +3232,14 @@ function scheduleChat(scene, minMs = 6000, maxMs = 14000) {
         const ax = a.getBoundingClientRect().left;
         const bx = b.getBoundingClientRect().left;
         if (Math.abs(ax - bx) < 200) {
-          const [say1, say2] = pickTwoSayings();
-          chatBubble(a, say1, 2600);
-          setTimeout(() => chatBubble(b, say2, 2200), 900);
+          // ~25% chance the encounter is a fight instead of chat
+          if (Math.random() < 0.25) {
+            grugFight(a, b, scene);
+          } else {
+            const [say1, say2] = pickTwoSayings();
+            chatBubble(a, say1, 2600);
+            setTimeout(() => chatBubble(b, say2, 2200), 900);
+          }
         }
       }
     }
@@ -3125,6 +3253,93 @@ function pickTwoSayings() {
   let b;
   do { b = GRUG_SAYS[Math.floor(Math.random() * GRUG_SAYS.length)]; } while (b === a);
   return [a, b];
+}
+
+/* --- Grug fights: occasionally, two adjacent grugs bonk each other ---
+   Attacker lunges, dust puff + THWACK, target flinches, both resume walking.
+   Called from scheduleChat when the fight-roll succeeds. */
+const HIT_WORDS = ['*THWACK*', '*BONK*', '*THUD*', '*OOF*', '*SMACK*'];
+const HURT_SAYS = ['OW.', 'grug hurt.', 'why.', 'stop it.', 'grug angry now.'];
+const TAUNT_SAYS = ['grug win.', 'no touch tribe.', 'ha.', 'grug strong.', 'grug mad.'];
+
+function dustPuffSVG() {
+  // 8x8-ish puff of tan pixels, semi-transparent
+  return `<svg viewBox="0 0 16 12" preserveAspectRatio="xMidYMax meet" style="image-rendering:pixelated">
+    <rect x="6" y="8" width="4" height="2" fill="#c8a878" opacity="0.9"/>
+    <rect x="4" y="9" width="8" height="2" fill="#a68856" opacity="0.75"/>
+    <rect x="3" y="6" width="2" height="2" fill="#c8a878" opacity="0.6"/>
+    <rect x="11" y="6" width="2" height="2" fill="#c8a878" opacity="0.6"/>
+    <rect x="7" y="5" width="2" height="1" fill="#e0c088" opacity="0.7"/>
+    <rect x="1" y="7" width="1" height="1" fill="#a68856" opacity="0.5"/>
+    <rect x="14" y="7" width="1" height="1" fill="#a68856" opacity="0.5"/>
+    <rect x="5" y="3" width="1" height="1" fill="#e0c088" opacity="0.6"/>
+    <rect x="10" y="4" width="1" height="1" fill="#e0c088" opacity="0.6"/>
+  </svg>`;
+}
+
+function grugFight(a, b, scene) {
+  if (!a || !b || !scene) return;
+  if (a.classList.contains('talking') || b.classList.contains('talking')) return;
+  if (a.classList.contains('fighting') || b.classList.contains('fighting')) return;
+
+  // Determine who's on the LEFT (attacker walks INTO the other one).
+  // We want the attacker to face the target so the swing lands correctly.
+  const aRect = a.getBoundingClientRect();
+  const bRect = b.getBoundingClientRect();
+  const aIsLeft = aRect.left < bRect.left;
+  const attacker = aIsLeft ? a : b;
+  const target   = aIsLeft ? b : a;
+
+  // Make the attacker face right (or left if attacker was rtl)
+  // Attacker is on the left, so we want them facing right — remove any rtl class.
+  const attackerWasRtl = attacker.classList.contains('rtl');
+  const targetWasRtl = target.classList.contains('rtl');
+  attacker.classList.remove('rtl');   // face right toward target
+  target.classList.add('rtl');        // face left back toward attacker
+
+  attacker.classList.add('fighting');
+  target.classList.add('fighting');
+
+  // Wind-up: brief pause before the swing
+  setTimeout(() => {
+    attacker.classList.add('hitting');
+    // Impact FX injected at midpoint at the moment of contact
+    setTimeout(() => {
+      target.classList.add('hurt');
+      // Dust puff between them
+      const fx = document.createElement('div');
+      fx.className = 'hit-fx';
+      const attackerRect = attacker.getBoundingClientRect();
+      const targetRect   = target.getBoundingClientRect();
+      const sceneRect    = scene.getBoundingClientRect();
+      const midX = ((attackerRect.right + targetRect.left) / 2) - sceneRect.left;
+      fx.style.left = midX + 'px';
+      const word = HIT_WORDS[Math.floor(Math.random() * HIT_WORDS.length)];
+      fx.innerHTML = `<div class="thwack">${word}</div>${dustPuffSVG()}`;
+      scene.appendChild(fx);
+      setTimeout(() => fx.remove(), 640);
+    }, 240); // ~mid-swing
+  }, 180);
+
+  // Recovery: brief speech + resume walking
+  setTimeout(() => {
+    attacker.classList.remove('hitting', 'fighting');
+    target.classList.remove('hurt', 'fighting');
+    // Restore original facing direction
+    if (attackerWasRtl) attacker.classList.add('rtl');
+    if (!targetWasRtl) target.classList.remove('rtl');
+    // Brief post-fight lines
+    if (Math.random() < 0.7) {
+      const say = TAUNT_SAYS[Math.floor(Math.random() * TAUNT_SAYS.length)];
+      chatBubble(attacker, say, 1600);
+    }
+    if (Math.random() < 0.6) {
+      setTimeout(() => {
+        const say = HURT_SAYS[Math.floor(Math.random() * HURT_SAYS.length)];
+        chatBubble(target, say, 1800);
+      }, 400);
+    }
+  }, 900);
 }
 
 /* ============================================================
@@ -3607,26 +3822,157 @@ if (soundBtn) {
 }
 
 /* ============================================================
-   WALLET CONNECT — mock only; real wiring hooks in later
+   WALLET CONNECT — real, via window.ethereum (MetaMask, Rabby,
+   Coinbase Wallet, any EIP-1193 injected wallet)
    ============================================================ */
 const connectBtn = document.getElementById('connect-btn');
+let currentAccount = null;
+
+function shortAddr(a) {
+  return (a.slice(0, 6) + '…' + a.slice(-4)).toUpperCase();
+}
+
+function setConnectedUI(addr) {
+  currentAccount = addr;
+  if (!connectBtn) return;
+  connectBtn.textContent = shortAddr(addr);
+  connectBtn.classList.add('connected');
+  connectBtn.dataset.connected = '1';
+  connectBtn.dataset.address = addr;
+  // Let the rest of the site react (mint button, WL check, wallet grugs page)
+  document.dispatchEvent(new CustomEvent('grug:wallet-connected', { detail: { address: addr } }));
+  refreshMintCta();
+}
+
+function setDisconnectedUI() {
+  currentAccount = null;
+  if (!connectBtn) return;
+  connectBtn.textContent = 'CONNECT GRUG';
+  connectBtn.classList.remove('connected');
+  delete connectBtn.dataset.connected;
+  delete connectBtn.dataset.address;
+  document.dispatchEvent(new CustomEvent('grug:wallet-disconnected'));
+  refreshMintCta();
+}
+
+async function connectWallet() {
+  if (!window.ethereum) {
+    alert('grug not see wallet. install MetaMask (metamask.io) or another eth wallet browser extension, then reload.');
+    window.open('https://metamask.io/download/', '_blank');
+    return;
+  }
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    if (accounts && accounts[0]) setConnectedUI(accounts[0]);
+  } catch (err) {
+    if (err && err.code === 4001) {
+      // User rejected — silent
+      return;
+    }
+    console.warn('[grug wallet]', err);
+    alert('grug wallet not connect: ' + (err.message || 'unknown'));
+  }
+}
+
+// On page load, if wallet already authorized this origin, restore it silently
+async function restoreWalletIfAuthorized() {
+  if (!window.ethereum) return;
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+    if (accounts && accounts[0]) setConnectedUI(accounts[0]);
+  } catch (_) { /* silent */ }
+}
+restoreWalletIfAuthorized();
+
+// React to account/chain changes from the wallet extension
+if (window.ethereum && window.ethereum.on) {
+  window.ethereum.on('accountsChanged', (accounts) => {
+    if (accounts && accounts[0]) setConnectedUI(accounts[0]);
+    else setDisconnectedUI();
+  });
+  window.ethereum.on('chainChanged', () => window.location.reload());
+}
+
 if (connectBtn) {
   connectBtn.addEventListener('click', () => {
     if (connectBtn.dataset.connected) {
-      // Disconnect on second click
-      connectBtn.textContent = 'CONNECT GRUG';
-      connectBtn.classList.remove('connected');
-      delete connectBtn.dataset.connected;
+      // Wallets don't expose a "disconnect" API. Best we can do is drop our UI
+      // state — the extension itself retains permission. That's fine.
+      setDisconnectedUI();
       return;
     }
-    // Mock connect — will be swapped for real wallet later
-    const hex = (n) => Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0');
-    const addr = '0x' + hex() + '…' + hex().slice(0,4);
-    connectBtn.textContent = addr.toUpperCase();
-    connectBtn.classList.add('connected');
-    connectBtn.dataset.connected = '1';
+    connectWallet();
   });
 }
+
+/* ============================================================
+   MINT CTA — single dynamic button that reflects contract phase
+   Phases from the contract (Grugs.sol enum Phase):
+     0 = Closed       → "MINT SOON"      (disabled, teaser)
+     1 = Whitelist    → "MINT (WL)"      (uses whitelistMint)
+     2 = Public       → "MINT · 0.001 ETH" (uses publicMint)
+   Reads on-chain phase when contract address is known; otherwise
+   falls back to Closed and shows the pre-launch teaser.
+   ============================================================ */
+const GRUGS_CONTRACT_ADDRESS = ''; // set to deployed address after testnet deploy
+let currentPhase = 0;
+
+async function fetchContractPhase() {
+  if (!window.ethereum || !GRUGS_CONTRACT_ADDRESS) return 0;
+  try {
+    // phase() selector = keccak256("phase()").slice(0,4) = 0x9edd2f27
+    const data = '0x9edd2f27';
+    const result = await window.ethereum.request({
+      method: 'eth_call',
+      params: [{ to: GRUGS_CONTRACT_ADDRESS, data }, 'latest'],
+    });
+    return parseInt(result, 16) || 0;
+  } catch (_) {
+    return 0;
+  }
+}
+
+function refreshMintCta() {
+  const btn = document.getElementById('mint-cta-main');
+  if (!btn) return;
+  if (!currentAccount) {
+    btn.textContent = 'CONNECT GRUG';
+    btn.disabled = false;
+    return;
+  }
+  if (currentPhase === 0) {
+    btn.textContent = 'MINT SOON';
+    btn.disabled = true;
+    return;
+  }
+  if (currentPhase === 1) {
+    btn.textContent = 'MINT · WHITELIST';
+    btn.disabled = false;
+    return;
+  }
+  if (currentPhase === 2) {
+    btn.textContent = 'MINT · 0.001 ETH';
+    btn.disabled = false;
+    return;
+  }
+}
+
+async function onMintCtaClick() {
+  if (!currentAccount) { connectWallet(); return; }
+  if (currentPhase === 0) return; // disabled anyway
+  if (currentPhase === 1) return alert('grug fetching your proof from tribe list... (wire whitelistMint + merkle proof lookup when contract is live)');
+  if (currentPhase === 2) return alert('grug ready to sell. (wire publicMint when contract is live)');
+}
+
+// Poll phase every 30s once connected + contract address is set
+setInterval(async () => {
+  if (!GRUGS_CONTRACT_ADDRESS) return;
+  const p = await fetchContractPhase();
+  if (p !== currentPhase) { currentPhase = p; refreshMintCta(); }
+}, 30_000);
+
+// Initial mint CTA state
+refreshMintCta();
 
 /* ============================================================
    MINT SCENE — altar with rotating grug + walkers
