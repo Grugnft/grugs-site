@@ -158,12 +158,13 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
 /* ================ HERO ================ */
 .hero-scene {
   position: relative;
-  height: calc(100vh - 68px);
+  height: calc(100vh - 120px);
   min-height: 640px;
   overflow: hidden;
   border-bottom: 3px double var(--wall-2);
-  /* Break out of main's padding + max-width */
-  margin-top: calc(-1 * var(--pad-y, 40px));
+  /* Break out of main's padding + max-width (horizontally only).
+     No negative margin-top — the sticky header would otherwise cover the title. */
+  margin-top: 0;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   margin-bottom: 48px;
@@ -584,7 +585,27 @@ main { --pad-y: 40px; --pad-x: 32px; }
   transition: filter 0.12s ease;
 }
 .walker.grabbed .walk-cycle { animation-play-state: paused; }
-.walker.grabbed .walk-wrap { transform: scale(1.06); transition: transform 0.15s; }
+/* Struggle: grug wiggles + kicks while held. Slight scale-up so the fingers-holding-them read. */
+.walker.grabbed .walk-wrap {
+  animation: grug-struggle 260ms ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+@keyframes grug-struggle {
+  0%   { transform: scale(1.06) translateX(-2px) rotate(-4deg); }
+  25%  { transform: scale(1.07) translateX(3px)  rotate(6deg); }
+  50%  { transform: scale(1.06) translateY(-2px) rotate(-3deg); }
+  75%  { transform: scale(1.08) translateX(-3px) rotate(5deg); }
+  100% { transform: scale(1.06) translateX(2px)  rotate(-4deg); }
+}
+/* Kicking legs — the walk-cycle frames each contain the legs. We wobble the
+   whole cycle wrapper independently so the legs kick out even though paused. */
+.walker.grabbed .walk-cycle {
+  animation: grug-kick 180ms ease-in-out infinite alternate;
+}
+@keyframes grug-kick {
+  0%   { transform: translateX(-100%) translateY(0px); }
+  100% { transform: translateX(-100%) translateY(-1px); }
+}
 .walker.dropping {
   transition: transform 320ms cubic-bezier(0.55, 0.05, 0.7, 1);
   animation-play-state: paused;
@@ -761,7 +782,76 @@ section.chamber { margin-top: 72px; }
   line-height: 1.4;
 }
 
-/* ============ RUG RADAR (utility teaser) ============ */
+/* ============ RUG RADAR (utility teaser) ============
+   Hidden by default. Revealed when the user finds the easter egg
+   (click the central campfire 5 times on the home tab). Once unlocked,
+   the flag persists via localStorage. */
+.rug-radar.rr-locked { display: none !important; }
+.rr-secret-badge {
+  font-family: 'VT323', monospace;
+  font-size: 15px;
+  color: var(--moss);
+  border: 1px dashed var(--moss);
+  padding: 2px 8px;
+  margin-left: auto;
+  letter-spacing: 1px;
+  align-self: center;
+}
+.rr-comingsoon {
+  margin: 22px 0 18px;
+  padding: 28px;
+  background: linear-gradient(to bottom, rgba(15,26,16,0.85), rgba(10,15,10,0.75));
+  border: 2px dashed var(--moss);
+  border-radius: 2px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.rr-comingsoon::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(106,138,72,0.12) 0%, transparent 60%);
+  pointer-events: none;
+}
+.rr-comingsoon-eye {
+  font-size: 48px;
+  line-height: 1;
+  filter: drop-shadow(0 0 12px rgba(106,138,72,0.5));
+  animation: rr-eye-blink 4s infinite;
+}
+@keyframes rr-eye-blink {
+  0%, 92%, 100% { transform: scale(1); }
+  95% { transform: scaleY(0.05) scaleX(1.02); }
+  97% { transform: scale(1); }
+}
+.rr-comingsoon-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 22px;
+  color: var(--moss);
+  margin: 12px 0 8px;
+  letter-spacing: 3px;
+}
+.rr-comingsoon-sub {
+  color: var(--bone-dim);
+  font-size: 18px;
+  line-height: 1.6;
+  max-width: 520px;
+  margin: 0 auto;
+}
+/* Unlock celebration: brief highlight when the section first appears */
+.rug-radar.rr-just-unlocked {
+  animation: rr-unlock-pop 900ms ease-out;
+}
+@keyframes rr-unlock-pop {
+  0%   { opacity: 0; transform: translateY(10px) scale(0.97); box-shadow: 0 0 0 0 rgba(106,138,72,0); }
+  60%  { opacity: 1; transform: translateY(0)    scale(1.01); box-shadow: 0 0 40px 6px rgba(106,138,72,0.35); }
+  100% { opacity: 1; transform: translateY(0)    scale(1);    box-shadow: 0 0 0 0 rgba(106,138,72,0); }
+}
+/* Fire is interactive when it's the easter egg */
+.fire-wrap.fire-clickable { pointer-events: auto; cursor: pointer; }
+.fire-wrap.fire-clickable:hover .fire-glow { animation-duration: 0.7s; }
+
 .rug-radar {
   padding: 44px 40px;
   background:
@@ -772,20 +862,9 @@ section.chamber { margin-top: 72px; }
   position: relative;
   overflow: hidden;
 }
-.rug-radar::before {
-  content: "COMING SOON";
-  position: absolute;
-  top: 20px;
-  right: -40px;
-  padding: 6px 50px;
-  background: var(--moss);
-  color: var(--bone);
-  font-family: 'Press Start 2P', ui-monospace, monospace;
-  font-size: 11px;
-  letter-spacing: 2px;
-  transform: rotate(35deg);
-  box-shadow: 0 3px 0 rgba(0,0,0,0.3);
-}
+/* The old "COMING SOON" corner ribbon is removed — the internal .rr-comingsoon
+   panel now serves that role, and the corner ribbon collided with the new
+   "secret · you found it" badge. */
 .rr-header {
   display: flex;
   align-items: center;
@@ -1763,7 +1842,7 @@ section.chamber { margin-top: 72px; }
   .tabs { flex-wrap: wrap; justify-content: center; }
   .tab { font-size: 18px; padding: 6px 12px; }
   main { padding: 24px 16px; }
-  .hero-scene { min-height: 620px; height: calc(100vh - 130px); }
+  .hero-scene { min-height: 620px; height: calc(100vh - 180px); }
   .hero-overlay { padding-top: 40px; }
   .hero-title { letter-spacing: 4px; }
   .hero-ctas { margin-top: 32px; gap: 12px; }
@@ -1861,7 +1940,7 @@ section.chamber { margin-top: 72px; }
 
       <div class="cave-floor"></div>
 
-        <div class="fire-wrap fire-big">
+        <div class="fire-wrap fire-big fire-clickable" id="home-fire" title="">
           <div class="fire-glow"></div>
           <svg class="fire-svg" viewBox="0 0 28 34" preserveAspectRatio="xMidYMax meet">
             <!-- Ground shadow -->
@@ -2014,85 +2093,44 @@ section.chamber { margin-top: 72px; }
       </div>
     </section>
 
-    <section class="chamber rug-radar">
+    <!-- RUG RADAR — hidden until the user finds the easter egg (click the fire 5 times) -->
+    <section class="chamber rug-radar rr-locked" id="rug-radar-section">
       <div class="rr-header">
         <div class="rr-radar-icon">
           <svg viewBox="0 0 32 32">
-            <!-- Radar sweep: circle with grid + rotating line -->
             <rect x="2" y="2" width="28" height="28" fill="#0f1a10" stroke="#3a5a3a" stroke-width="1"/>
-            <!-- Radar rings -->
             <circle cx="16" cy="16" r="12" fill="none" stroke="#2a4a2a" stroke-width="0.5"/>
             <circle cx="16" cy="16" r="8"  fill="none" stroke="#2a4a2a" stroke-width="0.5"/>
             <circle cx="16" cy="16" r="4"  fill="none" stroke="#2a4a2a" stroke-width="0.5"/>
-            <!-- Crosshair -->
             <line x1="16" y1="4" x2="16" y2="28" stroke="#2a4a2a" stroke-width="0.5"/>
             <line x1="4" y1="16" x2="28" y2="16" stroke="#2a4a2a" stroke-width="0.5"/>
-            <!-- Rotating sweep -->
             <g transform-origin="16px 16px">
               <path d="M16,16 L16,4 A12,12 0 0,1 26.4,10 Z" fill="#5aca5a" opacity="0.4">
                 <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="3s" repeatCount="indefinite"/>
               </path>
             </g>
-            <!-- Blips -->
             <rect x="20" y="8"  width="1" height="1" fill="#ff5a4a"/>
             <rect x="10" y="20" width="1" height="1" fill="#ffb040"/>
             <rect x="22" y="22" width="1" height="1" fill="#8ac560"/>
-            <!-- Center dot -->
             <rect x="15" y="15" width="2" height="2" fill="#8ac560"/>
           </svg>
         </div>
         <h2 class="rr-title">RUG RADAR</h2>
+        <span class="rr-secret-badge">secret · you found it</span>
       </div>
       <p class="rr-tagline">
-        grug tool. grug see rug from mile away. every new mint on Robinhood chain get
-        <b>score out of 100</b>. red mean bad. green mean maybe okay. grug still hate machine.
+        grug see rug from mile away. every new mint on Robinhood chain get a
+        <b>score out of 100</b>. red bad. green maybe okay. grug still hate machine.
       </p>
-
-      <div class="rr-grid">
-        <div class="rr-card red">
-          <div class="rr-card-head">
-            <span class="rr-name">MOON APES</span>
-            <span class="rr-score red">14 / 100</span>
-          </div>
-          <p class="rr-verdict">contract owner can mint infinite. team wallet 40%. copy of last rug.</p>
-          <div class="rr-flags">
-            <span class="rr-flag danger">owner mints</span>
-            <span class="rr-flag danger">team 40%</span>
-            <span class="rr-flag warn">no doxx</span>
-          </div>
-        </div>
-        <div class="rr-card yellow">
-          <div class="rr-card-head">
-            <span class="rr-name">QUANTUM ORBS</span>
-            <span class="rr-score yellow">52 / 100</span>
-          </div>
-          <p class="rr-verdict">contract okay. team half-doxx. twitter age 6 days. promises "yield".</p>
-          <div class="rr-flags">
-            <span class="rr-flag warn">young twitter</span>
-            <span class="rr-flag warn">yield claim</span>
-            <span class="rr-flag ok">contract clean</span>
-          </div>
-        </div>
-        <div class="rr-card green">
-          <div class="rr-card-head">
-            <span class="rr-name">STONE CATS</span>
-            <span class="rr-score green">81 / 100</span>
-          </div>
-          <p class="rr-verdict">renounced owner. doxxed team. no promises. real art. mint at cost.</p>
-          <div class="rr-flags">
-            <span class="rr-flag ok">renounced</span>
-            <span class="rr-flag ok">doxxed</span>
-            <span class="rr-flag ok">no yield</span>
-          </div>
+      <div class="rr-comingsoon">
+        <div class="rr-comingsoon-body">
+          <div class="rr-comingsoon-eye">👁️</div>
+          <h3 class="rr-comingsoon-title">grug watch coming</h3>
+          <p class="rr-comingsoon-sub">
+            grug still building. rug radar go live after mint. for now only tribe with sharp eye know it exist.
+          </p>
         </div>
       </div>
-
-      <p style="color: var(--bone-dim); font-size: 18px; line-height: 1.6; max-width: 720px;">
-        grug scan look at: contract owner, mint limits, team wallet split, twitter age &amp;
-        engagement, whitelist share, similar contracts (copy detect), yield promises,
-        website age, payment splits. each thing add or take from score.
-      </p>
-
       <div class="rr-access">
         <span class="rr-access-lock">🪨</span>
         <b>hold 5+ grug</b> = free unlimited scans, forever. no rate limit, no scan tax. grug tool for tribe.
@@ -2106,7 +2144,7 @@ section.chamber { margin-top: 72px; }
         <p>grug not promise yield.</p>
         <p>grug not promise stock.</p>
         <p style="color: var(--torch); margin-top: 24px;">grug promise grug.</p>
-        <p style="color: var(--torch); margin-top: 8px;">grug promise rug radar for tribe.</p>
+        <p style="color: var(--torch); margin-top: 8px;">grug promise tribe.</p>
         <p style="color: var(--bone-dim); font-size: 20px; margin-top: 28px;">tribe make own thing. tribe watch machine burn.</p>
       </div>
     </section>
@@ -3810,22 +3848,97 @@ class SoundKit {
     src.connect(f).connect(g).connect(this.master);
     src.start(now);
   }
-  grunt() {
+  /* Expressive grug voice — formant-shaped tones that read as "uh", "oof",
+     "hmm", "aha" etc. Each call picks a random mood. Uses a sawtooth carrier
+     through a resonant bandpass at a vowel formant, vibrato for warmth, and
+     a subtle noise breath layer. */
+  grunt(mood) {
     if (this.muted || !this.ctx) return;
-    const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    osc.type = 'square';
-    const startF = 110 + Math.random()*30;
-    osc.frequency.setValueAtTime(startF, now);
-    osc.frequency.exponentialRampToValueAtTime(startF * 0.55, now + 0.28);
-    const g = this.ctx.createGain();
-    g.gain.setValueAtTime(0.001, now);
-    g.gain.exponentialRampToValueAtTime(0.18, now + 0.03);
-    g.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-    const f = this.ctx.createBiquadFilter();
-    f.type = 'lowpass'; f.frequency.value = 800;
-    osc.connect(f).connect(g).connect(this.master);
-    osc.start(now); osc.stop(now + 0.32);
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    // Moods define the vowel formant, base pitch, contour, and duration.
+    // formant Hz roughly maps to: 500=ah, 700=uh, 900=oh, 1100=eh, 1500=ih
+    const MOODS = {
+      ugh:  { f0: 105, formant: 700,  dur: 0.32, bend: -0.35, gain: 0.24 },
+      uhh:  { f0: 120, formant: 650,  dur: 0.22, bend: -0.15, gain: 0.22 },
+      oof:  { f0: 90,  formant: 850,  dur: 0.28, bend: -0.4,  gain: 0.28 },
+      hmm:  { f0: 115, formant: 500,  dur: 0.45, bend: -0.05, gain: 0.20, nasal: true },
+      aha:  { f0: 155, formant: 1100, dur: 0.30, bend: +0.20, gain: 0.24 },
+      ha:   { f0: 170, formant: 900,  dur: 0.12, bend: -0.2,  gain: 0.22 },
+      oh:   { f0: 130, formant: 850,  dur: 0.36, bend: -0.10, gain: 0.24 },
+      mmph: { f0: 100, formant: 500,  dur: 0.22, bend: -0.3,  gain: 0.20, nasal: true },
+    };
+    const keys = Object.keys(MOODS);
+    const chosen = MOODS[mood] || MOODS[keys[Math.floor(Math.random() * keys.length)]];
+    const dur = chosen.dur * (0.88 + Math.random() * 0.24);
+    const f0 = chosen.f0 * (0.94 + Math.random() * 0.12);
+    const endF = f0 * (1 + chosen.bend);
+
+    // Voice carrier: two slightly detuned sawtooths for grit
+    const osc1 = ctx.createOscillator(); osc1.type = 'sawtooth';
+    const osc2 = ctx.createOscillator(); osc2.type = 'sawtooth'; osc2.detune.value = -14;
+    osc1.frequency.setValueAtTime(f0, now);
+    osc2.frequency.setValueAtTime(f0, now);
+    osc1.frequency.exponentialRampToValueAtTime(Math.max(40, endF), now + dur);
+    osc2.frequency.exponentialRampToValueAtTime(Math.max(40, endF), now + dur);
+    // Vibrato: gentle pitch wobble → sounds alive, not synthetic
+    const vibrato = ctx.createOscillator(); vibrato.type = 'sine'; vibrato.frequency.value = 5 + Math.random()*2;
+    const vibGain = ctx.createGain(); vibGain.gain.value = f0 * 0.02;
+    vibrato.connect(vibGain).connect(osc1.frequency);
+    vibrato.connect(vibGain).connect(osc2.frequency);
+
+    // Formant filter — resonant bandpass at the vowel frequency
+    const formant = ctx.createBiquadFilter();
+    formant.type = 'bandpass';
+    formant.frequency.value = chosen.formant;
+    formant.Q.value = 4.5;
+    // Second formant a bit higher (helps the vowel character)
+    const formant2 = ctx.createBiquadFilter();
+    formant2.type = 'bandpass';
+    formant2.frequency.value = chosen.formant * 1.9;
+    formant2.Q.value = 3;
+    // Low-pass to tame the harshness
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200;
+
+    // Envelope: quick attack, sustain hump, natural decay
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(chosen.gain, now + Math.min(0.05, dur * 0.15));
+    g.gain.exponentialRampToValueAtTime(chosen.gain * 0.7, now + dur * 0.6);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+    // Nasal branch — mixes in a low bandpass hum for hmm/mmph
+    const merger = ctx.createGain(); merger.gain.value = 1;
+    osc1.connect(formant);
+    osc2.connect(formant);
+    formant.connect(formant2).connect(lp).connect(g).connect(merger);
+    if (chosen.nasal) {
+      const nasal = ctx.createBiquadFilter(); nasal.type = 'bandpass';
+      nasal.frequency.value = 350; nasal.Q.value = 6;
+      const ng = ctx.createGain(); ng.gain.value = 0.5;
+      osc1.connect(nasal); osc2.connect(nasal);
+      nasal.connect(ng).connect(g);
+    }
+
+    // Breath layer — filtered noise for a subtle exhale
+    const noiseLen = Math.floor(ctx.sampleRate * dur);
+    const nbuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
+    const nd = nbuf.getChannelData(0);
+    for (let i = 0; i < noiseLen; i++) nd[i] = (Math.random()*2-1) * 0.4;
+    const noise = ctx.createBufferSource(); noise.buffer = nbuf;
+    const nf = ctx.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 1400; nf.Q.value = 1;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.0001, now);
+    ng.gain.exponentialRampToValueAtTime(0.04, now + 0.02);
+    ng.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    noise.connect(nf).connect(ng).connect(merger);
+
+    merger.connect(this.master);
+    osc1.start(now); osc2.start(now); vibrato.start(now); noise.start(now);
+    osc1.stop(now + dur + 0.02);
+    osc2.stop(now + dur + 0.02);
+    vibrato.stop(now + dur + 0.02);
+    noise.stop(now + dur + 0.02);
   }
   smash() {
     if (this.muted || !this.ctx) return;
@@ -3951,24 +4064,39 @@ function grugDrop(e) {
   const w = d.walker;
   w.classList.remove('grabbed');
   const clientX = e.clientX ?? d.startClientX;
-  const clientY = e.clientY ?? d.startClientY;
   const dx = clientX - d.startClientX;
-  // Drop-to-ground: keep horizontal drift, snap vertical back to baseline
+  const wasTap = !d.moved;
+
+  // Phase 1: falling. Snap Y back to ground, keep the horizontal drift.
   w.classList.add('dropping');
   w.style.transform = `translate(${dx}px, 0px)`;
-  // Was this a tap (not a real drag)? Just play a little bubble and reset.
-  const wasTap = !d.moved;
+
   setTimeout(() => {
+    // Phase 2: LANDED. Walker is currently visible at (baseLeft + dx, groundY).
+    // We now restart walk-across from that same x so removing the transform
+    // does not cause a visible snap.
+    const newLeft = Math.max(-60, Math.min(d.sRect.width + 20, d.baseLeft + dx));
+    const dur = parseFloat(w.style.animationDuration) || 26;
+    const sw = d.sRect.width;
+    const total = sw + 80; // walk-across spans left:-60 → 100%+20
+    const isRtl = w.classList.contains('rtl');
+    let frac = (newLeft + 60) / total;
+    if (isRtl) frac = 1 - frac;
+    frac = Math.max(0.001, Math.min(0.999, frac));
+
+    // Force a fresh animation instance so the new delay takes effect.
+    // Chrome silently ignores animation-delay changes on a running animation;
+    // wiping `animation` + reflow + re-setting is the reliable restart trick.
+    w.style.animation = 'none';
+    void w.offsetWidth; // force reflow — this is required
+    w.style.animation = `walk-across ${dur}s linear ${-frac * dur}s infinite ${isRtl ? 'reverse' : 'normal'}`;
+
+    // Now the animation is set to render at exactly newLeft — clear the drag
+    // transform in the same frame so we get no visual snap.
+    w.style.transform = '';
     w.classList.remove('dropping');
     w.classList.add('landed');
     if (!wasTap) { try { sound.logThud(); } catch (_) {} }
-    // Reposition the walker so walk-across resumes from where we dropped them
-    const newLeft = Math.max(-60, Math.min(d.sRect.width + 20, d.baseLeft + dx));
-    setWalkerAnimTimeForX(w, newLeft);
-    // Clear the transform in the same frame we set the animation-delay so there's no snap
-    requestAnimationFrame(() => {
-      w.style.transform = '';
-    });
     if (!wasTap && Math.random() < 0.7) {
       const say = GRUG_DROP_SAYS[Math.floor(Math.random() * GRUG_DROP_SAYS.length)];
       setTimeout(() => chatBubble(w, say, 1400), 260);
@@ -3981,6 +4109,63 @@ document.addEventListener('pointerdown', (e) => {
   const walker = e.target.closest && e.target.closest('.walker');
   if (walker) grugGrab(walker, e);
 }, { passive: false });
+
+/* ============================================================
+   RUG RADAR EASTER EGG — click the fire 5 times on the home
+   tab to unlock the hidden Rug Radar section. Unlock persists
+   in localStorage so it stays revealed on return visits.
+   ============================================================ */
+const RR_UNLOCK_KEY = 'grugs_rr_unlocked_v1';
+(function initRugRadarEasterEgg() {
+  const section = document.getElementById('rug-radar-section');
+  const fire = document.getElementById('home-fire');
+  if (!section) return;
+  // Restore prior unlock state
+  try {
+    if (localStorage.getItem(RR_UNLOCK_KEY) === '1') {
+      section.classList.remove('rr-locked');
+    }
+  } catch (_) {}
+  if (!fire) return;
+
+  let clicks = 0;
+  let resetTimer = null;
+  const REQUIRED = 5;
+  const WINDOW_MS = 4000;
+
+  fire.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // If already unlocked, don't spam the user — just a warm pop sound
+    if (!section.classList.contains('rr-locked')) {
+      try { sound.pop(); } catch (_) {}
+      return;
+    }
+    clicks++;
+    // Visual feedback per click — subtle scale bump on the fire
+    fire.animate(
+      [{ transform: 'translateX(-50%) scale(1)' }, { transform: 'translateX(-50%) scale(1.08)' }, { transform: 'translateX(-50%) scale(1)' }],
+      { duration: 220, easing: 'ease-out' }
+    );
+    try { sound.pop(); } catch (_) {}
+    if (resetTimer) clearTimeout(resetTimer);
+    resetTimer = setTimeout(() => { clicks = 0; }, WINDOW_MS);
+
+    if (clicks >= REQUIRED) {
+      clicks = 0;
+      clearTimeout(resetTimer);
+      // Unlock — remove hidden state, mark just-unlocked for the reveal animation
+      section.classList.remove('rr-locked');
+      section.classList.add('rr-just-unlocked');
+      try { localStorage.setItem(RR_UNLOCK_KEY, '1'); } catch (_) {}
+      try { sound.grunt('aha'); } catch (_) {}
+      // Scroll it into view so the user actually sees what they unlocked
+      setTimeout(() => {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
+      setTimeout(() => section.classList.remove('rr-just-unlocked'), 1000);
+    }
+  });
+})();
 document.addEventListener('pointermove', grugDragMove, { passive: true });
 document.addEventListener('pointerup', grugDrop, { passive: true });
 document.addEventListener('pointercancel', grugDrop, { passive: true });
@@ -4403,18 +4588,25 @@ function wlShowToast() {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3200);
 }
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('wl-modal-submit');
-  if (btn) btn.addEventListener('click', () => {
-    if (wlRegisterCurrent()) wlModalClose();
-  });
-});
-// Register-button handler works even if DOMContentLoaded already fired (script at bottom)
+// Register-button handler — attached once, guarded so no duplicate submits.
+// (Previously there was both a DOMContentLoaded handler AND an inline one,
+// causing every click to POST twice → two rows in the sheet per submit.)
 {
   const btn = document.getElementById('wl-modal-submit');
   if (btn && !btn.dataset.wired) {
     btn.dataset.wired = '1';
-    btn.addEventListener('click', () => { if (wlRegisterCurrent()) wlModalClose(); });
+    let inFlight = false;
+    btn.addEventListener('click', async () => {
+      if (inFlight) return;
+      inFlight = true;
+      btn.disabled = true;
+      try {
+        if (wlRegisterCurrent()) wlModalClose();
+      } finally {
+        // Small cooldown so a rapid double-tap can't race
+        setTimeout(() => { inFlight = false; btn.disabled = false; }, 1500);
+      }
+    });
   }
 }
 function wlUpdateStatus() {
