@@ -150,7 +150,9 @@ header.nav {
   border-bottom: 4px solid #4a6a3a;
 }
 
-main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
+/* padding-top is 0 so hero-scenes touch the sticky header (no gap).
+   Non-hero content adds its own top padding via .chamber margin. */
+main { max-width: 1180px; margin: 0 auto; padding: 0 32px 40px; }
 
 .view { display: none; }
 .view.active { display: block; }
@@ -584,27 +586,23 @@ main { --pad-y: 40px; --pad-x: 32px; }
   filter: drop-shadow(0 6px 8px rgba(0,0,0,0.55)) brightness(1.05);
   transition: filter 0.12s ease;
 }
+/* Freeze the sprite frame while held. IMPORTANT: don't apply a new animation
+   to .walk-cycle — its keyframes use translateX to select which frame is
+   showing, so overriding with a fresh translate makes the whole grug vanish
+   into empty space beyond the last frame. Pausing the animation keeps the
+   grug on-screen at whatever frame they were in. */
 .walker.grabbed .walk-cycle { animation-play-state: paused; }
-/* Struggle: grug wiggles + kicks while held. Slight scale-up so the fingers-holding-them read. */
+/* Struggle: grug wiggles while held. Slight scale-up so the "held" feel reads. */
 .walker.grabbed .walk-wrap {
   animation: grug-struggle 260ms ease-in-out infinite;
   transform-origin: 50% 100%;
 }
 @keyframes grug-struggle {
-  0%   { transform: scale(1.06) translateX(-2px) rotate(-4deg); }
-  25%  { transform: scale(1.07) translateX(3px)  rotate(6deg); }
-  50%  { transform: scale(1.06) translateY(-2px) rotate(-3deg); }
-  75%  { transform: scale(1.08) translateX(-3px) rotate(5deg); }
-  100% { transform: scale(1.06) translateX(2px)  rotate(-4deg); }
-}
-/* Kicking legs — the walk-cycle frames each contain the legs. We wobble the
-   whole cycle wrapper independently so the legs kick out even though paused. */
-.walker.grabbed .walk-cycle {
-  animation: grug-kick 180ms ease-in-out infinite alternate;
-}
-@keyframes grug-kick {
-  0%   { transform: translateX(-100%) translateY(0px); }
-  100% { transform: translateX(-100%) translateY(-1px); }
+  0%   { transform: scale(1.06) translateX(-3px) rotate(-6deg); }
+  25%  { transform: scale(1.08) translateX(4px)  translateY(-1px) rotate(7deg); }
+  50%  { transform: scale(1.06) translateX(-2px) translateY(-2px) rotate(-5deg); }
+  75%  { transform: scale(1.08) translateX(3px)  rotate(6deg); }
+  100% { transform: scale(1.06) translateX(-3px) rotate(-6deg); }
 }
 .walker.dropping {
   transition: transform 320ms cubic-bezier(0.55, 0.05, 0.7, 1);
@@ -1128,10 +1126,18 @@ section.chamber { margin-top: 72px; }
   letter-spacing: 1px;
 }
 
-/* Move the mint overlay text up above the altar */
-.hero-scene-mint .hero-overlay { padding-top: 36px; }
-.hero-scene-mint .tagline { margin: 20px 0 6px; }
-.hero-scene-mint .sub-tag { margin-top: 4px; }
+/* Mint overlay text — sit tight to the top so the tagline/sub-tag don't
+   overhang the statue's head. Boss-bar takes the very top strip (~18-44px);
+   we leave 44px + a hair for it. */
+.hero-scene-mint .hero-overlay { padding-top: 68px; }
+.hero-scene-mint .hero-title {
+  /* GRUG is 4 letters instead of GRUGS — cap smaller so it doesn't crowd the altar */
+  font-size: clamp(48px, 10vw, 128px);
+  line-height: 0.95;
+  margin: 0;
+}
+.hero-scene-mint .tagline { margin: 8px 0 2px; }
+.hero-scene-mint .sub-tag { margin-top: 2px; }
 
 /* Whitelist check */
 .wl-check {
@@ -1807,6 +1813,33 @@ section.chamber { margin-top: 72px; }
 .addr { color: var(--bone); font-family: 'VT323', monospace; }
 .count { text-align: right; color: var(--torch); font-variant-numeric: tabular-nums; }
 
+/* Log board — "coming soon" note under the mock leaderboard */
+.board-coming-soon {
+  margin-top: 20px;
+  padding: 16px 20px;
+  background: rgba(15,26,16,0.55);
+  border: 2px dashed var(--moss);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: center;
+  text-align: center;
+}
+.bcs-eye {
+  font-size: 28px;
+  line-height: 1;
+  animation: rr-eye-blink 4s infinite;
+  filter: drop-shadow(0 0 8px rgba(106,138,72,0.4));
+}
+.bcs-text {
+  color: var(--bone-dim);
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+.bcs-text b { color: var(--moss); }
+
 /* Schedule chips */
 .chip-row { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
 .chip {
@@ -1841,7 +1874,7 @@ section.chamber { margin-top: 72px; }
   .nav-right { flex-wrap: wrap; justify-content: center; }
   .tabs { flex-wrap: wrap; justify-content: center; }
   .tab { font-size: 18px; padding: 6px 12px; }
-  main { padding: 24px 16px; }
+  main { padding: 0 16px 24px; }
   .hero-scene { min-height: 620px; height: calc(100vh - 180px); }
   .hero-overlay { padding-top: 40px; }
   .hero-title { letter-spacing: 4px; }
@@ -2311,6 +2344,10 @@ section.chamber { margin-top: 72px; }
         <div class="board-row you"><div class="rank">42</div><div class="addr">you</div><div class="count">46</div></div>
       </div>
       <p style="color: var(--ash); font-size: 18px; margin-top: 12px; text-align: center;">top fetcher get title on cave wall. forever.</p>
+      <div class="board-coming-soon">
+        <span class="bcs-eye">👁️</span>
+        <span class="bcs-text"><b>coming soon</b> — real leaderboard go live at mint. board above is grug guess.</span>
+      </div>
     </section>
   </section>
 
@@ -3790,7 +3827,7 @@ class SoundKit {
     if (!Ctx) return;
     this.ctx = new Ctx();
     this.master = this.ctx.createGain();
-    this.master.gain.value = 0.45;
+    this.master.gain.value = 0.75;
     this.master.connect(this.ctx.destination);
   }
   toggle() {
@@ -4115,18 +4152,12 @@ document.addEventListener('pointerdown', (e) => {
    tab to unlock the hidden Rug Radar section. Unlock persists
    in localStorage so it stays revealed on return visits.
    ============================================================ */
-const RR_UNLOCK_KEY = 'grugs_rr_unlocked_v1';
 (function initRugRadarEasterEgg() {
+  // Per-session easter egg: every refresh resets it, so it stays a discovery
+  // rather than a checkbox. No localStorage persistence.
   const section = document.getElementById('rug-radar-section');
   const fire = document.getElementById('home-fire');
-  if (!section) return;
-  // Restore prior unlock state
-  try {
-    if (localStorage.getItem(RR_UNLOCK_KEY) === '1') {
-      section.classList.remove('rr-locked');
-    }
-  } catch (_) {}
-  if (!fire) return;
+  if (!section || !fire) return;
 
   let clicks = 0;
   let resetTimer = null;
@@ -4156,7 +4187,7 @@ const RR_UNLOCK_KEY = 'grugs_rr_unlocked_v1';
       // Unlock — remove hidden state, mark just-unlocked for the reveal animation
       section.classList.remove('rr-locked');
       section.classList.add('rr-just-unlocked');
-      try { localStorage.setItem(RR_UNLOCK_KEY, '1'); } catch (_) {}
+      // No persistence — resets on refresh, keeps the discovery feel
       try { sound.grunt('aha'); } catch (_) {}
       // Scroll it into view so the user actually sees what they unlocked
       setTimeout(() => {
@@ -4171,26 +4202,54 @@ document.addEventListener('pointerup', grugDrop, { passive: true });
 document.addEventListener('pointercancel', grugDrop, { passive: true });
 
 const soundBtn = document.getElementById('sound-btn');
+function _renderSoundBtnState(on) {
+  if (!soundBtn) return;
+  soundBtn.classList.toggle('on', on);
+  const mx = soundBtn.querySelector('.mute-x');
+  const sw = soundBtn.querySelector('.sound-waves');
+  if (mx) mx.hidden = on;
+  if (sw) sw.hidden = !on;
+}
 if (soundBtn) {
-  soundBtn.addEventListener('click', () => {
+  // Icon defaults to "on" visually — matches the intent that sound is on by
+  // default. Actual audio starts on the first user interaction (browsers
+  // block autoplay before that; there's nothing we can do about it).
+  _renderSoundBtnState(true);
+  soundBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
     soundBtn.classList.remove('hint');
     const on = sound.toggle();
-    soundBtn.classList.toggle('on', on);
-    soundBtn.querySelector('.mute-x').hidden = on;
-    soundBtn.querySelector('.sound-waves').hidden = !on;
+    _renderSoundBtnState(on);
   });
-  // First-visit hint: pulse the sound icon 3x after the page settles.
-  // Skip on repeat visits or if user has already toggled it.
-  try {
-    if (!localStorage.getItem('grugs_sound_seen_v1')) {
-      setTimeout(() => {
-        soundBtn.classList.add('hint');
-        localStorage.setItem('grugs_sound_seen_v1', '1');
-      }, 1600);
-      setTimeout(() => soundBtn.classList.remove('hint'), 1600 + 1600 * 3 + 200);
-    }
-  } catch (e) {}
 }
+
+/* Auto-enable sound on the first user interaction — the browser blocks
+   AudioContext until then. If the user later mutes via the icon we respect
+   that and never auto-enable again. */
+(function autoStartSoundOnFirstInteraction() {
+  let userMutedByChoice = false;
+  if (soundBtn) {
+    soundBtn.addEventListener('click', () => { userMutedByChoice = true; }, { once: true });
+  }
+  const kick = () => {
+    if (userMutedByChoice) return cleanup();
+    sound.ensure();
+    if (!sound.ctx) return cleanup();
+    if (sound.ctx.state === 'suspended') sound.ctx.resume();
+    if (sound.muted) {
+      sound.muted = false;
+      sound.startAmbient();
+      _renderSoundBtnState(true);
+    }
+    cleanup();
+  };
+  function cleanup() {
+    ['pointerdown', 'keydown', 'touchstart', 'click'].forEach(ev =>
+      document.removeEventListener(ev, kick, true));
+  }
+  ['pointerdown', 'keydown', 'touchstart', 'click'].forEach(ev =>
+    document.addEventListener(ev, kick, { capture: true, once: false }));
+})();
 
 /* ============================================================
    WALLET CONNECT — real, via window.ethereum (MetaMask, Rabby,
@@ -4225,6 +4284,40 @@ function setDisconnectedUI() {
   document.dispatchEvent(new CustomEvent('grug:wallet-disconnected'));
   refreshMintCta();
 }
+
+/* ============================================================
+   YOUR GRUGS — plug the wallet's owned tokenIds into the logs tab.
+   Right now: empty until wallet connects (pre-mint), and even when
+   connected there's no contract yet so we still show 0. Once the
+   contract is deployed to a testnet, replace loadWalletGrugsFromChain
+   with a real balanceOf + tokenOfOwnerByIndex + tokenURI loop.
+   For local demo/testing, `window.grugsSetWalletGrugs([...])` accepts
+   an array of trait objects and re-renders the grid.
+   ============================================================ */
+async function loadWalletGrugsFromChain(address) {
+  // Placeholder. When the contract exists, this will:
+  //   const c = new ethers.Contract(GRUGS_ADDRESS, ABI, provider);
+  //   const bal = await c.balanceOf(address);
+  //   for i in 0..bal: tokenId = await c.tokenOfOwnerByIndex(address, i);
+  //     tokenURI = await c.tokenURI(tokenId); parse traits; push to arr.
+  //   walletGrugs = arr; renderGrids();
+  return [];
+}
+window.grugsSetWalletGrugs = function (arr) {
+  walletGrugs = Array.isArray(arr) ? arr : [];
+  if (typeof renderGrids === 'function') renderGrids();
+};
+document.addEventListener('grug:wallet-connected', async (e) => {
+  const addr = e.detail && e.detail.address;
+  if (!addr) return;
+  const owned = await loadWalletGrugsFromChain(addr);
+  walletGrugs = owned;
+  if (typeof renderGrids === 'function') renderGrids();
+});
+document.addEventListener('grug:wallet-disconnected', () => {
+  walletGrugs = [];
+  if (typeof renderGrids === 'function') renderGrids();
+});
 
 async function connectWallet() {
   if (!window.ethereum) {
