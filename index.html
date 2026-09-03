@@ -766,6 +766,16 @@ section.chamber { margin-top: 72px; }
   transition: transform 0.2s, border-color 0.2s;
 }
 .pillar:hover { transform: translateY(-3px); border-left-color: var(--ember); }
+.pillar-link { cursor: pointer; text-decoration: none; color: inherit; display: block; }
+.pillar-link:focus-visible { outline: 2px solid var(--torch); outline-offset: 4px; }
+.pillar-arrow {
+  color: var(--ember);
+  margin-left: 8px;
+  font-size: 0.85em;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+.pillar-link:hover .pillar-arrow { transform: translateX(4px); }
 .pillar h3 {
   font-family: 'Press Start 2P', ui-monospace, monospace;
   font-size: 13px;
@@ -1114,10 +1124,14 @@ section.chamber { margin-top: 72px; }
 .altar-plaque::before { top: 3px; left: 4px; }
 .altar-plaque::after  { top: 3px; right: 4px; }
 .plaque-title {
-  font-size: 14px;
+  font-size: 12px;
   color: #1a0e05;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   text-shadow: 1px 1px 0 rgba(255,255,255,0.25);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 .plaque-sub {
   font-size: 8px;
@@ -2092,7 +2106,6 @@ section.chamber { margin-top: 72px; }
 
       <div class="hero-overlay">
         <h1 id="hero-title" class="hero-title">GRUGS</h1>
-        <p class="tagline">no rug. only grug.</p>
         <p class="sub-tag">10,000 caveman. anti-machine. anti-rug. on chain.</p>
       </div>
 
@@ -2111,18 +2124,18 @@ section.chamber { margin-top: 72px; }
     <section class="chamber">
       <h2 class="chamber-title">grug do what</h2>
       <div class="pillars">
-        <div class="pillar">
-          <h3>get grug</h3>
+        <a class="pillar pillar-link" data-tab-link="mint" role="button" tabindex="0">
+          <h3>get grug <span class="pillar-arrow">▸</span></h3>
           <p>grug come to cave. grug now tribe. small rock, big grug.</p>
-        </div>
-        <div class="pillar">
-          <h3>get log</h3>
+        </a>
+        <a class="pillar pillar-link" data-tab-link="logs" role="button" tabindex="0">
+          <h3>get log <span class="pillar-arrow">▸</span></h3>
           <p>grug walk to pile. grug bring log back. tribe count wood together.</p>
-        </div>
-        <div class="pillar">
-          <h3>smash machine</h3>
+        </a>
+        <a class="pillar pillar-link" data-tab-link="smash" role="button" tabindex="0">
+          <h3>smash machine <span class="pillar-arrow">▸</span></h3>
           <p>machine make bad. grug hit machine. grug feel better after.</p>
-        </div>
+        </a>
       </div>
     </section>
 
@@ -2183,7 +2196,7 @@ section.chamber { margin-top: 72px; }
     </section>
 
     <section class="chamber">
-      <h2 class="chamber-title">meet the tribe</h2>
+      <h2 class="chamber-title">meet tribe</h2>
       <div class="grug-grid" id="tribe-grid"></div>
     </section>
   </section>
@@ -2194,10 +2207,10 @@ section.chamber { margin-top: 72px; }
       <div class="boss-bar">
         <div class="boss-bar-label">
           <span class="label">tribe <span class="live">LIVE</span></span>
-          <span class="values"><span id="mint-bar-count">2,847</span> / 10,000</span>
+          <span class="values"><span id="mint-bar-count">0</span> / 10,000</span>
         </div>
         <div class="boss-bar-track">
-          <div class="boss-bar-fill" id="mint-bar-fill" style="width: 28.47%"></div>
+          <div class="boss-bar-fill" id="mint-bar-fill" style="width: 0%"></div>
         </div>
       </div>
       <div class="cave-wall-detail"></div>
@@ -2220,8 +2233,8 @@ section.chamber { margin-top: 72px; }
         <div class="altar-grug" id="altar-grug"></div>
         <div class="altar-stone"></div>
         <div class="altar-plaque">
-          <div class="plaque-title">GRUG OF LEGEND</div>
-          <div class="plaque-sub">one of hundred rarest</div>
+          <div class="plaque-title">GRUG</div>
+          <div class="plaque-sub">legend · 1/100</div>
         </div>
       </div>
 
@@ -2230,7 +2243,7 @@ section.chamber { margin-top: 72px; }
       <div class="hero-overlay">
         <h1 class="hero-title">GRUG</h1>
         <p class="tagline">free with smash. easy for grug.</p>
-        <p class="sub-tag"><span id="mint-count-inline">2,847</span> of 10,000 grug in cave.</p>
+        <p class="sub-tag"><span id="mint-count-inline">0</span> of 10,000 grug in cave.</p>
       </div>
     </div>
 
@@ -2289,10 +2302,10 @@ section.chamber { margin-top: 72px; }
       <div class="boss-bar">
         <div class="boss-bar-label">
           <span class="label">wood pile <span class="live">LIVE</span></span>
-          <span class="values"><span id="log-bar-count">1,203</span> / 10,000</span>
+          <span class="values"><span id="log-bar-count">0</span> / 10,000</span>
         </div>
         <div class="boss-bar-track">
-          <div class="boss-bar-fill" id="log-bar-fill" style="width: 12.03%"></div>
+          <div class="boss-bar-fill" id="log-bar-fill" style="width: 0%"></div>
         </div>
       </div>
       <div class="cave-wall-detail"></div>
@@ -2319,7 +2332,7 @@ section.chamber { margin-top: 72px; }
       <div class="hero-overlay">
         <h1 class="hero-title">LOGS</h1>
         <p class="tagline">the wood pile grow slow.</p>
-        <p class="sub-tag"><span id="log-count">1,203</span> logs · 10,000 to next thing.</p>
+        <p class="sub-tag"><span id="log-count">0</span> logs · 10,000 to next thing.</p>
       </div>
     </div>
 
@@ -2491,10 +2504,10 @@ section.chamber { margin-top: 72px; }
 </main>
 
 <footer class="hud">
-  <div class="stat"><span>tribe</span><b id="hud-tribe">2,847</b></div>
-  <div class="stat"><span>logs</span><b id="hud-logs">1,203</b></div>
-  <div class="stat"><span>machines smashed</span><b id="hud-smash">14,271</b></div>
-  <div class="stat phase"><span>phase</span><b>0 — release</b></div>
+  <div class="stat"><span>tribe</span><b id="hud-tribe">0</b></div>
+  <div class="stat"><span>logs</span><b id="hud-logs">0</b></div>
+  <div class="stat"><span>machines smashed</span><b id="hud-smash">0</b></div>
+  <div class="stat phase"><span>phase</span><b>0 — pre-mint</b></div>
 </footer>
 
 <!-- Whitelist registration modal — triggered when a wallet crosses 10 smashes -->
@@ -3027,11 +3040,29 @@ function randomGrug() {
 /* ============================================================
    SITE STATE
    ============================================================ */
-const NAMES = ['sticky','stone','big','ug','glug','oog','rok','moss','mud','flint','ash','ember','tuk','bonk','klop'];
+/* Caveman name generator — same shape as the on-chain metadata generator.
+   Every grug gets one; matches what shows on the plaque + card. */
+const NAME_ONSETS = ['','G','GR','GL','K','KR','KL','T','TR','TH','THR','D','DR','B','BR','BL','M','N','S','SH','SN','W','Z','ZR','V','F','FR','FL','CH','P','PR','H','Y'];
+const NAME_VOWELS = ['A','O','U','AR','OG','UR','OO','ORG','UG','AG','AH','ORM','ONG'];
+const NAME_CODAS = ['','G','GG','K','T','N','M','RK','RG','ND','NK','MP','SH','GAR','GAX','BONK','ORK','ORG','A','OK'];
+const NAME_TITLES = [
+  null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,
+  'THE HEAVY','THE TALL','THE HUNGRY','STONEHAND','FIRE-EYE','LOG-BREAKER','LOUD',
+];
+function generateCavemanName() {
+  const on = NAME_ONSETS[Math.floor(Math.random() * NAME_ONSETS.length)];
+  const vw = NAME_VOWELS[Math.floor(Math.random() * NAME_VOWELS.length)];
+  const co = NAME_CODAS[Math.floor(Math.random() * NAME_CODAS.length)];
+  let stem = on + vw + co;
+  if (stem.length < 2) stem = 'GRUG';
+  if (stem.length > 8) stem = stem.slice(0, 8);
+  const title = NAME_TITLES[Math.floor(Math.random() * NAME_TITLES.length)];
+  return title ? `${stem} ${title}` : stem;
+}
 function makeGrug(seed) {
   const traits = randomGrug();
   const id = '#' + String(Math.floor(1 + Math.random()*9999)).padStart(4,'0');
-  const name = Math.random() < 0.7 ? NAMES[Math.floor(Math.random()*NAMES.length)] : '(no name)';
+  const name = generateCavemanName();
   return { id, name, traits, logs: Math.floor(Math.random()*30), smashes: Math.floor(Math.random()*30), ready: true };
 }
 // Sample tribe (shown on home page — random showcase, not user-owned)
@@ -3086,6 +3117,21 @@ function showTab(id) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+// Chip/pillar → tab links (data-tab-link="mint" etc.)
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('[data-tab-link]');
+  if (!link) return;
+  showTab(link.dataset.tabLink);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const link = e.target.closest && e.target.closest('[data-tab-link]');
+  if (!link) return;
+  e.preventDefault();
+  showTab(link.dataset.tabLink);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
 
 /* ============================================================
    CARD RENDER
@@ -3229,11 +3275,7 @@ document.addEventListener('click', (e) => {
       if (barCount) barCount.textContent = next.toLocaleString();
       if (barFill) barFill.style.width = Math.min(100, next / 20000 * 100).toFixed(2) + '%';
     }
-    const hud = document.getElementById('hud-smash');
-    if (hud) {
-      const cur = parseInt(hud.textContent.replace(/,/g,''),10);
-      hud.textContent = (cur+1).toLocaleString();
-    }
+    // hud-smash update is handled inside wlRecordSmash → recordGlobalSmash
   }
   renderGrids();
 });
@@ -3801,12 +3843,7 @@ if (bigMachine) {
     // Dismiss the click-hint once the user has learned it
     const hint = document.getElementById('smash-hint');
     if (hint) hint.classList.add('hidden');
-    // Bump the "big" global smash counter in the HUD (community total)
-    const hud = document.getElementById('hud-smash');
-    if (hud) {
-      const cur = parseInt(hud.textContent.replace(/,/g,''),10);
-      hud.textContent = (cur+1).toLocaleString();
-    }
+    // hud-smash update happens inside wlRecordSmash → recordGlobalSmash
     setTimeout(() => bigMachine.classList.remove('smashing'), 600);
   });
 }
@@ -3840,9 +3877,11 @@ class SoundKit {
   }
   startAmbient() {
     if (this.crackleNode) return;
-    const sr = this.ctx.sampleRate;
+    const ctx = this.ctx;
+    const sr = ctx.sampleRate;
+    // ---- FIRE CRACKLE LAYER (unchanged) ----
     const bufSize = sr * 3;
-    const buf = this.ctx.createBuffer(1, bufSize, sr);
+    const buf = ctx.createBuffer(1, bufSize, sr);
     const d = buf.getChannelData(0);
     let last = 0;
     for (let i = 0; i < bufSize; i++) {
@@ -3850,14 +3889,59 @@ class SoundKit {
       last = (last + 0.02 * w) / 1.02;
       d[i] = last * 3.2;
     }
-    this.crackleNode = this.ctx.createBufferSource();
+    this.crackleNode = ctx.createBufferSource();
     this.crackleNode.buffer = buf; this.crackleNode.loop = true;
-    const filt = this.ctx.createBiquadFilter();
+    const filt = ctx.createBiquadFilter();
     filt.type = 'highpass'; filt.frequency.value = 300;
-    const g = this.ctx.createGain(); g.gain.value = 0.22;
-    this.crackleNode.connect(filt).connect(g).connect(this.master);
+    const cg = ctx.createGain(); cg.gain.value = 0.22;
+    this.crackleNode.connect(filt).connect(cg).connect(this.master);
     this.crackleNode.start();
-    // Random pops (fire crackle bursts) — more frequent + louder
+
+    // ---- CAVE DRONE (Moria-style) ----
+    // Sustained low drone: root A1 (~55Hz) + fifth E2 (~82Hz) + faint octave.
+    // Slow LFO on gain gives a breathing feel. Everything sits under 500Hz.
+    this.droneNodes = [];
+    const droneBus = ctx.createGain(); droneBus.gain.value = 0.35;
+    const droneLP = ctx.createBiquadFilter();
+    droneLP.type = 'lowpass'; droneLP.frequency.value = 480; droneLP.Q.value = 0.6;
+    droneBus.connect(droneLP).connect(this.master);
+    const notes = [
+      { f: 55,  type: 'sine',     g: 0.28 },
+      { f: 55,  type: 'triangle', g: 0.10, detune: -8 },  // slight detune → chorus
+      { f: 82.5, type: 'sine',    g: 0.16 },              // fifth
+      { f: 110, type: 'sine',     g: 0.06 },              // octave, very quiet
+    ];
+    notes.forEach(n => {
+      const osc = ctx.createOscillator();
+      osc.type = n.type;
+      osc.frequency.value = n.f;
+      if (n.detune) osc.detune.value = n.detune;
+      const g = ctx.createGain(); g.gain.value = n.g;
+      // Slow amplitude LFO for the "breathing cave" motion
+      const lfo = ctx.createOscillator(); lfo.type = 'sine';
+      lfo.frequency.value = 0.06 + Math.random() * 0.04; // ~0.06-0.10 Hz
+      const lfoAmp = ctx.createGain(); lfoAmp.gain.value = n.g * 0.35;
+      lfo.connect(lfoAmp).connect(g.gain);
+      osc.connect(g).connect(droneBus);
+      osc.start(); lfo.start();
+      this.droneNodes.push(osc, lfo);
+    });
+    // Very slow "cavern breath" — huge oscillation over 20-30s
+    this.droneBus = droneBus;
+    const breath = ctx.createOscillator(); breath.type = 'sine';
+    breath.frequency.value = 0.04; // one full cycle every 25s
+    const breathAmp = ctx.createGain(); breathAmp.gain.value = 0.12;
+    breath.connect(breathAmp).connect(droneBus.gain);
+    breath.start();
+    this.droneNodes.push(breath);
+
+    // Distant deep drum — sparse. Simulates dripping / echoing rocks.
+    this.droneDrumTimer = setInterval(() => {
+      if (this.muted) return;
+      if (Math.random() < 0.35) this._caveDrum();
+    }, 8000);
+
+    // ---- Fire crackle pop bursts ----
     this.popTimer = setInterval(() => {
       if (!this.muted && Math.random() < 0.65) this.pop();
     }, 500);
@@ -3866,10 +3950,41 @@ class SoundKit {
       if (!this.muted && Math.random() < 0.5) this.grunt();
     }, 4200);
   }
+  _caveDrum() {
+    if (!this.ctx) return;
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    // Deep drum: low sine hit with quick decay + long reverb tail
+    const osc = ctx.createOscillator(); osc.type = 'sine';
+    osc.frequency.setValueAtTime(80, now);
+    osc.frequency.exponentialRampToValueAtTime(30, now + 0.5);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.5, now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+    // Simple delay for cave echo
+    const dly = ctx.createDelay(2.5);
+    dly.delayTime.value = 0.55;
+    const fb = ctx.createGain(); fb.gain.value = 0.32;
+    const wet = ctx.createGain(); wet.gain.value = 0.55;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 260;
+    osc.connect(g);
+    g.connect(this.master);
+    g.connect(dly);
+    dly.connect(fb).connect(dly);   // feedback loop for echo
+    dly.connect(lp).connect(wet).connect(this.master);
+    osc.start(now); osc.stop(now + 2.0);
+  }
   stopAmbient() {
     if (this.crackleNode) { try { this.crackleNode.stop(); } catch(e){} this.crackleNode = null; }
     if (this.popTimer) { clearInterval(this.popTimer); this.popTimer = null; }
     if (this.gruntTimer) { clearInterval(this.gruntTimer); this.gruntTimer = null; }
+    if (this.droneDrumTimer) { clearInterval(this.droneDrumTimer); this.droneDrumTimer = null; }
+    if (this.droneNodes) {
+      this.droneNodes.forEach(n => { try { n.stop(); } catch(_){} });
+      this.droneNodes = null;
+    }
+    this.droneBus = null;
   }
   pop() {
     if (this.muted || !this.ctx) return;
@@ -4455,11 +4570,13 @@ function refreshAltarGrug() {
   setTimeout(() => {
     const pick = LEGENDARY_GRUGS[altarIdx];
     el.innerHTML = renderGrugSprite(pick.traits);
-    // Update the plaque with the grug's number
+    // Assign a caveman name if the legendary pick doesn't have one yet
+    if (!pick.name) pick.name = generateCavemanName();
+    // Update the plaque with the grug's name + number
     const plaqueTitle = document.querySelector('.altar-plaque .plaque-title');
     const plaqueSub = document.querySelector('.altar-plaque .plaque-sub');
-    if (plaqueTitle) plaqueTitle.textContent = 'GRUG #' + String(pick.id).padStart(4, '0');
-    if (plaqueSub) plaqueSub.textContent = 'legend · ' + (altarIdx + 1) + ' of 100';
+    if (plaqueTitle) plaqueTitle.textContent = pick.name;
+    if (plaqueSub) plaqueSub.textContent = 'grug #' + String(pick.id).padStart(4, '0') + ' · legend ' + (altarIdx + 1) + '/100';
     el.style.opacity = '1';
     altarIdx = (altarIdx + 1) % LEGENDARY_GRUGS.length;
   }, 400);
@@ -4637,6 +4754,8 @@ function wlCurrentAddr() {
   return (btn.dataset.address || btn.textContent || '').toLowerCase();
 }
 function wlRecordSmash() {
+  // Anyone (connected or not) contributes to the global smash counter
+  recordGlobalSmash();
   const addr = wlCurrentAddr();
   if (!addr) return;
   const d = wlLoad();
@@ -4650,6 +4769,75 @@ function wlRecordSmash() {
   }
   wlUpdateStatus();
 }
+
+/* ============================================================
+   GLOBAL SMASH COUNTER — pushes each visitor's smashes to the
+   Apps Script backend so the HUD shows a real community total.
+   Batched: we accumulate locally and POST every 20s (or on
+   pagehide) so we're not hammering the endpoint.
+   ============================================================ */
+let __pendingSmashes = 0;
+let __statsCache = { totalSmashes: 0, totalWallets: 0, at: 0 };
+function recordGlobalSmash() {
+  __pendingSmashes++;
+  // Show it locally right away — reconciliation happens on next stats poll
+  const hud = document.getElementById('hud-smash');
+  if (hud) {
+    const cur = parseInt((hud.textContent || '0').replace(/,/g,''), 10) || 0;
+    hud.textContent = (cur + 1).toLocaleString();
+  }
+}
+async function flushPendingSmashes() {
+  if (!WL_WEBHOOK_URL || __pendingSmashes <= 0) return;
+  const delta = __pendingSmashes;
+  __pendingSmashes = 0;
+  try {
+    await fetch(WL_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'bumpSmashes',
+        delta: delta,
+        source: 'grugs.site',
+      }),
+      keepalive: true, // survives pagehide
+    });
+  } catch (e) {
+    // On failure, put them back in the queue for the next flush
+    __pendingSmashes += delta;
+  }
+}
+async function fetchGlobalStats() {
+  if (!WL_WEBHOOK_URL) return;
+  try {
+    const url = new URL(WL_WEBHOOK_URL);
+    url.searchParams.set('action', 'stats');
+    const res = await fetch(url.toString());
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data || !data.ok) return;
+    __statsCache = { ...data, at: Date.now() };
+    const hud = document.getElementById('hud-smash');
+    if (hud && typeof data.totalSmashes === 'number') {
+      // Add any local pending on top so we don't visually go backwards
+      hud.textContent = (data.totalSmashes + __pendingSmashes).toLocaleString();
+    }
+    const tribe = document.getElementById('hud-tribe');
+    if (tribe && typeof data.totalWallets === 'number') {
+      tribe.textContent = data.totalWallets.toLocaleString();
+    }
+  } catch (_) {}
+}
+// Kick off the pollers once the page settles
+setTimeout(() => {
+  fetchGlobalStats();
+  setInterval(fetchGlobalStats, 20000);   // refresh HUD every 20s
+  setInterval(flushPendingSmashes, 15000); // push local smashes every 15s
+}, 1200);
+// Flush any pending smashes as the user leaves — keepalive: true lets the
+// request survive even after unload starts.
+window.addEventListener('pagehide', flushPendingSmashes);
+window.addEventListener('beforeunload', flushPendingSmashes);
 function wlCount() {
   const addr = wlCurrentAddr();
   if (!addr) return 0;
