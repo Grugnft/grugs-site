@@ -402,18 +402,18 @@ main { --pad-y: 40px; --pad-x: 32px; }
   pointer-events: none;
 }
 .fire-wrap.fire-big {
-  width: 340px;
-  height: 380px;
-  bottom: 12px;
+  width: 220px;
+  height: 250px;
+  bottom: 18px;
 }
 .fire-wrap.fire-big .fire-svg {
-  width: 340px;
-  height: 370px;
+  width: 220px;
+  height: 240px;
 }
 .fire-wrap.fire-big .fire-glow {
-  width: 640px;
-  height: 440px;
-  bottom: -80px;
+  width: 440px;
+  height: 300px;
+  bottom: -52px;
 }
 /* Extra ground shadow so the logs feel planted */
 .fire-wrap.fire-big::after {
@@ -422,8 +422,8 @@ main { --pad-y: 40px; --pad-x: 32px; }
   bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 300px;
-  height: 26px;
+  width: 200px;
+  height: 20px;
   background: radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.35) 45%, transparent 70%);
   z-index: -1;
   pointer-events: none;
@@ -565,26 +565,31 @@ main { --pad-y: 40px; --pad-x: 32px; }
 /* Impact FX — dust puff + THWACK, injected at the midpoint between two walkers */
 .hit-fx {
   position: absolute;
-  bottom: 60px;
-  width: 64px;
-  height: 64px;
+  bottom: 72px;
+  width: 96px;
+  height: 96px;
   pointer-events: none;
-  z-index: 9;
-  animation: hit-puff 640ms ease-out forwards;
+  z-index: 30;
+  animation: hit-puff 720ms ease-out forwards;
   transform: translate(-50%, 0);
 }
 .hit-fx svg { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
 .hit-fx .thwack {
   position: absolute;
-  top: 4px;
+  top: -8px;
   left: 50%;
   transform: translateX(-50%) rotate(-6deg);
-  color: var(--torch-peak, #fff4c0);
-  text-shadow: 2px 2px 0 #7c2718, -1px -1px 0 #7c2718, 1px -1px 0 #7c2718, -1px 1px 0 #7c2718;
+  color: #fff4c0;
+  text-shadow:
+    3px 3px 0 #7c2718, -2px -2px 0 #7c2718,
+    2px -2px 0 #7c2718, -2px 2px 0 #7c2718,
+    0 3px 0 #7c2718, 3px 0 0 #7c2718,
+    0 -3px 0 #7c2718, -3px 0 0 #7c2718;
   font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
+  font-size: 15px;
   letter-spacing: 1px;
   white-space: nowrap;
+  z-index: 2;
 }
 @keyframes hit-puff {
   0%   { opacity: 0; transform: translate(-50%, 6px) scale(0.4); }
@@ -3210,7 +3215,7 @@ function chatBubble(walker, text, holdMs = 2400) {
     walker.classList.remove('talking');
   }, holdMs);
 }
-function scheduleChat(scene, minMs = 6000, maxMs = 14000) {
+function scheduleChat(scene, minMs = 3500, maxMs = 8500) {
   if (!scene) return;
   const tick = () => {
     // Only run when the scene's containing tab is active
@@ -3231,9 +3236,9 @@ function scheduleChat(scene, minMs = 6000, maxMs = 14000) {
         // Only chat if they're close enough
         const ax = a.getBoundingClientRect().left;
         const bx = b.getBoundingClientRect().left;
-        if (Math.abs(ax - bx) < 200) {
-          // ~25% chance the encounter is a fight instead of chat
-          if (Math.random() < 0.25) {
+        if (Math.abs(ax - bx) < 320) {
+          // ~55% chance the encounter is a fight instead of chat
+          if (Math.random() < 0.55) {
             grugFight(a, b, scene);
           } else {
             const [say1, say2] = pickTwoSayings();
@@ -3276,6 +3281,26 @@ function dustPuffSVG() {
     <rect x="10" y="4" width="1" height="1" fill="#e0c088" opacity="0.6"/>
   </svg>`;
 }
+
+// Console helper — force a fight in whatever hero scene is currently active.
+// Type `grugsForceFight()` in DevTools to test the animation on demand.
+window.grugsForceFight = function () {
+  const activeView = document.querySelector('.view.active');
+  const scene = activeView && activeView.querySelector('.hero-scene');
+  if (!scene) return console.warn('[grugs] no active hero scene');
+  const walkers = Array.from(scene.querySelectorAll('.walker:not(.talking):not(.fighting)'));
+  if (walkers.length < 2) return console.warn('[grugs] need 2 idle walkers, have', walkers.length);
+  walkers.sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left);
+  // Pick the two walkers that are currently closest together
+  let bestPair = [walkers[0], walkers[1]];
+  let bestGap = Infinity;
+  for (let i = 0; i < walkers.length - 1; i++) {
+    const gap = Math.abs(walkers[i + 1].getBoundingClientRect().left - walkers[i].getBoundingClientRect().left);
+    if (gap < bestGap) { bestGap = gap; bestPair = [walkers[i], walkers[i + 1]]; }
+  }
+  grugFight(bestPair[0], bestPair[1], scene);
+  console.log('[grugs] fight triggered, gap =', Math.round(bestGap), 'px');
+};
 
 function grugFight(a, b, scene) {
   if (!a || !b || !scene) return;
@@ -4029,14 +4054,17 @@ const WL_THRESHOLD = 10;
    The whole flow works either way — the modal + toast + WL state all
    still happen locally. This is purely for you to collect the submissions.
 ------------------------------------------------------------------------- */
-const WL_WEBHOOK_URL = '';
+const WL_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzmAg4FlakCjGLBJ1mxFhvTPluJrT1RVKX2cnzEQi-QnMXGMo1KW1qqxatVrs_E_8p7fQ/exec';
 
 async function wlPostToBackend(addr, count) {
   if (!WL_WEBHOOK_URL) return { sent: false, reason: 'no webhook configured' };
   try {
+    // NOTE: content-type is text/plain (not application/json) to avoid
+    // triggering a CORS preflight that Google Apps Script doesn't respond to.
+    // The Apps Script side parses e.postData.contents as JSON regardless.
     const res = await fetch(WL_WEBHOOK_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
         action: 'register',
         wallet: addr,
@@ -4146,7 +4174,9 @@ function wlRegisterCurrent() {
 }
 function wlCurrentAddr() {
   const btn = document.getElementById('connect-btn');
-  return btn?.dataset.connected ? btn.textContent : null;
+  if (!btn?.dataset.connected) return null;
+  // Use the full address from dataset, not the shortened display text
+  return (btn.dataset.address || btn.textContent || '').toLowerCase();
 }
 function wlRecordSmash() {
   const addr = wlCurrentAddr();
