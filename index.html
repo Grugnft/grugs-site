@@ -3968,23 +3968,35 @@ class SoundKit {
     if (this.crackleNode) return;
     const ctx = this.ctx;
     const sr = ctx.sampleRate;
-    // ---- FIRE CRACKLE LAYER (unchanged) ----
+    // ---- FIRE BED — very quiet low hiss (the "hush" behind the flame) ----
+    // The old loop was mid-band filtered noise → sounded like rain. Real fire
+    // has almost no continuous mid-band content; the bed here is a barely-there
+    // low rumble/whoosh (below 220 Hz) so the sharp snaps carry the character.
     const bufSize = sr * 3;
     const buf = ctx.createBuffer(1, bufSize, sr);
     const d = buf.getChannelData(0);
     let last = 0;
     for (let i = 0; i < bufSize; i++) {
       const w = Math.random() * 2 - 1;
-      last = (last + 0.02 * w) / 1.02;
-      d[i] = last * 3.2;
+      last = (last + 0.015 * w) / 1.015;
+      d[i] = last * 2.4;
     }
     this.crackleNode = ctx.createBufferSource();
     this.crackleNode.buffer = buf; this.crackleNode.loop = true;
-    const filt = ctx.createBiquadFilter();
-    filt.type = 'highpass'; filt.frequency.value = 300;
-    const cg = ctx.createGain(); cg.gain.value = 0.22;
-    this.crackleNode.connect(filt).connect(cg).connect(this.master);
+    const fireLp = ctx.createBiquadFilter();
+    fireLp.type = 'lowpass'; fireLp.frequency.value = 220; fireLp.Q.value = 0.6;
+    const fireHp = ctx.createBiquadFilter();
+    fireHp.type = 'highpass'; fireHp.frequency.value = 60;
+    const cg = ctx.createGain(); cg.gain.value = 0.07;   // was 0.22 → cut way down
+    // Slow LFO on the bed for "flame breathing"
+    const fireLfo = ctx.createOscillator(); fireLfo.type = 'sine';
+    fireLfo.frequency.value = 0.25 + Math.random() * 0.2;
+    const fireLfoAmp = ctx.createGain(); fireLfoAmp.gain.value = 0.03;
+    fireLfo.connect(fireLfoAmp).connect(cg.gain);
+    fireLfo.start();
+    this.crackleNode.connect(fireHp).connect(fireLp).connect(cg).connect(this.master);
     this.crackleNode.start();
+    this._fireLfo = fireLfo;
 
     // ---- CAVE DRONE (Moria-style) ----
     // Sustained low drone: root A1 (~55Hz) + fifth E2 (~82Hz) + faint octave.
@@ -4030,14 +4042,113 @@ class SoundKit {
       if (Math.random() < 0.35) this._caveDrum();
     }, 8000);
 
-    // ---- Fire crackle pop bursts ----
-    this.popTimer = setInterval(() => {
-      if (!this.muted && Math.random() < 0.65) this.pop();
-    }, 500);
+    // ---- BONE FLUTE MELODY ----
+    // Sparse, contemplative notes over the drone. Pentatonic minor in A
+    // (A, C, D, E, G) so every combination sits with the 55 Hz root.
+    // Notes are soft triangle + heavy delay → cavern echo. Phrase every
+    // ~8-11 s so the melody feels present, not accidental.
+    const scheduleFlute = () => {
+      if (!this.muted) this._boneFlutePhrase();
+      const nextIn = 8000 + Math.random() * 3000;
+      this.fluteTimer = setTimeout(scheduleFlute, nextIn);
+    };
+    // Kick off first phrase quickly, then reschedule itself
+    setTimeout(scheduleFlute, 1500);
+
+    // ---- Fire snap bursts ---- Sparse and irregular. Self-scheduling with
+    // a random interval so it never sounds metronomic.
+    const scheduleSnap = () => {
+      if (!this.muted && Math.random() < 0.55) this.pop();
+      const nextIn = 900 + Math.random() * 2200;   // 0.9 – 3.1 s between attempts
+      this.popTimer = setTimeout(scheduleSnap, nextIn);
+    };
+    this.popTimer = setTimeout(scheduleSnap, 800);
+    // Sap hiss — rare, longer moisture escape
+    this.hissTimer = setInterval(() => {
+      if (!this.muted && Math.random() < 0.25) this._fireHiss();
+    }, 9000);
     // Occasional grug grunt — ambient tribe murmur
     this.gruntTimer = setInterval(() => {
       if (!this.muted && Math.random() < 0.5) this.grunt();
     }, 4200);
+  }
+  /* Bone-flute phrase — 3–5 notes from the A-minor pentatonic scale,
+     played on a soft triangle carrier with a low-passed formant and a
+     long feedback delay for cavern echo. Deliberately breathy and slow. */
+  _boneFlutePhrase() {
+    if (!this.ctx) return;
+    const ctx = this.ctx;
+    // A minor pentatonic — A3, C4, D4, E4, G4, A4 (relative to drone root A1)
+    const SCALE = [220.00, 261.63, 293.66, 329.63, 392.00, 440.00];
+    // Common phrase shapes — indices into SCALE. Feels intentional, not random.
+    const PHRASES = [
+      [0, 2, 3, 2, 0],
+      [3, 4, 3, 2, 0],
+      [0, 3, 4, 3],
+      [2, 3, 4, 5, 4],
+      [5, 4, 2, 0],
+      [0, 2, 4, 3, 2, 0],
+      [4, 3, 2, 3, 0],
+    ];
+    const phrase = PHRASES[Math.floor(Math.random() * PHRASES.length)];
+    const noteDur = 0.55 + Math.random() * 0.35;   // 0.55–0.90s per note
+    const gap = 0.05 + Math.random() * 0.08;
+
+    // Shared bus with long delay + lowpass = "cave chamber" reverb-lite
+    const bus = ctx.createGain(); bus.gain.value = 0.85;
+    const dry = ctx.createGain(); dry.gain.value = 0.55;
+    const wet = ctx.createGain(); wet.gain.value = 0.35;
+    const dly = ctx.createDelay(3.0); dly.delayTime.value = 0.42;
+    const fb = ctx.createGain(); fb.gain.value = 0.55;
+    const echoLp = ctx.createBiquadFilter(); echoLp.type = 'lowpass'; echoLp.frequency.value = 1400;
+    bus.connect(dry).connect(this.master);
+    bus.connect(dly);
+    dly.connect(fb).connect(dly);
+    dly.connect(echoLp).connect(wet).connect(this.master);
+
+    let t = ctx.currentTime + 0.02;
+    for (const idx of phrase) {
+      const f = SCALE[idx] * (0.996 + Math.random()*0.008);   // tiny natural detune
+      this._boneFluteNote(bus, t, f, noteDur);
+      t += noteDur + gap;
+    }
+  }
+  _boneFluteNote(dest, when, freq, dur) {
+    const ctx = this.ctx;
+    // Body: triangle carrier (soft, hollow tone)
+    const osc = ctx.createOscillator(); osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, when);
+    // Tiny pitch scoop into the note — bone-flute breath attack
+    osc.frequency.setValueAtTime(freq * 0.985, when);
+    osc.frequency.exponentialRampToValueAtTime(freq, when + 0.06);
+    // Formant band around 900 Hz — hollow-wood colour
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 1.4;
+    // Gentle low-pass to remove any harshness
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 2200;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(0.18, when + 0.08);
+    g.gain.setValueAtTime(0.18, when + dur * 0.55);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+    osc.connect(bp).connect(lp).connect(g).connect(dest);
+    osc.start(when); osc.stop(when + dur + 0.02);
+
+    // Breath layer: filtered noise at the attack for realism
+    const nLen = Math.floor(ctx.sampleRate * 0.12);
+    const nBuf = ctx.createBuffer(1, nLen, ctx.sampleRate);
+    const nd = nBuf.getChannelData(0);
+    for (let i = 0; i < nLen; i++) nd[i] = (Math.random()*2-1);
+    const nSrc = ctx.createBufferSource(); nSrc.buffer = nBuf;
+    const nBp = ctx.createBiquadFilter(); nBp.type = 'bandpass';
+    nBp.frequency.value = freq * 2; nBp.Q.value = 1.5;
+    const nG = ctx.createGain();
+    nG.gain.setValueAtTime(0.0001, when);
+    nG.gain.exponentialRampToValueAtTime(0.04, when + 0.02);
+    nG.gain.exponentialRampToValueAtTime(0.0001, when + 0.12);
+    nSrc.connect(nBp).connect(nG).connect(dest);
+    nSrc.start(when);
   }
   _caveDrum() {
     if (!this.ctx) return;
@@ -4066,8 +4177,11 @@ class SoundKit {
   }
   stopAmbient() {
     if (this.crackleNode) { try { this.crackleNode.stop(); } catch(e){} this.crackleNode = null; }
-    if (this.popTimer) { clearInterval(this.popTimer); this.popTimer = null; }
+    if (this._fireLfo) { try { this._fireLfo.stop(); } catch(_){} this._fireLfo = null; }
+    if (this.popTimer) { clearTimeout(this.popTimer); this.popTimer = null; }
+    if (this.hissTimer) { clearInterval(this.hissTimer); this.hissTimer = null; }
     if (this.gruntTimer) { clearInterval(this.gruntTimer); this.gruntTimer = null; }
+    if (this.fluteTimer) { clearTimeout(this.fluteTimer); this.fluteTimer = null; }
     if (this.droneDrumTimer) { clearInterval(this.droneDrumTimer); this.droneDrumTimer = null; }
     if (this.droneNodes) {
       this.droneNodes.forEach(n => { try { n.stop(); } catch(_){} });
@@ -4076,109 +4190,187 @@ class SoundKit {
     this.droneBus = null;
   }
   pop() {
+    // Fire snap — a real crackle is an airy high-freq tick, not a pitched hit.
+    // The old version had a high-Q bandpass around 2-4 kHz which read as a
+    // pitched drum tom. Rewritten: very short broadband transient, highpassed
+    // above 3 kHz so it sits well above the drum register.
     if (this.muted || !this.ctx) return;
-    const now = this.ctx.currentTime;
-    const bufSize = Math.floor(this.ctx.sampleRate * 0.06);
-    const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+
+    // Very short noise burst — 6-9 ms, no resonance, just a highpassed tick
+    const snapLen = Math.floor(ctx.sampleRate * (0.006 + Math.random() * 0.003));
+    const snapBuf = ctx.createBuffer(1, snapLen, ctx.sampleRate);
+    const sd = snapBuf.getChannelData(0);
+    for (let i = 0; i < snapLen; i++) {
+      sd[i] = (Math.random()*2-1) * Math.exp(-i / (snapLen*0.20));
+    }
+    const snapSrc = ctx.createBufferSource(); snapSrc.buffer = snapBuf;
+    // Highpass above 3 kHz — pushes it out of the drum range into "twig snap"
+    const snapHp = ctx.createBiquadFilter();
+    snapHp.type = 'highpass'; snapHp.frequency.value = 3000 + Math.random()*1500;
+    // Gentle bandpass with LOW Q — colouration without pitch
+    const snapBp = ctx.createBiquadFilter();
+    snapBp.type = 'bandpass';
+    snapBp.frequency.value = 5000 + Math.random()*2500;
+    snapBp.Q.value = 1.5;
+    const snapG = ctx.createGain(); snapG.gain.value = 0.14 + Math.random()*0.08;
+    snapSrc.connect(snapHp).connect(snapBp).connect(snapG).connect(this.master);
+    snapSrc.start(now);
+  }
+  // Occasional "sap hiss" — moisture escaping wood. Longer, softer than a pop.
+  _fireHiss() {
+    if (this.muted || !this.ctx) return;
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const len = Math.floor(ctx.sampleRate * (0.4 + Math.random() * 0.4));
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
     const d = buf.getChannelData(0);
-    for (let i = 0; i < bufSize; i++) d[i] = (Math.random()*2-1) * Math.exp(-i / (bufSize*0.25));
-    const src = this.ctx.createBufferSource(); src.buffer = buf;
-    const f = this.ctx.createBiquadFilter();
-    f.type = 'bandpass'; f.frequency.value = 800 + Math.random()*1400; f.Q.value = 4;
-    const g = this.ctx.createGain(); g.gain.value = 0.35;
-    src.connect(f).connect(g).connect(this.master);
+    for (let i = 0; i < len; i++) d[i] = (Math.random()*2-1);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3200;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.06, now + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + len / ctx.sampleRate);
+    src.connect(hp).connect(g).connect(this.master);
     src.start(now);
   }
-  /* Expressive grug voice — formant-shaped tones that read as "uh", "oof",
-     "hmm", "aha" etc. Each call picks a random mood. Uses a sawtooth carrier
-     through a resonant bandpass at a vowel formant, vibrato for warmth, and
-     a subtle noise breath layer. */
+  /* Human "uhhhh" grunt — models the actual vocal tract:
+       - glottal source: single sawtooth (natural harmonic roll-off), no square
+       - three formants stacked (F1, F2, F3) → real vowel colour, not filter-bank
+       - gentle pitch drift, tiny jitter (not vibrato, not AM growl)
+       - breathy exhale mixed in as the note releases
+     No square wave, no fast AM, no ring-mod-y layers — those are what read
+     as "synth". Moods only shift the vowel target (uh/oh/ah/eh) and duration. */
   grunt(mood) {
     if (this.muted || !this.ctx) return;
     const ctx = this.ctx;
     const now = ctx.currentTime;
-    // Moods define the vowel formant, base pitch, contour, and duration.
-    // formant Hz roughly maps to: 500=ah, 700=uh, 900=oh, 1100=eh, 1500=ih
+
+    // Formant tables — approximate adult male vowels (F1/F2/F3 in Hz).
+    // "uh" = schwa/UH, our default caveman sound.
     const MOODS = {
-      ugh:  { f0: 105, formant: 700,  dur: 0.32, bend: -0.35, gain: 0.24 },
-      uhh:  { f0: 120, formant: 650,  dur: 0.22, bend: -0.15, gain: 0.22 },
-      oof:  { f0: 90,  formant: 850,  dur: 0.28, bend: -0.4,  gain: 0.28 },
-      hmm:  { f0: 115, formant: 500,  dur: 0.45, bend: -0.05, gain: 0.20, nasal: true },
-      aha:  { f0: 155, formant: 1100, dur: 0.30, bend: +0.20, gain: 0.24 },
-      ha:   { f0: 170, formant: 900,  dur: 0.12, bend: -0.2,  gain: 0.22 },
-      oh:   { f0: 130, formant: 850,  dur: 0.36, bend: -0.10, gain: 0.24 },
-      mmph: { f0: 100, formant: 500,  dur: 0.22, bend: -0.3,  gain: 0.20, nasal: true },
+      uh:   { f0: 105, dur: 0.50, bend: -0.10, gain: 0.34, F1: 520,  F2: 1180, F3: 2500 },
+      uhh:  { f0: 98,  dur: 0.75, bend: -0.15, gain: 0.34, F1: 500,  F2: 1150, F3: 2450 }, // longer "uhhhh"
+      oh:   { f0: 100, dur: 0.55, bend: -0.20, gain: 0.34, F1: 450,  F2: 800,  F3: 2400 },
+      ah:   { f0: 115, dur: 0.45, bend: -0.15, gain: 0.36, F1: 750,  F2: 1150, F3: 2500 },
+      eh:   { f0: 120, dur: 0.35, bend: -0.10, gain: 0.32, F1: 600,  F2: 1700, F3: 2500 },
+      hmm:  { f0: 100, dur: 0.60, bend: -0.05, gain: 0.28, F1: 380,  F2: 900,  F3: 2400, closed: true },
+      unh:  { f0: 110, dur: 0.30, bend: -0.20, gain: 0.34, F1: 500,  F2: 1100, F3: 2500 },
+      hup:  { f0: 130, dur: 0.22, bend: -0.30, gain: 0.34, F1: 650,  F2: 1200, F3: 2500 },
     };
-    const keys = Object.keys(MOODS);
-    const chosen = MOODS[mood] || MOODS[keys[Math.floor(Math.random() * keys.length)]];
-    const dur = chosen.dur * (0.88 + Math.random() * 0.24);
-    const f0 = chosen.f0 * (0.94 + Math.random() * 0.12);
-    const endF = f0 * (1 + chosen.bend);
+    // Weight the "uh"-family heavier — that's the caveman sound
+    const WEIGHTS = { uh:4, uhh:3, oh:2, ah:2, eh:1, hmm:2, unh:2, hup:1 };
+    let chosen = MOODS[mood];
+    if (!chosen) {
+      const keys = Object.keys(WEIGHTS);
+      const total = keys.reduce((s,k) => s + WEIGHTS[k], 0);
+      let r = Math.random() * total;
+      for (const k of keys) { r -= WEIGHTS[k]; if (r <= 0) { chosen = MOODS[k]; break; } }
+      chosen = chosen || MOODS.uh;
+    }
+    const dur = chosen.dur * (0.9 + Math.random() * 0.2);
+    const f0Start = chosen.f0 * (0.95 + Math.random() * 0.10);
+    const f0End = Math.max(55, f0Start * (1 + chosen.bend));
 
-    // Voice carrier: two slightly detuned sawtooths for grit
-    const osc1 = ctx.createOscillator(); osc1.type = 'sawtooth';
-    const osc2 = ctx.createOscillator(); osc2.type = 'sawtooth'; osc2.detune.value = -14;
-    osc1.frequency.setValueAtTime(f0, now);
-    osc2.frequency.setValueAtTime(f0, now);
-    osc1.frequency.exponentialRampToValueAtTime(Math.max(40, endF), now + dur);
-    osc2.frequency.exponentialRampToValueAtTime(Math.max(40, endF), now + dur);
-    // Vibrato: gentle pitch wobble → sounds alive, not synthetic
-    const vibrato = ctx.createOscillator(); vibrato.type = 'sine'; vibrato.frequency.value = 5 + Math.random()*2;
-    const vibGain = ctx.createGain(); vibGain.gain.value = f0 * 0.02;
-    vibrato.connect(vibGain).connect(osc1.frequency);
-    vibrato.connect(vibGain).connect(osc2.frequency);
+    // --- Glottal source: single sawtooth (models pulse-train from vocal cords) ---
+    // Natural harmonic roll-off is what makes it sound like a voice, not a synth.
+    const src = ctx.createOscillator();
+    src.type = 'sawtooth';
+    // Pitch contour: quick rise into the note, then gentle downward drift
+    src.frequency.setValueAtTime(f0Start * 0.92, now);
+    src.frequency.exponentialRampToValueAtTime(f0Start, now + 0.05);
+    src.frequency.exponentialRampToValueAtTime(f0End, now + dur);
 
-    // Formant filter — resonant bandpass at the vowel frequency
-    const formant = ctx.createBiquadFilter();
-    formant.type = 'bandpass';
-    formant.frequency.value = chosen.formant;
-    formant.Q.value = 4.5;
-    // Second formant a bit higher (helps the vowel character)
-    const formant2 = ctx.createBiquadFilter();
-    formant2.type = 'bandpass';
-    formant2.frequency.value = chosen.formant * 1.9;
-    formant2.Q.value = 3;
-    // Low-pass to tame the harshness
-    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200;
+    // Tiny random pitch jitter (real vocal cords aren't perfectly periodic).
+    // A slow chaotic LFO reads as "human" where a fast sine reads as "vibrato".
+    const jitterBufLen = Math.floor(ctx.sampleRate * dur);
+    const jitterBuf = ctx.createBuffer(1, jitterBufLen, ctx.sampleRate);
+    const jd = jitterBuf.getChannelData(0);
+    let js = 0;
+    for (let i = 0; i < jitterBufLen; i++) {
+      js = js * 0.995 + (Math.random()*2-1) * 0.05;
+      jd[i] = js;
+    }
+    const jitterSrc = ctx.createBufferSource(); jitterSrc.buffer = jitterBuf;
+    const jitterAmp = ctx.createGain(); jitterAmp.gain.value = f0Start * 0.025;
+    jitterSrc.connect(jitterAmp).connect(src.frequency);
 
-    // Envelope: quick attack, sustain hump, natural decay
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, now);
-    g.gain.exponentialRampToValueAtTime(chosen.gain, now + Math.min(0.05, dur * 0.15));
-    g.gain.exponentialRampToValueAtTime(chosen.gain * 0.7, now + dur * 0.6);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    // --- Three-formant vocal tract ---
+    // Each formant = resonant bandpass, in PARALLEL (not series). Mixed with
+    // decreasing gain up the spectrum, like real vowel resonances.
+    const mkFormant = (freq, q, gain) => {
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+      const g = ctx.createGain(); g.gain.value = gain;
+      return { bp, g };
+    };
+    const f1 = mkFormant(chosen.F1, 8,  1.0);
+    const f2 = mkFormant(chosen.F2, 10, 0.55);
+    const f3 = mkFormant(chosen.F3, 12, 0.22);
+    // Gentle formant motion — mouth "settles" into vowel shape
+    f1.bp.frequency.setValueAtTime(chosen.F1 * 0.88, now);
+    f1.bp.frequency.linearRampToValueAtTime(chosen.F1, now + Math.min(0.12, dur * 0.4));
+    f2.bp.frequency.setValueAtTime(chosen.F2 * 0.9, now);
+    f2.bp.frequency.linearRampToValueAtTime(chosen.F2, now + Math.min(0.12, dur * 0.4));
 
-    // Nasal branch — mixes in a low bandpass hum for hmm/mmph
-    const merger = ctx.createGain(); merger.gain.value = 1;
-    osc1.connect(formant);
-    osc2.connect(formant);
-    formant.connect(formant2).connect(lp).connect(g).connect(merger);
-    if (chosen.nasal) {
-      const nasal = ctx.createBiquadFilter(); nasal.type = 'bandpass';
-      nasal.frequency.value = 350; nasal.Q.value = 6;
-      const ng = ctx.createGain(); ng.gain.value = 0.5;
-      osc1.connect(nasal); osc2.connect(nasal);
-      nasal.connect(ng).connect(g);
+    // Low-shelf boost for chest warmth (not a fixed narrow filter — a broad tilt)
+    const shelf = ctx.createBiquadFilter();
+    shelf.type = 'lowshelf'; shelf.frequency.value = 300; shelf.gain.value = 4;
+
+    // Overall lowpass to remove buzz above vocal range
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 3200; lp.Q.value = 0.5;
+
+    // Amplitude envelope — human speech attack is soft (~40 ms), release is longer
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0.0001, now);
+    env.gain.linearRampToValueAtTime(chosen.gain, now + 0.045);
+    env.gain.setValueAtTime(chosen.gain, now + dur * 0.65);
+    env.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+    // Wire: source → parallel formants → sum → shelf → lp → env → master
+    const sum = ctx.createGain(); sum.gain.value = 0.5;
+    src.connect(f1.bp); src.connect(f2.bp); src.connect(f3.bp);
+    f1.bp.connect(f1.g).connect(sum);
+    f2.bp.connect(f2.g).connect(sum);
+    f3.bp.connect(f3.g).connect(sum);
+    sum.connect(shelf).connect(lp).connect(env).connect(this.master);
+
+    // Closed-mouth (hmm) — reroute through a narrower nasal filter, less F3
+    if (chosen.closed) {
+      f3.g.gain.value = 0.05;
+      const nasal = ctx.createBiquadFilter();
+      nasal.type = 'lowpass'; nasal.frequency.value = 900;
+      // Insert nasal filter before shelf
+      sum.disconnect();
+      sum.connect(nasal).connect(shelf);
     }
 
-    // Breath layer — filtered noise for a subtle exhale
+    // Breath layer — soft filtered noise that fades in as the note releases
+    // (real speech has aspiration especially on the tail of a grunt)
     const noiseLen = Math.floor(ctx.sampleRate * dur);
     const nbuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
     const nd = nbuf.getChannelData(0);
-    for (let i = 0; i < noiseLen; i++) nd[i] = (Math.random()*2-1) * 0.4;
+    for (let i = 0; i < noiseLen; i++) nd[i] = (Math.random()*2-1);
     const noise = ctx.createBufferSource(); noise.buffer = nbuf;
-    const nf = ctx.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 1400; nf.Q.value = 1;
-    const ng = ctx.createGain();
-    ng.gain.setValueAtTime(0.0001, now);
-    ng.gain.exponentialRampToValueAtTime(0.04, now + 0.02);
-    ng.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-    noise.connect(nf).connect(ng).connect(merger);
+    // Shape the noise through the F1 formant too — makes breath sound like it's
+    // coming from the same mouth as the tone
+    const noiseBp = ctx.createBiquadFilter();
+    noiseBp.type = 'bandpass'; noiseBp.frequency.value = chosen.F1; noiseBp.Q.value = 1.5;
+    const noiseHp = ctx.createBiquadFilter();
+    noiseHp.type = 'highpass'; noiseHp.frequency.value = 400;
+    const noiseG = ctx.createGain();
+    noiseG.gain.setValueAtTime(0.0001, now);
+    noiseG.gain.linearRampToValueAtTime(0.018, now + 0.05);        // subtle throughout
+    noiseG.gain.linearRampToValueAtTime(0.04, now + dur * 0.7);    // grows toward release
+    noiseG.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    noise.connect(noiseHp).connect(noiseBp).connect(noiseG).connect(this.master);
 
-    merger.connect(this.master);
-    osc1.start(now); osc2.start(now); vibrato.start(now); noise.start(now);
-    osc1.stop(now + dur + 0.02);
-    osc2.stop(now + dur + 0.02);
-    vibrato.stop(now + dur + 0.02);
+    src.start(now); jitterSrc.start(now); noise.start(now);
+    src.stop(now + dur + 0.02);
+    jitterSrc.stop(now + dur + 0.02);
     noise.stop(now + dur + 0.02);
   }
   smash() {
