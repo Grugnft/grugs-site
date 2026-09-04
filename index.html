@@ -2043,6 +2043,58 @@ section.chamber { margin-top: 72px; }
 }
 
 :focus-visible { outline: 2px solid var(--torch); outline-offset: 3px; }
+
+/* Mobile wallet picker modal — shown when no window.ethereum on a phone */
+#wallet-picker-overlay {
+  position: fixed; inset: 0;
+  background: rgba(10, 6, 3, 0.85);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; z-index: 10000;
+  animation: wpFade 160ms ease-out;
+}
+@keyframes wpFade { from { opacity: 0; } to { opacity: 1; } }
+#wallet-picker-overlay .wp-card {
+  background: var(--stone-2);
+  border: 3px solid var(--wall-2);
+  padding: 22px 20px 20px;
+  max-width: 340px; width: 100%;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 0 0 3px var(--stone), 0 12px 40px rgba(0,0,0,0.6);
+}
+#wallet-picker-overlay .wp-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px; color: var(--torch);
+  letter-spacing: 1px; margin-bottom: 4px;
+}
+#wallet-picker-overlay .wp-sub {
+  font-family: 'VT323', monospace;
+  font-size: 18px; color: var(--bone-dim);
+  margin-bottom: 8px; line-height: 1.3;
+}
+#wallet-picker-overlay .wp-btn {
+  display: block; padding: 12px 14px;
+  background: var(--wall); color: var(--bone);
+  border: 2px solid var(--wall-2);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px; letter-spacing: 1px;
+  text-decoration: none; text-align: center;
+  transition: background 120ms, border-color 120ms, transform 100ms;
+}
+#wallet-picker-overlay .wp-btn:hover,
+#wallet-picker-overlay .wp-btn:active {
+  background: var(--torch); color: var(--stone);
+  border-color: var(--torch-hot);
+  transform: translateY(-1px);
+}
+#wallet-picker-overlay .wp-close {
+  margin-top: 4px; padding: 10px;
+  background: transparent; color: var(--bone-dim);
+  border: 2px solid var(--wall-2);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px; letter-spacing: 1px;
+  cursor: pointer;
+}
+#wallet-picker-overlay .wp-close:hover { color: var(--bone); border-color: var(--bone-dim); }
 </style>
 
 <header class="nav">
@@ -2410,7 +2462,7 @@ section.chamber { margin-top: 72px; }
         </div>
         <div class="mint-fact">
           <span class="lbl">public</span>
-          <span class="val">0.001 ETH · 10 per tx</span>
+          <span class="val">TBD · 10 per tx</span>
         </div>
         <div class="mint-fact">
           <span class="lbl">chain</span>
@@ -2428,7 +2480,7 @@ section.chamber { margin-top: 72px; }
       <ul class="rule-list">
         <li>small creator fee on trade. keep grug fire lit.</li>
         <li>no yield. no stock. no roadmap grug can't keep.</li>
-        <li>grug make one tool: rug radar. grug hold, grug scan.</li>
+        <li>grug build community. tribe first. tribe last.</li>
         <li>contract clear. tribe can read on chain.</li>
       </ul>
     </section>
@@ -4436,7 +4488,7 @@ class SoundKit {
     const src = this.ctx.createBufferSource(); src.buffer = buf;
     const filt = this.ctx.createBiquadFilter();
     filt.type = 'bandpass'; filt.frequency.value = 2000; filt.Q.value = 1;
-    const gn = this.ctx.createGain(); gn.gain.value = 0.55;
+    const gn = this.ctx.createGain(); gn.gain.value = 0.28;   // was 0.55
     src.connect(filt).connect(gn).connect(this.master);
     src.start(now);
     // Low thud layer
@@ -4446,7 +4498,7 @@ class SoundKit {
     osc.frequency.exponentialRampToValueAtTime(35, now + 0.18);
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(0.001, now);
-    g.gain.exponentialRampToValueAtTime(0.6, now + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.32, now + 0.005);   // was 0.6
     g.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
     osc.connect(g).connect(this.master);
     osc.start(now); osc.stop(now + 0.22);
@@ -4781,8 +4833,53 @@ document.addEventListener('grug:wallet-disconnected', () => {
   if (typeof renderGrids === 'function') renderGrids();
 });
 
+/* Wallet-app deep links for mobile.
+   On a phone's regular Safari/Chrome there's no window.ethereum (no extension).
+   The universal fix is to open the site inside the wallet app's own browser via
+   a deep link — once loaded there, ethereum is injected and the normal flow works.
+   No SDK needed. Works for MetaMask, Rabby, Coinbase Wallet, Trust, Rainbow, etc. */
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod|IEMobile|BlackBerry|Opera Mini/i.test(navigator.userAgent || '');
+}
+function walletDeepLinks() {
+  const host = location.host || 'grugnft.xyz';
+  const path = (location.pathname || '/') + (location.search || '');
+  const dapp = host + path;
+  return {
+    metamask:  'https://metamask.app.link/dapp/' + dapp,
+    rabby:     'https://rabby.io/',   // Rabby has no universal dapp deep link on mobile yet
+    coinbase:  'https://go.cb-w.com/dapp?cb_url=' + encodeURIComponent(location.href),
+    trust:     'https://link.trustwallet.com/open_url?coin_id=60&url=' + encodeURIComponent(location.href),
+    rainbow:   'https://rnbwapp.com/dapp/' + dapp,
+  };
+}
+function showMobileWalletPicker() {
+  const links = walletDeepLinks();
+  // Modal-lite overlay — dismiss on click outside or on the close pill
+  const overlay = document.createElement('div');
+  overlay.id = 'wallet-picker-overlay';
+  overlay.innerHTML = `
+    <div class="wp-card" role="dialog" aria-label="pick wallet app">
+      <div class="wp-title">open in wallet app</div>
+      <div class="wp-sub">grug not see wallet on this phone. pick app.</div>
+      <a class="wp-btn" href="${links.metamask}">MetaMask</a>
+      <a class="wp-btn" href="${links.coinbase}">Coinbase Wallet</a>
+      <a class="wp-btn" href="${links.trust}">Trust Wallet</a>
+      <a class="wp-btn" href="${links.rainbow}">Rainbow</a>
+      <button class="wp-close" type="button" aria-label="close">not now</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  overlay.querySelector('.wp-close').addEventListener('click', close);
+}
+
 async function connectWallet() {
   if (!window.ethereum) {
+    if (isMobileDevice()) {
+      showMobileWalletPicker();
+      return;
+    }
     alert('grug not see wallet. install MetaMask (metamask.io) or another eth wallet browser extension, then reload.');
     window.open('https://metamask.io/download/', '_blank');
     return;
