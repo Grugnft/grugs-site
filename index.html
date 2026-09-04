@@ -4065,7 +4065,20 @@ class SoundKit {
     if (!this.ctx) return false;
     if (this.ctx.state === 'suspended') this.ctx.resume();
     this.muted = !this.muted;
-    if (!this.muted) this.startAmbient(); else this.stopAmbient();
+    // Ramp the master gain instead of just flipping the flag — this silences
+    // any in-flight sound including delay-line tails (bone flute echo, cave
+    // drum echo) that the .muted guard alone can't cut off.
+    const now = this.ctx.currentTime;
+    this.master.gain.cancelScheduledValues(now);
+    if (this.muted) {
+      this.master.gain.setValueAtTime(this.master.gain.value, now);
+      this.master.gain.linearRampToValueAtTime(0, now + 0.04);
+      this.stopAmbient();
+    } else {
+      this.master.gain.setValueAtTime(0, now);
+      this.master.gain.linearRampToValueAtTime(0.75, now + 0.08);
+      this.startAmbient();
+    }
     return !this.muted;
   }
   startAmbient() {
@@ -4152,17 +4165,21 @@ class SoundKit {
     // Notes are soft triangle + heavy delay → cavern echo. Phrase every
     // ~8-11 s so the melody feels present, not accidental.
     const scheduleFlute = () => {
-      if (!this.muted) this._boneFlutePhrase();
+      this.fluteTimer = null;
+      if (this.muted) return;    // stop the reschedule loop when muted
+      this._boneFlutePhrase();
       const nextIn = 8000 + Math.random() * 3000;
       this.fluteTimer = setTimeout(scheduleFlute, nextIn);
     };
     // Kick off first phrase quickly, then reschedule itself
-    setTimeout(scheduleFlute, 1500);
+    this.fluteTimer = setTimeout(scheduleFlute, 1500);
 
     // ---- Fire snap bursts ---- Sparse and irregular. Self-scheduling with
     // a random interval so it never sounds metronomic.
     const scheduleSnap = () => {
-      if (!this.muted && Math.random() < 0.55) this.pop();
+      this.popTimer = null;
+      if (this.muted) return;    // stop the reschedule loop when muted
+      if (Math.random() < 0.55) this.pop();
       const nextIn = 900 + Math.random() * 2200;   // 0.9 – 3.1 s between attempts
       this.popTimer = setTimeout(scheduleSnap, nextIn);
     };
