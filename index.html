@@ -1,5 +1,36 @@
-<title>Grugs</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Grugs — 10,000 caveman on Robinhood Chain</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Grugs — 10,000 pixel-art caveman on Robinhood Chain. Anti-machine. Anti-rug. Grug not care about machine.">
+<meta name="theme-color" content="#1A140F">
+
+<!-- Open Graph / social share preview -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Grugs">
+<meta property="og:title" content="Grugs — 10,000 caveman on Robinhood Chain">
+<meta property="og:description" content="Anti-machine. Anti-rug. Grug not care about machine. Join the tribe.">
+<meta property="og:url" content="https://grugnft.xyz">
+<meta property="og:image" content="https://grugnft.xyz/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Grugs — 10,000 pixel-art cavemen">
+
+<!-- Twitter card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@GrugNFT">
+<meta name="twitter:creator" content="@GrugNFT">
+<meta name="twitter:title" content="Grugs — 10,000 caveman on Robinhood Chain">
+<meta name="twitter:description" content="Anti-machine. Anti-rug. Grug not care about machine.">
+<meta name="twitter:image" content="https://grugnft.xyz/og.png">
+
+<link rel="canonical" href="https://grugnft.xyz/">
+
+<!-- Favicon — inline pixel-art grug head so no extra request/file needed -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%231a140f'/><rect x='4' y='3' width='8' height='9' fill='%237b5a3e'/><rect x='3' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='12' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='4' y='5' width='2' height='1' fill='%23000'/><rect x='10' y='5' width='2' height='1' fill='%23000'/><rect x='5' y='6' width='1' height='1' fill='%23fff'/><rect x='10' y='6' width='1' height='1' fill='%23fff'/><rect x='6' y='9' width='4' height='1' fill='%23000'/><rect x='4' y='2' width='8' height='2' fill='%23000'/></svg>">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
@@ -98,6 +129,22 @@ header.nav {
   font-family: 'Press Start 2P', monospace;
   font-size: 10px;
   letter-spacing: 1px;
+}
+.nav-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  color: var(--bone-dim);
+  border: 2px solid var(--wall-2);
+  text-decoration: none;
+  transition: color 120ms, border-color 120ms, transform 120ms;
+}
+.nav-x:hover, .nav-x:focus-visible {
+  color: var(--torch);
+  border-color: var(--torch);
+  transform: translateY(-1px);
 }
 .chain-badge::before {
   content: "";
@@ -2007,6 +2054,11 @@ section.chamber { margin-top: 72px; }
     <button class="tab" data-tab="smash">smash machine</button>
   </nav>
   <div class="nav-right">
+    <a class="nav-x" href="https://twitter.com/GrugNFT" target="_blank" rel="noopener noreferrer" title="@GrugNFT on Twitter" aria-label="Follow @GrugNFT on Twitter">
+      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+        <path fill="currentColor" d="M12.6 1.5h2.3l-5 5.7 5.9 7.8h-4.6l-3.6-4.7-4.1 4.7H1.2l5.4-6.1L1 1.5h4.7l3.3 4.4L12.6 1.5zm-.8 12.1h1.3L4.3 2.8H2.9l8.9 10.8z"/>
+      </svg>
+    </a>
     <div class="chain-badge">RHC</div>
     <button class="sound-btn" id="sound-btn" title="sound">
       <svg viewBox="0 0 16 16" width="16" height="16" style="image-rendering:pixelated" aria-hidden="true">
