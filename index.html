@@ -2552,14 +2552,6 @@ section.chamber { margin-top: 72px; }
     <section class="chamber mint-widget" id="mint-chamber" style="max-width: 780px; margin-left: auto; margin-right: auto;">
       <h2 class="chamber-title">mint grug</h2>
 
-      <!-- Network mismatch banner (hidden until we detect wrong chain) -->
-      <div id="mint-chain-warn" class="mint-warn" hidden>
-        <div>
-          <b>wrong chain.</b> grug live on <b id="mint-chain-name">Robinhood Chain</b>.
-        </div>
-        <button class="cta cta-sm" id="mint-chain-switch">SWITCH NETWORK</button>
-      </div>
-
       <!-- Live counter -->
       <div class="mint-live">
         <div class="mint-live-row">
@@ -5260,33 +5252,30 @@ async function refreshMintUI() {
     if (total) total.textContent = '—';
   }
 
-  const warn    = $('mint-chain-warn');
   const controls = $('mint-controls');
   const walletOk  = !!(window.ethereum && currentAccount);
+  // Wrong-chain is no longer surfaced as an error banner — clicking MINT
+  // triggers a silent wallet chain-switch (see onMintClick).
   const chainOk   = walletOk ? await ensureChain() : false;
 
   if (!window.ethereum) {
     setStatus('grug not see wallet. install MetaMask or a wallet app.', 'pending');
     setHint('first grug free. extra grug 0.0001 ETH each.');
     if (controls) controls.hidden = true;
-    if (warn) warn.hidden = true;
     return;
   }
   if (!currentAccount) {
     setStatus('connect wallet to mint.', 'pending');
     setHint('first grug free. extra grug 0.0001 ETH each.');
     if (controls) controls.hidden = true;
-    if (warn) warn.hidden = true;
     return;
   }
   if (!chainOk) {
-    setStatus('wrong network.', 'err');
-    setHint('switch to ' + GRUGS_CONFIG.chainName + ' to mint.');
-    if (controls) controls.hidden = true;
-    if (warn) { warn.hidden = false; const name = $('mint-chain-name'); if (name) name.textContent = GRUGS_CONFIG.chainName; }
-    return;
+    // Silent: no banner, no error. Just show the mint form; clicking MINT
+    // prompts the wallet to switch networks. If the user reads the hint they
+    // still get a nudge, but nothing shouts at them.
+    // (State fetches from RPC still succeed independent of the wallet's chain.)
   }
-  if (warn) warn.hidden = true;
 
   if (!state) {
     setStatus('cannot reach contract. try again.', 'err');
@@ -5415,7 +5404,7 @@ async function waitForReceipt(txHash, maxTries = 60) {
   });
   $('qty-input')?.addEventListener('input', () => updateQuote());
   $('mint-btn')?.addEventListener('click', onMintClick);
-  $('mint-chain-switch')?.addEventListener('click', async () => { await switchToGrugsChain(); refreshMintUI(); });
+  // (Chain-switch is triggered by clicking MINT, no dedicated button.)
 
   // React to wallet events (accounts / chain changes)
   if (window.ethereum && window.ethereum.on) {
