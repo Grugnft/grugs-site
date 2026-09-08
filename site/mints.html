@@ -511,45 +511,6 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
   font-size: 18px;
 }
 
-/* Submit CTA */
-.submit-panel {
-  margin-top: 48px;
-  padding: 32px;
-  background: var(--stone-2);
-  border: 2px solid var(--wall-2);
-  border-left: 6px solid var(--torch);
-  text-align: center;
-}
-.submit-panel h2 {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 14px;
-  color: var(--torch);
-  letter-spacing: 2px;
-  margin: 0 0 12px;
-}
-.submit-panel p {
-  color: var(--bone-dim);
-  font-size: 18px;
-  margin: 0 0 18px;
-  max-width: 560px;
-  margin-left: auto;
-  margin-right: auto;
-}
-.submit-panel .submit-btn {
-  display: inline-block;
-  padding: 14px 26px;
-  background: var(--torch);
-  color: var(--stone);
-  border: none;
-  border-bottom: 5px solid #8A5A20;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 12px;
-  letter-spacing: 2px;
-  cursor: pointer;
-  text-decoration: none;
-}
-.submit-panel .submit-btn:hover { filter: brightness(1.1); }
-
 @media (max-width: 700px) {
   .wordmark, .tabs, .nav-right { justify-self: center; }
   header.nav { grid-template-columns: 1fr; }
@@ -608,18 +569,6 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
     <div id="upcoming" class="mint-grid"></div>
   </section>
 
-  <!-- SECTION 3: past picks — hidden entirely when empty. -->
-  <section class="mint-section" id="past-section" hidden>
-    <h2 class="section-title">past picks</h2>
-    <p class="section-sub">already minted from the curated / OpenSea feeds.</p>
-    <div id="past" class="mint-grid"></div>
-  </section>
-
-  <section class="submit-panel">
-    <h2>SUBMIT A MINT</h2>
-    <p>you know a drop coming to Robinhood chain? send it to grug. grug sniff it, add to list.</p>
-    <a class="submit-btn" href="https://twitter.com/GrugNFT" target="_blank" rel="noopener noreferrer">TELL @GRUGNFT</a>
-  </section>
 </main>
 
 <script>
@@ -845,19 +794,17 @@ async function scanCard(card) {
 
 function partition(mints) {
   const now = Date.now();
-  const upcoming = [], past = [];
+  const upcoming = [];
   for (const m of mints) {
-    // Drops with no mintStart yet stay in upcoming — they're on the board but
-    // the schedule is TBD; showing them in "past picks" would be wrong.
-    // Live/upcoming status from the API also wins over the timestamp check:
-    // a stage that says state="live" is still relevant even if `start` was
-    // in the past by a few minutes.
+    // Keep everything that hasn't already minted. Drops with no mintStart yet
+    // stay too — they're on the board with a TBD schedule. API-reported
+    // status wins over the timestamp check: a stage that says state="live"
+    // is still relevant even if `start` was in the past by a few minutes.
     if (!m.mintStart || m.status === 'live' || m.status === 'upcoming') {
       upcoming.push(m);
       continue;
     }
-    const t = new Date(m.mintStart).getTime();
-    if (t > now) upcoming.push(m); else past.push(m);
+    if (new Date(m.mintStart).getTime() > now) upcoming.push(m);
   }
   upcoming.sort((a, b) => {
     // Scheduled mints first (soonest at top), then schedule-TBD drops.
@@ -865,8 +812,7 @@ function partition(mints) {
     const bt = b.mintStart ? new Date(b.mintStart).getTime() : Infinity;
     return at - bt;
   });
-  past.sort((a, b) => new Date(b.mintStart) - new Date(a.mintStart));
-  return { upcoming, past };
+  return upcoming;
 }
 
 /* Merge curated + auto-fetched sources, dedupe by contract address (or slug). */
@@ -928,7 +874,6 @@ async function pool(items, parallel, work) {
 
 (async () => {
   const upcomingEl = document.getElementById('upcoming');
-  const pastEl     = document.getElementById('past');
   const sourcesEl  = document.getElementById('sources-info');
 
   // "New since your last visit" state. Persists the `built` timestamp of
@@ -967,7 +912,12 @@ async function pool(items, parallel, work) {
   const newSince = new Set(changedIds.map(x => (x.contract || '').toLowerCase()).filter(Boolean));
 
   // Sources chip row — one chip per data source, showing count or setup state.
-  const bits = [`<span class="src-chip curated">CURATED · ${curated.length}</span>`];
+  // Skip the curated chip entirely when the curated list is empty — showing
+  // "CURATED · 0" was reading as "grug forgot the curated feed."
+  const bits = [];
+  if (curated.length > 0) {
+    bits.push(`<span class="src-chip curated">CURATED · ${curated.length}</span>`);
+  }
   if (openseaConfigured) {
     bits.push(`<span class="src-chip opensea">OPENSEA · ${opensea.length}</span>`);
   } else {
@@ -984,10 +934,9 @@ async function pool(items, parallel, work) {
   // OpenSea wins over NFT if a contract appears in multiple — curated has
   // editorial context we don't want to lose.
   const scheduled = dedupe([...curated, ...opensea, ...nftFeed]);
-  const { upcoming, past } = partition(scheduled);
+  const upcoming = partition(scheduled);
 
   const upcomingSection = document.getElementById('upcoming-section');
-  const pastSection     = document.getElementById('past-section');
 
   if (upcoming.length > 0) {
     let newCount = 0;
@@ -1021,10 +970,6 @@ async function pool(items, parallel, work) {
         });
       });
     }
-  }
-  if (past.length > 0) {
-    past.forEach(m => pastEl.appendChild(renderCard(m)));
-    pastSection.hidden = false;
   }
 
   // Persist the current build timestamp so next visit can diff against it.
