@@ -571,82 +571,13 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
 
 </main>
 
-<script>
-const RPC_URL        = 'https://rpc.mainnet.chain.robinhood.com';
-const BLOCKSCOUT_API = 'https://robinhoodchain.blockscout.com/api/v2';
-const ZERO_ADDR      = '0x0000000000000000000000000000000000000000';
-const EIP1967_IMPL_SLOT = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc';
-const SEL = { owner: '0x8da5cb5b', supportsInterface: '0x01ffc9a7' };
-const ADMIN_SEL = { ownerMint: '40c10f19', ownerMintTo: '449a52f8', setBaseURI: '55f804b3', pause: '8456cb59' };
-
-/* Same signal weights as scanner.html so the badge here matches a full scan there. */
-const WEIGHTS = {
-  unverified: 20, proxy: 25, ownerActive: 18,
-  adminMint: 15, openBaseURI: 10, transferLock: 12,
-  topHeavy: 15,
-};
-
-async function rpc(method, params) {
-  const r = await fetch(RPC_URL, {
-    method: 'POST',
-    headers: {'content-type': 'application/json'},
-    body: JSON.stringify({jsonrpc:'2.0', id:1, method, params}),
-  });
-  const j = await r.json();
-  if (j.error) throw new Error(j.error.message || 'rpc error');
-  return j.result;
-}
-async function ethCall(to, data) {
-  try { return await rpc('eth_call', [{to, data}, 'latest']); } catch (e) { return null; }
-}
-function decodeAddress(hex) { return (hex && hex.length >= 66) ? ('0x' + hex.slice(-40).toLowerCase()) : null; }
-
-/* A lightweight scan — fewer signals than the full scanner. Just enough
-   to render a green/yellow/red badge on the card. */
-async function quickScan(addr) {
-  const code = await rpc('eth_getCode', [addr, 'latest']).catch(() => null);
-  if (!code || code === '0x' || code === '0x0') return { error: 'not_a_contract' };
-
-  const implSlot = await rpc('eth_getStorageAt', [addr, EIP1967_IMPL_SLOT, 'latest']).catch(() => null);
-  const implAddr = decodeAddress(implSlot);
-  const isProxy = !!(implAddr && implAddr !== ZERO_ADDR);
-  let scanCode = code.toLowerCase();
-  if (isProxy) {
-    const impl = await rpc('eth_getCode', [implAddr, 'latest']).catch(() => null);
-    if (impl && impl !== '0x') scanCode = impl.toLowerCase();
-  }
-
-  const has = {
-    ownerMint:   scanCode.includes(ADMIN_SEL.ownerMint),
-    ownerMintTo: scanCode.includes(ADMIN_SEL.ownerMintTo),
-    setBaseURI:  scanCode.includes(ADMIN_SEL.setBaseURI),
-    pause:       scanCode.includes(ADMIN_SEL.pause),
-  };
-
-  const ownerRaw = await ethCall(addr, SEL.owner);
-  const owner = decodeAddress(ownerRaw);
-  const ownerRenounced = owner === ZERO_ADDR;
-  const ownerCallable = ownerRaw !== null;
-
-  // Verified source from Blockscout
-  let verified = null;
-  try {
-    const r = await fetch(`${BLOCKSCOUT_API}/smart-contracts/${addr}`);
-    if (r.ok) { const j = await r.json(); verified = !!j.is_verified; }
-    else if (r.status === 404) { verified = false; }
-  } catch (e) {}
-
-  let score = 0;
-  if (verified === false) score += WEIGHTS.unverified;
-  if (isProxy) score += WEIGHTS.proxy;
-  if (ownerCallable && !ownerRenounced) score += WEIGHTS.ownerActive;
-  if (has.ownerMint || has.ownerMintTo) score += WEIGHTS.adminMint;
-  if (has.setBaseURI) score += WEIGHTS.openBaseURI;
-  if (has.pause) score += WEIGHTS.transferLock;
-  if (score > 100) score = 100;
-
-  return { score };
-}
+<script type="module">
+// Shared full-scan engine. The mint-card badge and the rug-radar page pipe
+// through this same module — same weights, same signal logic, same result.
+// localStorage caches the per-contract score for 15 min so repeat loads
+// are instant. Any signal or weight change goes in grug-score-engine.mjs.
+import { fullScore } from '/scripts/grug-score-engine.mjs';
+const quickScan = fullScore;   // legacy name used by scanCard below
 
 function tone(score) {
   if (score < 25) return 'green';
@@ -776,16 +707,17 @@ async function scanCard(card) {
   if (!addr) return;
   const scoreEl = card.querySelector('.mc-score');
   try {
+    // fullScore returns { score, tone, verdict, cached, isUtility }.
+    // Trust the engine's tone/verdict — that's the point of consolidating.
     const res = await quickScan(addr);
     if (res.error) {
       scoreEl.className = 'mc-score pending';
       scoreEl.innerHTML = `<span class="n">NO CODE</span><span class="l">EOA / EMPTY</span>`;
       return;
     }
-    const t = tone(res.score);
-    scoreEl.className = 'mc-score ' + t;
-    scoreEl.innerHTML = `<span class="n">${res.score}</span><span class="l">${verdict(res.score)}</span>`;
-    card.classList.add(t);
+    scoreEl.className = 'mc-score ' + res.tone;
+    scoreEl.innerHTML = `<span class="n">${res.score}</span><span class="l">${res.verdict}</span>`;
+    card.classList.add(res.tone);
   } catch (e) {
     scoreEl.className = 'mc-score pending';
     scoreEl.innerHTML = `<span class="n">?</span><span class="l">CHAIN ERROR</span>`;
