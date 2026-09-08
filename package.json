@@ -1,19 +1,7 @@
 {
-  "name": "grugs",
+  "name": "grugs-site",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "GRUGS — 10,000 pixel-art cavemen on Robinhood Chain",
-  "scripts": {
-    "generate": "node scripts/generate-collection.mjs",
-    "pin:art": "node scripts/pin-art.cjs",
-    "pin:metadata": "node scripts/pin-metadata.cjs"
-  },
-  "dependencies": {
-    "@pinata/sdk": "^2.1.0",
-    "dotenv": "^16.4.5"
-  },
-  "devDependencies": {
-    "sharp": "^0.35.4"
-  }
+  "description": "GRUGS site — mint radar + rug radar"
 }
