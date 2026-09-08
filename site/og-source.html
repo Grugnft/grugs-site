@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OG source</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; padding:0; background:#000; }
+  body { font-family:'Press Start 2P', monospace; color:#F4E4C8; }
+  .card {
+    width: 1200px; height: 630px;
+    position: relative; overflow: hidden;
+    background:
+      radial-gradient(ellipse 60% 55% at 50% 82%, rgba(232,161,71,0.30) 0%, rgba(232,161,71,0.10) 40%, rgba(0,0,0,0) 70%),
+      linear-gradient(180deg, #241A12 0%, #1A140F 60%, #100a04 100%);
+    box-sizing: border-box;
+  }
+  /* Torch dots along the top wall for atmosphere */
+  .torches { position:absolute; top:0; left:0; right:0; height:40px; display:flex; justify-content:space-around; padding:0 40px; }
+  .torch  { width: 8px; height: 8px; background:#FFC864; box-shadow: 0 0 20px 4px rgba(255,200,100,0.6); border-radius:0; margin-top: 12px; }
+  .stack {
+    position: absolute; top: 60px; left: 0; right: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .wordmark {
+    font-family:'Press Start 2P', monospace;
+    font-size: 118px; letter-spacing: 6px;
+    color: #F4E4C8;
+    text-shadow:
+      5px 5px 0 #1A140F,
+      10px 10px 0 rgba(209,75,47,0.6),
+      0 0 40px rgba(232,161,71,0.4);
+  }
+  .tagline {
+    font-family:'VT323', monospace;
+    font-size: 34px; color: #E8A147;
+    letter-spacing: 2px; text-shadow: 2px 2px 0 #1A140F;
+    margin-top: 2px;
+  }
+  .grug-row {
+    position: absolute; left: 0; right: 0; bottom: 60px;
+    display: flex; align-items: flex-end; justify-content: center;
+    gap: 24px;
+    padding: 0 60px;
+  }
+  .grug-row .g {
+    height: 260px; width: 195px;
+    display: flex; align-items: flex-end;
+    filter: drop-shadow(0 6px 0 rgba(0,0,0,0.5));
+  }
+  .grug-row .g svg { height: 260px; width: 195px; display:block; image-rendering: pixelated; }
+  /* Middle grugs slightly bigger — hero row perspective */
+  .grug-row .g.hero { height: 300px; width: 225px; }
+  .grug-row .g.hero svg { height: 300px; width: 225px; }
+  .ground {
+    position: absolute; left:0; right:0; bottom:0; height: 60px;
+    background: repeating-linear-gradient(90deg, #241A12 0px, #241A12 6px, #2B1F17 6px, #2B1F17 12px);
+    border-top: 4px solid #100a04;
+  }
+  .rhc {
+    position: absolute; top: 30px; right: 40px;
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 10px 16px; border: 3px solid #3A2A1E;
+    font-family:'Press Start 2P', monospace;
+    font-size: 18px; color: #F4E4C8; letter-spacing: 2px;
+    background: rgba(26,20,15,0.75);
+  }
+  .rhc::before {
+    content:""; width:14px; height:14px;
+    background: #5F8C4B; box-shadow: 0 0 10px #5F8C4B;
+  }
+  .footer {
+    position: absolute; bottom: 18px; right: 40px;
+    font-family: 'VT323', monospace; font-size: 24px; color: #E8A147;
+    letter-spacing: 2px; text-shadow: 2px 2px 0 #1A140F;
+    z-index: 5;
+  }
+  .footer-l {
+    position: absolute; bottom: 18px; left: 40px;
+    font-family: 'VT323', monospace; font-size: 22px; color: #8a6a4a;
+    letter-spacing: 1px;
+    z-index: 5;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="torches">
+    <div class="torch"></div><div class="torch"></div><div class="torch"></div>
+    <div class="torch"></div><div class="torch"></div><div class="torch"></div>
+    <div class="torch"></div><div class="torch"></div>
+  </div>
+  <div class="rhc">RHC</div>
+  <div class="stack">
+    <div class="wordmark">GRUGS</div>
+    <div class="tagline">10,000 caveman · anti-machine · anti-rug</div>
+  </div>
+  <div class="grug-row" id="grug-row"></div>
+  <div class="ground"></div>
+  <div class="footer-l">on robinhood chain</div>
+  <div class="footer">grugnft.xyz</div>
+</div>
+
+<script>
+// Load 5 real grug SVGs from out/svg/ — deterministic picks spanning the tribe.
+// Middle three are marked .hero for a slightly bigger silhouette.
+const IDS = ['0001', '2856', '4284', '5712', '8568'];
+const row = document.getElementById('grug-row');
+Promise.all(IDS.map(id => fetch('out/svg/' + id + '.svg').then(r => r.text())))
+  .then(svgs => {
+    row.innerHTML = svgs.map((s, i) => {
+      const hero = (i >= 1 && i <= 3) ? ' hero' : '';
+      return '<div class="g' + hero + '">' + s + '</div>';
+    }).join('');
+    // Also wait for fonts to be ready so the wordmark doesn't screenshot pre-font
+    return document.fonts ? document.fonts.ready : Promise.resolve();
+  })
+  .then(() => {
+    document.body.setAttribute('data-ready', '1');
+  })
+  .catch(err => {
+    document.body.setAttribute('data-error', String(err));
+  });
+</script>
+</body>
+</html>

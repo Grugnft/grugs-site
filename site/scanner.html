@@ -1,0 +1,2696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rug Radar — Grugs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="grug smell rug from mile away. paste NFT contract. grug tell you if project safe.">
+<meta name="theme-color" content="#1A140F">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Grugs">
+<meta property="og:title" content="Rug Radar — grug smell rug">
+<meta property="og:description" content="paste NFT contract on Robinhood Chain. get a rug score out of 100.">
+<meta property="og:url" content="https://grugnft.xyz/scanner">
+<meta property="og:image" content="https://grugnft.xyz/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@GrugNFT">
+<meta name="twitter:title" content="Rug Radar — grug smell rug">
+<meta name="twitter:description" content="paste NFT contract on Robinhood Chain. get a rug score out of 100.">
+<meta name="twitter:image" content="https://grugnft.xyz/og.png">
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%231a140f'/><rect x='4' y='3' width='8' height='9' fill='%237b5a3e'/><rect x='3' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='12' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='4' y='5' width='2' height='1' fill='%23000'/><rect x='10' y='5' width='2' height='1' fill='%23000'/><rect x='5' y='6' width='1' height='1' fill='%23fff'/><rect x='10' y='6' width='1' height='1' fill='%23fff'/><rect x='6' y='9' width='4' height='1' fill='%23000'/><rect x='4' y='2' width='8' height='2' fill='%23000'/></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --stone: #1A140F;
+  --stone-2: #241A12;
+  --wall: #2B1F17;
+  --wall-2: #3A2A1E;
+  --torch: #E8A147;
+  --torch-hot: #FFC864;
+  --torch-peak: #FFF4C0;
+  --ember: #D14B2F;
+  --ember-hot: #F26A47;
+  --ember-deep: #7C2718;
+  --bone: #EDE1CE;
+  --bone-dim: #B8AA95;
+  --ash: #6B584A;
+  --moss: #7A9B5C;
+  --moss-hot: #8ac560;
+  --danger: #ff5a4a;
+  --warn: #ffb040;
+}
+
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(122,155,92,0.10) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 90%, rgba(209,75,47,0.05) 0%, transparent 40%),
+    var(--stone);
+  color: var(--bone);
+  font-family: 'VT323', ui-monospace, monospace;
+  font-size: 22px;
+  line-height: 1.35;
+  padding-bottom: 60px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============ NAV (matches index.html) ============ */
+header.nav {
+  position: sticky; top: 0; z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 14px 32px;
+  gap: 16px;
+  background: linear-gradient(to bottom, rgba(26,20,15,0.98), rgba(26,20,15,0.90));
+  border-bottom: 3px double var(--wall-2);
+  backdrop-filter: blur(6px);
+}
+.wordmark {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: var(--torch);
+  letter-spacing: 2px;
+  text-shadow: 0 0 14px rgba(232,161,71,0.35);
+  cursor: pointer;
+  user-select: none;
+  justify-self: start;
+  text-decoration: none;
+}
+.tabs { display: flex; gap: 4px; justify-self: center; }
+.tab {
+  padding: 8px 16px;
+  color: var(--bone-dim);
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: transparent;
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  letter-spacing: 1px;
+  text-transform: lowercase;
+  text-decoration: none;
+}
+.tab:hover { color: var(--bone); border-color: var(--wall-2); }
+.tab.active {
+  color: var(--stone);
+  background: var(--moss);
+  border-color: var(--moss);
+}
+.nav-right { justify-self: end; display: inline-flex; align-items: center; gap: 10px; }
+.chain-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border: 2px solid var(--wall-2);
+  color: var(--bone-dim);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px; letter-spacing: 1px;
+}
+.chain-badge::before {
+  content: ""; width: 8px; height: 8px;
+  background: var(--moss);
+  box-shadow: 0 0 6px var(--moss);
+}
+.nav-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
+  color: var(--bone-dim);
+  border: 2px solid var(--wall-2);
+  text-decoration: none;
+  transition: color 120ms, border-color 120ms, transform 120ms;
+}
+.nav-x:hover { color: var(--torch); border-color: var(--torch); transform: translateY(-1px); }
+
+main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
+
+/* ============ HERO ============ */
+.scanner-hero {
+  text-align: center;
+  padding: 24px 0 28px;
+  border-bottom: 3px double var(--wall-2);
+  margin-bottom: 24px;
+  position: relative;
+}
+.disclaimer-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  margin: 0 0 32px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-left: 5px solid var(--warn);
+  color: var(--bone);
+  font-size: 18px;
+  line-height: 1.45;
+  letter-spacing: 0.3px;
+}
+.disclaimer-bar .dis-icon {
+  color: var(--warn);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 18px;
+  line-height: 1.3;
+  flex: 0 0 auto;
+}
+.disclaimer-bar .dis-text b { color: var(--torch); }
+.scanner-hero h1 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(28px, 5vw, 44px);
+  letter-spacing: 4px;
+  color: var(--bone);
+  margin: 6px 0 10px;
+  text-shadow: 3px 3px 0 var(--ember-deep), 6px 6px 0 rgba(0,0,0,0.5);
+}
+.scanner-hero .tagline {
+  color: var(--torch);
+  font-size: clamp(20px, 2vw, 26px);
+  letter-spacing: 2px;
+  margin: 0 0 4px;
+}
+.scanner-hero .sub {
+  color: var(--bone-dim);
+  font-size: 18px;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+/* ============ SCANNER INPUT ============ */
+.scan-panel {
+  padding: 28px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-left: 6px solid var(--moss);
+  margin-bottom: 32px;
+}
+.scan-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--torch);
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+  display: block;
+}
+.scan-row {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  align-items: stretch;
+}
+.scan-input {
+  flex: 1 1 420px;
+  padding: 16px 18px;
+  background: var(--stone);
+  color: var(--bone);
+  border: 2px solid var(--wall-2);
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  letter-spacing: 1px;
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 0;
+}
+.scan-input:focus { border-color: var(--moss); }
+.scan-input::placeholder { color: var(--ash); }
+.scan-btn {
+  padding: 16px 28px;
+  background: var(--moss);
+  color: var(--stone);
+  border: none;
+  border-bottom: 5px solid #4a6a3a;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 13px;
+  letter-spacing: 3px;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.06s;
+  white-space: nowrap;
+}
+.scan-btn:hover { filter: brightness(1.1); }
+.scan-btn:active { transform: translateY(2px); border-bottom-width: 3px; }
+.scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.scan-hint {
+  font-size: 16px;
+  color: var(--bone-dim);
+  margin: 12px 0 0;
+  letter-spacing: 0.5px;
+}
+.scan-hint b { color: var(--torch); }
+.scan-error {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #401010;
+  color: #ff8080;
+  border-left: 4px solid var(--danger);
+  font-size: 18px;
+  display: none;
+}
+.scan-error.on { display: block; }
+
+/* ============ RESULT ============ */
+#result { display: none; }
+#result.on { display: block; animation: result-in 0.35s ease-out; }
+@keyframes result-in {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.result-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 32px;
+  align-items: center;
+  padding: 32px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.result-header::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 90% 50%, rgba(122,155,92,0.08) 0%, transparent 55%);
+  pointer-events: none;
+}
+.gauge-wrap { position: relative; width: 200px; height: 200px; }
+.gauge-wrap svg { width: 100%; height: 100%; display: block; }
+.gauge-track { fill: none; stroke: var(--wall); stroke-width: 18; }
+.gauge-fill {
+  fill: none; stroke-width: 18;
+  stroke-linecap: butt;
+  transition: stroke-dashoffset 1s cubic-bezier(0.2, 0.8, 0.2, 1), stroke 0.4s;
+}
+.gauge-fill.green  { stroke: var(--moss-hot); filter: drop-shadow(0 0 10px rgba(138,197,96,0.5)); }
+.gauge-fill.yellow { stroke: var(--warn);     filter: drop-shadow(0 0 10px rgba(255,176,64,0.5)); }
+.gauge-fill.red    { stroke: var(--danger);   filter: drop-shadow(0 0 10px rgba(255,90,74,0.5)); }
+.gauge-num {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center; flex-direction: column;
+  pointer-events: none;
+}
+.gauge-num .n {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 44px;
+  line-height: 1;
+  color: var(--bone);
+}
+.gauge-num .max {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--bone-dim);
+  letter-spacing: 1px;
+  margin-top: 6px;
+}
+
+.verdict-block { position: relative; z-index: 1; }
+.verdict {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 28px;
+  letter-spacing: 3px;
+  margin: 0 0 6px;
+}
+.verdict.green  { color: var(--moss-hot); }
+.verdict.yellow { color: var(--warn); }
+.verdict.red    { color: var(--danger); }
+.contract-line {
+  font-size: 18px;
+  color: var(--bone-dim);
+  margin: 0 0 4px;
+  letter-spacing: 0.5px;
+  word-break: break-all;
+}
+.contract-line b { color: var(--bone); font-weight: normal; }
+.contract-line a {
+  color: var(--torch);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--wall-2);
+}
+.contract-line a:hover { color: var(--torch-hot); border-color: var(--torch); }
+.grug-quote {
+  margin: 14px 0 0;
+  padding: 12px 16px;
+  background: var(--stone);
+  border-left: 3px solid var(--torch);
+  color: var(--bone);
+  font-size: 20px;
+  font-style: italic;
+  letter-spacing: 0.5px;
+}
+
+/* ============ SIGNAL CATEGORIES ============ */
+.cat-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: var(--torch);
+  letter-spacing: 2px;
+  margin: 32px 0 14px;
+  text-transform: lowercase;
+}
+.cat-title::before { content: "▸ "; color: var(--ember); }
+
+.signals { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.signal {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 14px;
+  align-items: start;
+  padding: 14px 18px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-left: 5px solid var(--moss);
+}
+.signal.warn { border-left-color: var(--warn); }
+.signal.danger { border-left-color: var(--danger); }
+.signal.info { border-left-color: var(--ash); }
+
+.signal-icon {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 18px;
+  line-height: 1.2;
+  color: var(--moss-hot);
+  text-align: center;
+}
+.signal.warn .signal-icon { color: var(--warn); }
+.signal.danger .signal-icon { color: var(--danger); }
+.signal.info .signal-icon { color: var(--bone-dim); }
+
+.signal-body { min-width: 0; }
+.signal-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: var(--bone);
+  letter-spacing: 1px;
+  margin: 0 0 4px;
+}
+.signal-desc {
+  color: var(--bone-dim);
+  font-size: 18px;
+  margin: 0;
+  line-height: 1.4;
+}
+.signal-desc code {
+  background: var(--stone);
+  padding: 1px 5px;
+  border: 1px solid var(--wall-2);
+  color: var(--bone);
+  font-size: 15px;
+}
+
+.signal-points {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--bone-dim);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+.signal.warn   .signal-points { color: var(--warn); }
+.signal.danger .signal-points { color: var(--danger); }
+.signal-points.good { color: var(--moss-hot); }
+.signal-points.unknown { color: var(--ash); font-size: 10px; }
+
+.project-meta {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  background: var(--wall);
+  border: 1px solid var(--wall-2);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--bone-dim);
+  vertical-align: middle;
+}
+.data-quality {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 4px 0 -4px;
+  font-size: 15px;
+  color: var(--bone-dim);
+}
+.data-quality .dq {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: var(--stone);
+  border: 1px solid var(--wall-2);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+.data-quality .dq.good::before { content: ""; width: 7px; height: 7px; background: var(--moss-hot); }
+.data-quality .dq.bad::before  { content: ""; width: 7px; height: 7px; background: var(--danger); }
+.data-quality .dq.unk::before  { content: ""; width: 7px; height: 7px; background: var(--ash); }
+
+/* ============ Deployer profile + contract capabilities panels ============
+   Informational cards that surface the raw data the scanner has already
+   fetched, without turning every fact into a scoring signal. Sits above
+   the signal categories so a reader can see "who / what" first before
+   reading the rug flags. */
+.info-panel {
+  margin: 16px 0 10px;
+  padding: 14px 18px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-left: 6px solid var(--moss);
+}
+.info-panel .panel-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--moss-hot);
+  margin: 0 0 8px;
+}
+.info-panel .panel-sub {
+  color: var(--bone-dim);
+  font-size: 14px;
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+/* Deployer profile — key/value grid */
+.panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 20px;
+}
+.panel-grid .cell {
+  padding: 8px 0;
+  border-top: 1px dashed var(--wall-2);
+}
+.panel-grid .cell .k {
+  display: block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--ash);
+  margin-bottom: 4px;
+}
+.panel-grid .cell .v {
+  color: var(--bone);
+  font-size: 15px;
+  word-break: break-all;
+}
+.panel-grid .cell .v.good { color: var(--moss-hot); }
+.panel-grid .cell .v.warn { color: var(--warn); }
+.panel-grid .cell .v.bad  { color: var(--danger); }
+.panel-grid .cell .v a { color: var(--torch); text-decoration: underline; }
+/* Capabilities grid — one chip per detected function */
+.cap-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cap-chip {
+  padding: 5px 10px;
+  border: 1px solid var(--wall-2);
+  background: var(--stone);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  color: var(--bone-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cap-chip::before { content: ''; width: 7px; height: 7px; display: inline-block; background: var(--ash); }
+.cap-chip.good::before { background: var(--moss-hot); }
+.cap-chip.warn::before { background: var(--warn); }
+.cap-chip.bad::before  { background: var(--danger); }
+.cap-chip.good { color: var(--moss-hot); }
+.cap-chip.warn { color: var(--warn); }
+.cap-chip.bad  { color: var(--danger); }
+
+/* Banner for edge-case contract kinds where the standard rug signals don't
+   map cleanly. Right now: utility/factory contracts. Sits below the score,
+   above the signal list, so the reader knows "the signals below have been
+   adjusted for this contract kind" before they start reading them. */
+.contract-note {
+  margin: 14px 0 10px;
+  padding: 12px 16px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-left: 6px solid var(--torch);
+  color: var(--bone-dim);
+  font-size: 16px;
+  line-height: 1.55;
+}
+.contract-note b { color: var(--torch); }
+.contract-note .cn-title {
+  display: block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--torch);
+  margin-bottom: 6px;
+}
+.est-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  background: var(--stone);
+  border: 1px solid var(--wall-2);
+  color: var(--ash);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+
+/* ============ LOADING ============ */
+/* The loader is the same little grug-with-a-club that runs across the
+   homepage, doing a 3-hit combo on a small pixel machine. Uses the shared
+   grug-body renderer (site/scripts/grug-body.mjs) so the sprite matches
+   the homepage 1:1 — no bespoke SVG that drifts out of sync with the
+   real grug art. Populated at module-load time (see the module script
+   near the end of the file). */
+#loading { display: none; padding: 40px 20px 60px; text-align: center; }
+#loading.on { display: block; }
+
+.grug-smash {
+  position: relative;
+  width: 280px; height: 170px;
+  margin: 0 auto 12px;
+  display: flex; align-items: flex-end; justify-content: center;
+  gap: 6px;
+}
+
+/* Grug attacker — the whole sprite rotates around its feet, same idiom the
+   homepage uses for the machine-attackers on the hero scene. */
+.gs-attacker {
+  position: relative;
+  width: 96px; height: 160px;
+  transform-origin: 50% 100%;
+  animation: gs-combo 1.9s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.gs-attacker svg { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+/* 3-hit combo: wind up → strike → recoil → strike → recoil → BIG strike → settle */
+@keyframes gs-combo {
+  0%   { transform: rotate(0deg); }
+  8%   { transform: rotate(-14deg); }   /* wind-up 1 */
+  16%  { transform: rotate(20deg); }    /* hit 1 */
+  22%  { transform: rotate(4deg); }     /* recoil 1 */
+  28%  { transform: rotate(-12deg); }   /* wind-up 2 */
+  36%  { transform: rotate(20deg); }    /* hit 2 */
+  42%  { transform: rotate(4deg); }     /* recoil 2 */
+  50%  { transform: rotate(-20deg); }   /* big wind-up */
+  60%  { transform: rotate(28deg); }    /* hit 3 — heaviest */
+  70%  { transform: rotate(8deg); }     /* long recoil */
+  100% { transform: rotate(0deg); }     /* settle */
+}
+
+/* Machine — miniature homepage machine, shakes on each of the 3 impacts. */
+.gs-machine-wrap {
+  position: relative;
+  width: 96px; height: 130px;
+  align-self: flex-end;
+}
+.gs-machine {
+  width: 100%; height: 100%;
+  transform-origin: 50% 100%;
+  animation: gs-machine-shake 1.9s steps(1) infinite;
+}
+.gs-machine svg { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+@keyframes gs-machine-shake {
+  0%, 14%, 22%, 34%, 42%, 58%, 68%, 100% { transform: translate(0, 0); }
+  16% { transform: translate(4px, 2px)  rotate(-2deg); }
+  36% { transform: translate(4px, 2px)  rotate(2deg); }
+  60% { transform: translate(6px, 3px)  rotate(-3deg); }
+  64% { transform: translate(-4px, 1px) rotate(2deg); }
+}
+.gs-screen-line {
+  animation: gs-glitch 1.9s steps(1) infinite;
+}
+@keyframes gs-glitch {
+  0%, 15%, 35%, 59% { opacity: 0.9; fill: #8ac560; }
+  16%, 36%, 60%     { opacity: 0.3; fill: #ff5a4a; }
+  20%, 40%, 66%     { opacity: 0.6; fill: #ffb040; }
+  24%, 44%, 72%     { opacity: 0.9; fill: #8ac560; }
+}
+
+/* Impact FX — SMASH! text pops on each of the 3 hits. */
+.gs-fx {
+  position: absolute;
+  pointer-events: none;
+  left: 50%;
+  top: 6px;
+  transform: translateX(-50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 15px;
+  color: #FFF4C0;
+  text-shadow: 2px 2px 0 #7C2718, -1px -1px 0 #7C2718, 1px -1px 0 #7C2718, -1px 1px 0 #7C2718;
+  opacity: 0;
+  animation: gs-thwack 1.9s ease-out infinite;
+  letter-spacing: 1px;
+}
+@keyframes gs-thwack {
+  0%, 14%, 22%, 34%, 42%, 58%, 68%, 100% { opacity: 0; transform: translate(-50%, 8px) scale(0.4); }
+  16% { opacity: 1; transform: translate(-50%, 0)    scale(1.0); }
+  20% { opacity: 0.8; transform: translate(-50%, -4px) scale(1.1); }
+  36% { opacity: 1; transform: translate(-50%, 0)    scale(1.0); }
+  40% { opacity: 0.8; transform: translate(-50%, -4px) scale(1.1); }
+  60% { opacity: 1; transform: translate(-50%, -2px) scale(1.25); }
+  66% { opacity: 0.8; transform: translate(-50%, -8px) scale(1.3); }
+}
+
+.loading-txt {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: var(--torch);
+  margin: 0;
+}
+.loading-sub {
+  color: var(--bone-dim);
+  font-size: 18px;
+  margin: 8px 0 0;
+  letter-spacing: 1px;
+  min-height: 26px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gs-attacker, .gs-machine, .gs-screen-line, .gs-fx { animation: none; }
+  .gs-fx { opacity: 1; }
+}
+
+/* ============ EXAMPLES ============ */
+.examples {
+  margin-top: 24px;
+  padding: 24px 28px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-left: 6px solid var(--torch);
+}
+.examples h3 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--torch);
+  letter-spacing: 2px;
+  margin: 0 0 14px;
+}
+.example-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.example {
+  padding: 14px 16px;
+  background: var(--stone);
+  border: 2px solid var(--wall-2);
+  border-left: 4px solid var(--moss);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.example:hover { transform: translateY(-2px); }
+.example.red { border-left-color: var(--danger); }
+.example.yellow { border-left-color: var(--warn); }
+.example.green { border-left-color: var(--moss); }
+.example-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--bone);
+  margin: 0 0 4px;
+}
+.example-desc { color: var(--bone-dim); font-size: 17px; margin: 0 0 6px; }
+.example-badge {
+  display: inline-block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  background: var(--wall);
+  border: 1px solid var(--wall-2);
+}
+.example.green .example-badge  { color: var(--moss-hot); border-color: #2a4020; background: #1a2818; }
+.example.yellow .example-badge { color: var(--warn);     border-color: #8a4820; background: #3a2010; }
+.example.red .example-badge    { color: var(--danger);   border-color: #802020; background: #401010; }
+
+/* ============ HOW IT WORKS ============ */
+.how {
+  margin-top: 40px;
+  padding: 32px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+}
+.how h2 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 18px;
+  color: var(--torch);
+  letter-spacing: 3px;
+  margin: 0 0 20px;
+}
+.how h2::before { content: "▸ "; color: var(--ember); }
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.how-step {
+  padding: 20px;
+  background: var(--stone);
+  border: 2px solid var(--wall-2);
+}
+.how-step .num {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 24px;
+  color: var(--ember);
+  margin-bottom: 8px;
+}
+.how-step h4 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: var(--bone);
+  letter-spacing: 1.5px;
+  margin: 0 0 8px;
+}
+.how-step p {
+  color: var(--bone-dim);
+  font-size: 18px;
+  margin: 0;
+  line-height: 1.4;
+}
+.disclaimer {
+  margin-top: 24px;
+  padding: 16px 20px;
+  background: var(--stone);
+  border: 1px dashed var(--ash);
+  color: var(--bone-dim);
+  font-size: 17px;
+  line-height: 1.5;
+}
+.disclaimer b { color: var(--torch); }
+
+/* ============ EMPTY STATE ============ */
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--bone-dim);
+}
+.empty-state .art {
+  font-size: 48px; line-height: 1;
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+
+@media (max-width: 900px) {
+  .wordmark, .tabs, .nav-right { justify-self: center; }
+  header.nav { grid-template-columns: 1fr; }
+  .tabs { flex-wrap: wrap; justify-content: center; }
+  main { padding: 24px 16px 40px; }
+  .result-header { grid-template-columns: 1fr; text-align: center; }
+  .gauge-wrap { margin: 0 auto; width: 160px; height: 160px; }
+  .example-grid, .how-grid { grid-template-columns: 1fr; }
+  .verdict { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <a class="wordmark" href="index.html">GRUGS</a>
+  <nav class="tabs" role="tablist">
+    <a class="tab" href="index.html">home</a>
+    <a class="tab active" href="scanner.html">rug radar</a>
+    <a class="tab" href="mints.html">mints</a>
+  </nav>
+  <div class="nav-right">
+    <a class="nav-x" href="https://twitter.com/GrugNFT" target="_blank" rel="noopener noreferrer" title="@GrugNFT on Twitter" aria-label="Twitter">
+      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+        <path fill="currentColor" d="M12.6 1.5h2.3l-5 5.7 5.9 7.8h-4.6l-3.6-4.7-4.1 4.7H1.2l5.4-6.1L1 1.5h4.7l3.3 4.4L12.6 1.5zm-.8 12.1h1.3L4.3 2.8H2.9l8.9 10.8z"/>
+      </svg>
+    </a>
+    <div class="chain-badge">RHC</div>
+  </div>
+</header>
+
+<main>
+
+  <section class="scanner-hero">
+    <h1>RUG RADAR</h1>
+    <p class="tagline">grug smell rug from mile away</p>
+    <p class="sub">paste NFT contract on Robinhood chain. grug tell you if project safe.</p>
+  </section>
+
+  <aside class="disclaimer-bar" role="note">
+    <span class="dis-icon" aria-hidden="true">⚠</span>
+    <span class="dis-text">
+      <b>grug word:</b> radar not oracle. grug make mistake sometimes. always <b>do your own research</b> before you buy.
+    </span>
+  </aside>
+
+  <section class="scan-panel">
+    <label for="addr" class="scan-label">CONTRACT ADDRESS</label>
+    <div class="scan-row">
+      <input
+        id="addr"
+        class="scan-input"
+        type="text"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder="0x…  (paste NFT contract address on Robinhood Chain)"
+        aria-label="NFT contract address"
+      >
+      <button id="scan-btn" class="scan-btn" type="button">GRUG SNIFF</button>
+    </div>
+    <p class="scan-hint">
+      grug scan <b>ERC-721 / ERC-1155</b> on Robinhood Chain only for now. more chains later. <b>free scan</b> for tribe.
+    </p>
+    <div id="scan-error" class="scan-error" role="alert"></div>
+  </section>
+
+  <div id="loading">
+    <div class="grug-smash" aria-hidden="true">
+      <!-- Grug attacker — populated by the grug-body ES module below with a
+           real 24×32 pixel-art grug sprite (identical to the ones running
+           across the homepage hero). Falls back to empty if the module
+           fails to load, but the machine still animates. -->
+      <div class="gs-attacker" id="gs-attacker"></div>
+      <div class="gs-machine-wrap">
+        <div class="gs-machine">
+          <svg viewBox="0 0 48 44" xmlns="http://www.w3.org/2000/svg">
+            <!-- Miniature pixel machine — same silhouette as the homepage
+                 machine, condensed to a 48×44 viewBox so it sits neatly
+                 next to the ~96px-tall grug. Feet, keyboard, monitor with
+                 a green CRT that glitches into red/amber on each impact. -->
+            <rect x="8"  y="42" width="6"  height="2" fill="#2a2a2a"/>
+            <rect x="34" y="42" width="6"  height="2" fill="#2a2a2a"/>
+            <rect x="5"  y="36" width="38" height="6" fill="#5a5a5a" stroke="#2a2a2a" stroke-width="0.5"/>
+            <rect x="5"  y="36" width="38" height="1" fill="#7a7a7a"/>
+            <rect x="8"  y="38" width="2"  height="2" fill="#3a3a3a"/>
+            <rect x="12" y="38" width="2"  height="2" fill="#3a3a3a"/>
+            <rect x="16" y="38" width="2"  height="2" fill="#3a3a3a"/>
+            <rect x="20" y="38" width="8"  height="2" fill="#3a3a3a"/>
+            <rect x="30" y="38" width="2"  height="2" fill="#3a3a3a"/>
+            <rect x="34" y="38" width="2"  height="2" fill="#3a3a3a"/>
+            <rect x="38" y="38" width="2"  height="2" fill="#3a3a3a"/>
+            <rect x="20" y="34" width="8"  height="2" fill="#4a4a4a"/>
+            <rect x="22" y="32" width="4"  height="2" fill="#4a4a4a"/>
+            <rect x="4"  y="4"  width="40" height="28" fill="#8a8a8a" stroke="#3a3a3a" stroke-width="1"/>
+            <rect x="4"  y="4"  width="40" height="1"  fill="#b8b8b8"/>
+            <rect x="43" y="4"  width="1"  height="28" fill="#5a5a5a"/>
+            <rect x="9"  y="9"  width="26" height="18" fill="#0e1a0e"/>
+            <rect class="gs-screen-line" x="12" y="12" width="18" height="2" fill="#8ac560"/>
+            <rect class="gs-screen-line" x="12" y="16" width="22" height="2" fill="#8ac560"/>
+            <rect class="gs-screen-line" x="12" y="20" width="14" height="2" fill="#8ac560"/>
+            <rect class="gs-screen-line" x="12" y="24" width="20" height="2" fill="#8ac560"/>
+            <rect x="7" y="10" width="1" height="1" fill="#e83030"/>
+            <rect x="7" y="12" width="1" height="1" fill="#30e830"/>
+            <!-- Crack marks from all the past smashing -->
+            <g stroke="#1a1a1a" stroke-width="0.4" fill="none" opacity="0.7">
+              <polyline points="16,4 17,6 15,9 17,11"/>
+              <polyline points="32,30 34,28 33,26"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="gs-fx">SMASH!</div>
+    </div>
+    <p class="loading-txt">GRUG SMASHING</p>
+    <p id="loading-sub" class="loading-sub">grug read contract…</p>
+  </div>
+
+  <div id="result">
+    <div class="result-header">
+      <div class="gauge-wrap" aria-hidden="true">
+        <svg viewBox="0 0 120 120">
+          <circle class="gauge-track" cx="60" cy="60" r="50"/>
+          <circle id="gauge-fill" class="gauge-fill" cx="60" cy="60" r="50"
+                  transform="rotate(-90 60 60)"
+                  stroke-dasharray="314.16" stroke-dashoffset="314.16"/>
+        </svg>
+        <div class="gauge-num">
+          <div id="score-num" class="n">0</div>
+          <div class="max">/ 100 RISK</div>
+        </div>
+      </div>
+      <div class="verdict-block">
+        <h2 id="verdict" class="verdict green">grug approve</h2>
+        <p class="contract-line">
+          <b id="project-name">Unknown Project</b>
+          <span id="project-meta" class="project-meta" hidden></span>
+        </p>
+        <p class="contract-line">
+          contract: <a id="explorer-link" href="#" target="_blank" rel="noopener"><span id="addr-echo">0x…</span></a>
+        </p>
+        <div id="grug-quote" class="grug-quote">grug think this one okay. grug still watch though.</div>
+      </div>
+    </div>
+
+    <div id="data-quality" class="data-quality" hidden></div>
+    <div id="contract-note" class="contract-note" hidden></div>
+
+    <!-- Deployer profile block — everything grug knows about the wallet
+         that shipped this contract. Populated when the deployer-history
+         endpoint responds; stays hidden otherwise so a failed lookup
+         doesn't leave a dead card on the page. -->
+    <section id="deployer-profile" class="info-panel" hidden>
+      <h3 class="panel-title">deployer profile</h3>
+      <div class="panel-grid" id="deployer-profile-grid"></div>
+    </section>
+
+    <!-- Contract capabilities block — informational, not scored. Lists what
+         admin functions this bytecode exposes so a reader can eyeball the
+         attack surface without parsing every signal weight. -->
+    <section id="contract-capabilities" class="info-panel" hidden>
+      <h3 class="panel-title">contract capabilities</h3>
+      <p class="panel-sub">what the team can do from here. green = safe, orange = admin power still live, grey = grug can't tell.</p>
+      <div class="cap-grid" id="cap-grid"></div>
+    </section>
+
+    <h3 class="cat-title">contract</h3>
+    <div id="signals-contract" class="signals"></div>
+
+    <h3 class="cat-title">deployer</h3>
+    <div id="signals-deployer" class="signals"></div>
+
+    <h3 class="cat-title">distribution</h3>
+    <div id="signals-distribution" class="signals"></div>
+
+    <h3 class="cat-title">socials</h3>
+    <div id="signals-socials" class="signals"></div>
+
+    <h3 class="cat-title">metadata</h3>
+    <div id="signals-metadata" class="signals"></div>
+  </div>
+
+  <section class="examples" id="examples">
+    <h3>OR SNIFF ONE OF THESE</h3>
+    <p style="color:var(--bone-dim); font-size:17px; margin:0 0 14px;">
+      grug pick three project so tribe can see how radar work. click one.
+    </p>
+    <div class="example-grid">
+      <button class="example green" data-addr="0x00000000000000000000000000000000000c0000" data-name="Stone Tribe" data-preset="green">
+        <div class="example-name">STONE TRIBE</div>
+        <p class="example-desc">verified, renounced, IPFS pinned, spread holders.</p>
+        <span class="example-badge">grug approve</span>
+      </button>
+      <button class="example yellow" data-addr="0x00000000000000000000000000000000000ba110" data-name="Mystery Apes" data-preset="yellow">
+        <div class="example-name">MYSTERY APES</div>
+        <p class="example-desc">looks fine but owner not renounced and metadata still swappable.</p>
+        <span class="example-badge">grug wary</span>
+      </button>
+      <button class="example red" data-addr="0x00000000000000000000000000000000dead4444" data-name="Moonshot Yeti" data-preset="red">
+        <div class="example-name">MOONSHOT YETI</div>
+        <p class="example-desc">unverified proxy, fresh deployer, 80% held by 3 wallets.</p>
+        <span class="example-badge">grug run</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="how">
+    <h2>how grug sniff</h2>
+    <div class="how-grid">
+      <div class="how-step">
+        <div class="num">1</div>
+        <h4>read contract</h4>
+        <p>grug ask chain for source. is it verified? is it a proxy? what admin function still live?</p>
+      </div>
+      <div class="how-step">
+        <div class="num">2</div>
+        <h4>sniff deployer</h4>
+        <p>how old the wallet? funded from where? has this wallet done rug before? are big allocations sitting quiet?</p>
+      </div>
+      <div class="how-step">
+        <div class="num">3</div>
+        <h4>count holders</h4>
+        <p>are top 10 wallets holding half the supply? are block-0 snipers piled up? grug not like concentration.</p>
+      </div>
+      <div class="how-step">
+        <div class="num">4</div>
+        <h4>score it</h4>
+        <p>every warning add point. grug add up. give score out of 100. low = safe-ish. high = grug run.</p>
+      </div>
+    </div>
+    <p class="disclaimer">
+      <b>grug word:</b> radar not oracle. radar look at what chain say today. project can still rug tomorrow.
+      grug do best sniff. tribe still do own homework. never buy thing grug not understand.
+    </p>
+  </section>
+
+</main>
+
+<script>
+/* ============================================================
+   RUG RADAR — real chain scanner
+   ------------------------------------------------------------
+   Reads real state from Robinhood Chain (chain id 4663) via:
+     - Public JSON-RPC: eth_call, eth_getCode, eth_getStorageAt
+     - Blockscout API v2: source verification, holders, creator
+
+   Nine signals are "real" (derived from RPC + explorer). Six
+   are "unknown" (need a custom indexer for deployer history,
+   sniper clusters, wash trades, IPFS pin status) — those show
+   as grey with a "?" icon and contribute zero to the score,
+   so the score reflects only what we could actually verify.
+
+   Preset examples (Stone Tribe / Mystery Apes / Moonshot Yeti)
+   bypass the reader and use hand-scripted scenarios so the demo
+   story renders consistently.
+   ============================================================ */
+
+const RPC_URL        = 'https://rpc.mainnet.chain.robinhood.com';
+const BLOCKSCOUT_API = 'https://robinhoodchain.blockscout.com/api/v2';
+const EXPLORER       = 'https://robinhoodchain.blockscout.com/address/';
+const ZERO_ADDR      = '0x0000000000000000000000000000000000000000';
+const EIP1967_IMPL_SLOT = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc';
+
+/* Function selectors we call directly */
+const SEL = {
+  name:              '0x06fdde03',
+  symbol:            '0x95d89b41',
+  owner:             '0x8da5cb5b',
+  supportsInterface: '0x01ffc9a7',
+  tokenURI:          '0xc87b56dd', // ERC-721
+  uri:               '0x0e89341c', // ERC-1155
+  // Live-state checks — these are eth_call view reads, not bytecode grep.
+  paused:            '0x5c975abb', // paused() view — returns bool
+  getThreshold:      '0xe75235b8', // Gnosis Safe getThreshold() — reveals multi-sig
+};
+
+/* Selectors we grep the bytecode for. Each is the first 4 bytes of
+   keccak256("name(argtypes)"). If the bytecode contains the selector, the
+   contract exposes that admin function. This is a *lower bound* — a project
+   with a differently-named custom mint (e.g. `founderMint()` instead of
+   `mint(address,uint256)`) won't show up here. All selectors are hex
+   without the leading "0x".
+
+   Only well-known / standardized selectors go in this map. Non-standard
+   custom names would risk collisions with unrelated functions, and a false
+   "admin blacklist detected" is worse than a missing detection. If you want
+   to add a new one, compute it and verify against 4byte.directory before
+   adding — don't guess. */
+const ADMIN_SEL = {
+  // Supply-side admin — mint the team can call
+  ownerMint:         '40c10f19', // mint(address,uint256)   (OZ / common)
+  ownerMintTo:       '449a52f8', // mintTo(address,uint256) (OZ ERC-721 preset)
+
+  // Metadata admin — post-mint art/URI changes
+  setBaseURI:        '55f804b3', // setBaseURI(string)      (OZ)
+  setTokenURI:       '162094c4', // setTokenURI(uint256,string) (OZ ERC-721URIStorage)
+
+  // Transfer/pause admin — team can freeze the whole collection
+  pause:             '8456cb59', // pause()                 (OZ Pausable)
+  unpause:           '3f4ba83a', // unpause()               (OZ Pausable)
+
+  // Ownership admin — indicates OpenZeppelin Ownable is present
+  renounceOwnership: '715018a6', // renounceOwnership()     (OZ Ownable)
+  transferOwnership: 'f2fde38b', // transferOwnership(address) (OZ Ownable)
+
+  // Value-drain admin — team can pull ETH held by the contract
+  withdraw:          '3ccfd60b', // withdraw()              (very common)
+
+  // Fee/royalty admin — team can change economics after mint
+  setDefaultRoyalty: '04634d8d', // setDefaultRoyalty(address,uint96) (OZ ERC2981)
+};
+
+/* Interface IDs */
+const IFACE = {
+  ERC721:  '80ac58cd',
+  ERC1155: 'd9b67a26',
+  ERC2981: '2a55205a',
+};
+
+/* -------- signal catalog (weights + copy) -------- */
+/*
+ * Signal weights — rebalanced 2026-09.
+ *
+ * Guiding principle: a weight is how much *rug risk* this specific pattern
+ * adds when triggered, not how bad the pattern is in the abstract. Owner
+ * not renounced is common in legit projects (mint managers, whitelist
+ * controllers) and shouldn't clobber a good score on its own. A proxy or
+ * a known prior rug is nearly always terminal and should still hit hard.
+ *
+ * Category totals (max damage if every signal in the group triggers):
+ *   contract:    145   (transfer-sim 25 + fresh-deploy 8 + mutable-royalty 6)
+ *   deployer:     90   (batch 3: +10 for freshFunding — funding-source trace)
+ *   distribution: 59   (batch 3: +6 for noMarket — OpenSea sales activity)
+ *   socials:      11   (no socials ≠ rug on its own)
+ *   metadata:     17
+ * Grand total 322, score still capped at 100. Two signals a rug pattern
+ * consistently trips (freshFunding + freshWallet + noMarket) are enough by
+ * themselves to move the score past 25 into "wary" without ever touching
+ * contract-code signals.
+ */
+const CATALOG = {
+  contract: [
+    { id: 'unverified',   name: 'source unverified',        weight: 15,
+      bad: 'contract source not published. grug cannot see what code do.',
+      good: 'contract source verified on Blockscout.' },
+    { id: 'proxy',        name: 'upgradeable proxy',        weight: 25,
+      bad: 'contract is a proxy. owner can swap the logic any time.',
+      good: 'not a proxy. code is fixed.' },
+    { id: 'ownerActive',  name: 'owner not renounced',      weight:  8,
+      bad: 'owner is still set. one wallet holds admin keys.',
+      good: 'ownership renounced. no admin key exists.' },
+    { id: 'adminMint',    name: 'admin mint function present', weight: 10,
+      bad: 'owner-style <code>mint()</code> selector found in bytecode. supply may not be capped.',
+      good: 'no admin mint selector found.' },
+    { id: 'openBaseURI',  name: 'baseURI still swappable',  weight:  8,
+      bad: '<code>setBaseURI()</code> selector found. art can be swapped post-mint.',
+      good: 'no <code>setBaseURI()</code> selector found.' },
+    { id: 'transferLock', name: 'admin transfer lock',      weight:  8,
+      bad: '<code>pause()</code> selector found. owner can freeze transfers.',
+      good: 'no pause selector found. transfers permissionless.' },
+    { id: 'currentlyPaused', name: 'contract is paused now', weight: 20,
+      bad: 'contract\'s <code>paused()</code> returns true. transfers are frozen right this moment.',
+      good: 'contract is not paused. transfers flowing.' },
+    { id: 'withdrawExposure', name: 'owner can drain contract ETH', weight: 12,
+      bad: 'contract holds ETH and exposes a <code>withdraw()</code> function. owner can pull mint proceeds.',
+      good: 'no withdraw exposure — contract holds no ETH or has no <code>withdraw()</code>.' },
+    { id: 'transferBlocked', name: 'transfer simulation reverts', weight: 25,
+      bad: 'simulated transfer reverts with a lock-style reason. contract may be a honeypot.',
+      good: 'simulated transfer would succeed. no transfer lock detected.' },
+    { id: 'freshDeploy',     name: 'launched minutes after deploy', weight: 8,
+      bad: 'contract minted almost immediately after deploy. no testing window — typical hot rug.',
+      good: 'deploy → first mint gap looks mature. team had time to test.' },
+    { id: 'mutableRoyalty',  name: 'royalty rate mutable',   weight: 6,
+      bad: '<code>setDefaultRoyalty()</code> selector found. owner can change the royalty at any time.',
+      good: 'no royalty setter. royalty rate is fixed.' },
+  ],
+  deployer: [
+    { id: 'freshWallet',   name: 'deployer wallet fresh',     weight: 12,
+      bad: 'deployer wallet is new or has little history.',
+      good: 'deployer wallet has established history.' },
+    { id: 'emptyBalance',  name: 'deployer wallet empty',     weight:  8,
+      bad: 'deployer wallet has almost no ETH. common rug pattern (deploy and vanish).',
+      good: 'deployer wallet holds a healthy balance.' },
+    { id: 'firstDeploy',   name: 'first contract by deployer', weight:  5,
+      bad: 'this is the deployer\'s first contract. no reputation to lean on.',
+      good: 'deployer has shipped multiple contracts. some reputation.' },
+    { id: 'mixerFunded',   name: 'funded from mixer',         weight: 25,
+      bad: 'deployer funded from a privacy mixer.',
+      good: 'deployer funded from a known source.' },
+    { id: 'priorRug',      name: 'past rug on same wallet',   weight: 30,
+      bad: 'deployer wallet linked to a prior rug.',
+      good: 'no prior rugs on record for this deployer.' },
+    { id: 'freshFunding',  name: 'funded by fresh wallet',    weight: 10,
+      bad: 'deployer\'s ETH came from a wallet with almost no history. disposable-identity chain.',
+      good: 'deployer funded from an established source.' },
+  ],
+  distribution: [
+    { id: 'topHeavy',     name: 'top 10 hold > 50%',        weight: 18,
+      bad: 'top 10 wallets hold most of the supply. one dump kills floor.',
+      good: 'top 10 hold under 50%. distribution reasonable.' },
+    { id: 'deadContract', name: 'no on-chain activity',     weight: 10,
+      bad: 'contract has zero token transfers. nothing trading, nothing minted.',
+      good: 'contract has seen live transfer activity.' },
+    { id: 'sniperStack',  name: 'block-0 sniper cluster',   weight: 15,
+      bad: 'cluster of wallets minted at block 0 and never traded.',
+      good: 'block-0 mints spread across many wallets.' },
+    { id: 'washTrades',   name: 'wash-trade pattern',       weight: 10,
+      bad: 'same wallets round-tripping. volume looks fake.',
+      good: 'volume looks organic.' },
+    { id: 'noMarket',     name: 'no secondary market yet',  weight:  6,
+      bad: 'collection has been live but nobody has bought or sold on OpenSea.',
+      good: 'collection has real secondary-market activity on OpenSea.' },
+  ],
+  socials: [
+    { id: 'websiteReachable', name: 'website reachable',    weight:  6,
+      bad: 'website listed in metadata but not reachable. broken or gone.',
+      good: 'website in metadata is up.' },
+    { id: 'twitterExists',    name: 'twitter handle valid', weight:  5,
+      bad: 'twitter handle in metadata does not resolve.',
+      good: 'twitter handle in metadata exists.' },
+  ],
+  metadata: [
+    { id: 'centralArt',   name: 'art on centralized url',   weight: 10,
+      bad: 'metadata points to a server, not IPFS/Arweave. team can flip it.',
+      good: 'metadata pinned to IPFS or Arweave.' },
+    { id: 'unpinned',     name: 'IPFS not pinned',          weight:  4,
+      bad: 'metadata on IPFS but no pin found. could disappear.',
+      good: 'metadata pinned by more than one provider.' },
+    { id: 'noRoyalty',    name: 'off-chain royalty only',   weight:  3,
+      bad: 'no on-chain ERC-2981 royalty function.',
+      good: 'royalty declared on-chain via EIP-2981.' },
+  ],
+};
+
+/* Preset scans (demo mode, bypass real reader) */
+const PRESETS = {
+  green: {
+    name: 'Stone Tribe',
+    triggered: new Set(['sniperStack']),
+  },
+  yellow: {
+    name: 'Mystery Apes',
+    triggered: new Set(['ownerActive', 'openBaseURI', 'centralArt', 'freshWallet']),
+  },
+  red: {
+    name: 'Moonshot Yeti',
+    triggered: new Set(['unverified', 'proxy', 'ownerActive', 'adminMint', 'transferLock', 'currentlyPaused', 'withdrawExposure', 'transferBlocked', 'freshDeploy', 'mutableRoyalty', 'freshWallet', 'mixerFunded', 'freshFunding', 'topHeavy', 'sniperStack', 'noMarket', 'centralArt']),
+  },
+};
+
+const LOADING_MESSAGES = [
+  'grug read contract…',
+  'grug ask chain for owner…',
+  'grug sniff bytecode…',
+  'grug count holders…',
+  'grug check metadata pin…',
+  'grug think hard…',
+];
+
+/* Heuristic for "this is plumbing, not an art drop." Kept in sync with the
+   same regex in site/mints.html — if you change one, change both. Matches
+   Uniswap V3/V4 Positions, various Fee/Wrapper/Adapter/Beneficiary tokens,
+   liquidity/vault/permit receipt tokens. These are ERC-721/1155 by protocol,
+   but no user is trying to "mint" one — so several rug signals (holder
+   concentration, sniper cluster) return technically-true, semantically-wrong
+   verdicts and need to be suppressed. */
+const UTILITY_RE = /\b(position|positions|beneficiary|wrapper|unwrapper|adapter|reward|fee(-|s)?|treasury|permit|vault|gauge|liquidity)\b/i;
+function isUtilityName(name, symbol) {
+  return UTILITY_RE.test(`${name || ''} ${symbol || ''}`);
+}
+
+/* ================ RPC + Blockscout helpers ================ */
+
+function isValidAddress(a) {
+  return /^0x[0-9a-fA-F]{40}$/.test((a || '').trim());
+}
+
+async function rpc(method, params) {
+  // 8s ceiling per call — if the RPC hangs, the whole scan hangs (the
+  // top-level scan awaits Promise.all([...rpc calls...])). Aborting turns a
+  // hang into a normal thrown error that ethCall's caller can handle.
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), 8000);
+  try {
+    const r = await fetch(RPC_URL, {
+      method: 'POST',
+      headers: {'content-type': 'application/json'},
+      body: JSON.stringify({jsonrpc:'2.0', id:1, method, params}),
+      signal: ac.signal,
+    });
+    const j = await r.json();
+    if (j.error) throw new Error(j.error.message || 'rpc error');
+    return j.result;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+async function ethCall(to, data) {
+  try {
+    return await rpc('eth_call', [{to, data}, 'latest']);
+  } catch (e) {
+    return null;
+  }
+}
+
+/* Simulate a transferFrom via eth_call {from: holder}, returning either
+ * { success: true } or { success: false, reason }. The revert reason is the
+ * raw string reported by the RPC — the caller pattern-matches it to decide
+ * "honeypot" vs "normal ERC-721 permission check." Used by the transferBlocked
+ * signal. Supports both ERC-721 (transferFrom) and ERC-1155 (safeTransferFrom)
+ * — different selectors, different arg encodings. */
+const TRANSFER_FROM_ERC721       = '0x23b872dd'; // transferFrom(address,address,uint256)
+const SAFE_TRANSFER_FROM_ERC1155 = '0xf242432a'; // safeTransferFrom(address,address,uint256,uint256,bytes)
+async function simulateTransfer(contract, from, to, tokenId, is1155) {
+  const padAddr = a => a.replace(/^0x/, '').padStart(64, '0');
+  const padU256 = n => BigInt(n).toString(16).padStart(64, '0');
+  let data;
+  if (is1155) {
+    data = SAFE_TRANSFER_FROM_ERC1155
+      + padAddr(from) + padAddr(to)
+      + padU256(tokenId) + padU256(1)
+      + padU256(0xa0)                              // offset to bytes arg
+      + padU256(0);                                // empty bytes
+  } else {
+    data = TRANSFER_FROM_ERC721
+      + padAddr(from) + padAddr(to) + padU256(tokenId);
+  }
+  try {
+    await rpc('eth_call', [{ to: contract, from, data }, 'latest']);
+    return { success: true, reason: null };
+  } catch (e) {
+    // RHC RPC returns "execution reverted: <reason>" for revert-with-string,
+    // or a bare hint for revert-without-string / custom errors. Strip the prefix.
+    const msg = String(e.message || '');
+    const m = msg.match(/execution reverted:?\s*(.*)/i);
+    return { success: false, reason: (m ? m[1] : msg).trim() };
+  }
+}
+
+function pad32(hex) { return hex.replace(/^0x/, '').padStart(64, '0'); }
+function encodeUint(n) { return BigInt(n).toString(16).padStart(64, '0'); }
+function encodeBytes4(b4) { return b4.replace(/^0x/, '').toLowerCase().padEnd(64, '0'); }
+
+function decodeAddress(hex) {
+  if (!hex || hex.length < 66) return null;
+  return '0x' + hex.slice(-40).toLowerCase();
+}
+
+function decodeBool(hex) {
+  if (!hex || hex.length < 4) return null;
+  return hex.slice(-1) === '1';
+}
+
+function decodeString(hex) {
+  if (!hex || hex === '0x') return null;
+  const h = hex.replace(/^0x/, '');
+  if (h.length < 128) return null;
+  const len = parseInt(h.slice(64, 128), 16);
+  if (!len || len > 4096) return null;
+  const bytesHex = h.slice(128, 128 + len * 2);
+  const bytes = new Uint8Array(bytesHex.length / 2);
+  for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(bytesHex.substr(i * 2, 2), 16);
+  try {
+    return new TextDecoder('utf-8', {fatal: false}).decode(bytes).replace(/ +$/, '');
+  } catch (e) { return null; }
+}
+
+async function readContractOnChain(addr) {
+  const out = { hasSelector: {} };
+
+  // eth_getCode is the one probe we can't proceed without — if the RPC
+  // fails/aborts, surface it as "notAContract" so the caller renders the
+  // "chain unreachable" state instead of a scan that stalls forever or
+  // scores from a totally empty onChain object.
+  const code = await rpc('eth_getCode', [addr, 'latest']).catch(() => null);
+  if (!code || code === '0x' || code === '0x0') {
+    out.notAContract = true;
+    return out;
+  }
+  out.codeSize = (code.length - 2) / 2;
+
+  // Proxy check
+  const implSlot = await rpc('eth_getStorageAt', [addr, EIP1967_IMPL_SLOT, 'latest']).catch(() => null);
+  const implAddr = decodeAddress(implSlot);
+  out.isProxy = !!(implAddr && implAddr !== ZERO_ADDR);
+  out.implAddr = out.isProxy ? implAddr : null;
+
+  // If proxy, scan impl bytecode for admin selectors (that's where they live)
+  let scanCode = code.toLowerCase();
+  if (out.isProxy) {
+    const implCode = await rpc('eth_getCode', [implAddr, 'latest']).catch(() => null);
+    if (implCode && implCode !== '0x') scanCode = implCode.toLowerCase();
+  }
+  for (const [k, sel] of Object.entries(ADMIN_SEL)) {
+    out.hasSelector[k] = scanCode.includes(sel);
+  }
+
+  // Interface support (parallel)
+  const [is721, is1155, is2981, nameRaw, symbolRaw, ownerRaw] = await Promise.all([
+    ethCall(addr, SEL.supportsInterface + encodeBytes4(IFACE.ERC721)),
+    ethCall(addr, SEL.supportsInterface + encodeBytes4(IFACE.ERC1155)),
+    ethCall(addr, SEL.supportsInterface + encodeBytes4(IFACE.ERC2981)),
+    ethCall(addr, SEL.name),
+    ethCall(addr, SEL.symbol),
+    ethCall(addr, SEL.owner),
+  ]);
+  out.is721  = decodeBool(is721)  === true;
+  out.is1155 = decodeBool(is1155) === true;
+  out.hasRoyalty2981 = is2981 === null ? null : decodeBool(is2981);
+  out.name   = decodeString(nameRaw);
+  out.symbol = decodeString(symbolRaw);
+  out.owner  = decodeAddress(ownerRaw);
+  out.ownerRenounced = out.owner === ZERO_ADDR;
+  out.ownerCallable  = ownerRaw !== null;
+
+  // Try tokenURI(1) / uri(1) for metadata origin
+  const uriSel = out.is1155 ? SEL.uri : SEL.tokenURI;
+  const uriRaw = await ethCall(addr, uriSel + encodeUint(1));
+  out.tokenURI = decodeString(uriRaw);
+  if (!out.tokenURI) {
+    // Try tokenURI(0) as fallback (some collections are 0-indexed)
+    const uri0 = await ethCall(addr, uriSel + encodeUint(0));
+    out.tokenURI = decodeString(uri0);
+  }
+
+  // ============================================================================
+  // LIVE-STATE READS — checked against the actual chain state, not bytecode grep.
+  // ============================================================================
+
+  // Only call paused() when the selector was present in the code. A contract
+  // without pause() will revert on this call, which we'd have to treat as
+  // "unknown" anyway — skipping saves an RPC hop.
+  out.isPaused = null;
+  if (out.hasSelector.pause) {
+    const pausedRaw = await ethCall(addr, SEL.paused);
+    out.isPaused = pausedRaw === null ? null : decodeBool(pausedRaw);
+  }
+
+  // Contract's own ETH balance — combined with withdraw() presence tells us
+  // whether the deployer has a live drain path to the mint proceeds.
+  const balHex = await rpc('eth_getBalance', [addr, 'latest']).catch(() => null);
+  out.contractBalanceWei = balHex ? BigInt(balHex).toString() : null;
+  out.contractBalanceEth = balHex ? Number(BigInt(balHex)) / 1e18 : null;
+
+  // Multi-sig owner detection — Gnosis Safe (and every safe fork) responds to
+  // getThreshold() with the number of required confirmations. Any other
+  // contract or EOA reverts. A successful call proves the owner is a multi-sig
+  // and softens the "owner active" signal — you'd need N wallets to conspire.
+  out.ownerIsMultiSig = false;
+  out.ownerThreshold  = null;
+  if (out.owner && out.owner !== ZERO_ADDR) {
+    // First confirm there's code at the owner address — an EOA has no code and
+    // can't be a multi-sig by definition. Skips the getThreshold call for the
+    // common case where owner is just a wallet.
+    const ownerCode = await rpc('eth_getCode', [out.owner, 'latest']).catch(() => null);
+    if (ownerCode && ownerCode !== '0x' && ownerCode !== '0x0') {
+      const threshRaw = await ethCall(out.owner, SEL.getThreshold);
+      // A Safe returns a uint256 (0x0...N). Anything else — a revert (null), a
+      // longer/shorter return, or a threshold of 0 — is not a safe we recognize.
+      if (threshRaw && threshRaw.length === 66) {
+        const n = parseInt(threshRaw, 16);
+        if (n > 0 && n < 100) {
+          out.ownerIsMultiSig = true;
+          out.ownerThreshold  = n;
+        }
+      }
+    }
+  }
+
+  return out;
+}
+
+async function readExplorer(addr) {
+  // Delegate to our serverless proxy, which batches all six Blockscout reads
+  // behind a shared retry + short-cache. Doing this from the browser was the
+  // source of the "same contract, different score" flakiness: Cloudflare
+  // occasionally handed us an HTML challenge (which JSON.parse threw on) and
+  // the signal flipped to "?". Server-side is stable.
+  try {
+    const r = await fetch('/api/explorer-info?addr=' + addr, { cache: 'no-store' });
+    if (!r.ok) return {};
+    const j = await r.json();
+    return {
+      verified: j.verified === null ? undefined : j.verified,
+      compilerVersion: j.compilerVersion,
+      proxyType: j.proxyType,
+      explorerName: j.explorerName,
+      tokenName: j.tokenName,
+      tokenSymbol: j.tokenSymbol,
+      tokenType: j.tokenType,
+      totalSupply: j.totalSupply,
+      holdersCount: j.holdersCount,
+      topHolders: j.topHolders || undefined,
+      creator: j.creator,
+      creationTx: j.creationTx,
+      contractTransferCount: j.contractTransferCount,
+      contractTxCount: j.contractTxCount,
+      // NEW: passed through so signal logic below can use it (sniperStack).
+      firstTransfers: j.firstTransfers,
+    };
+  } catch (e) {
+    return {};
+  }
+}
+
+/* ================ Report builder ================ */
+
+function pushSig(cats, catKey, id, state, override) {
+  const meta = CATALOG[catKey].find(s => s.id === id);
+  cats[catKey].push({
+    id,
+    name: meta.name,
+    weight: meta.weight,
+    badText: (override && override.bad) || meta.bad,
+    goodText: (override && override.good) || meta.good,
+    // Signals that stay 'unknown' can carry their own explanation of *why*
+    // (missing data source, out-of-scope for this chain, etc). Falls back to
+    // a generic "grug still learning" line when no override is given.
+    unknownText: (override && override.unknown) || null,
+    state, // 'good' | 'bad' | 'unknown'
+  });
+}
+
+async function computeRealReport(addr) {
+  const [onChain, explorer] = await Promise.all([
+    readContractOnChain(addr),
+    readExplorer(addr).catch(() => ({})),
+  ]);
+
+  if (onChain.notAContract) {
+    const err = new Error('not_a_contract');
+    err.code = 'not_a_contract';
+    throw err;
+  }
+
+  /* Second wave — richer signals via our own serverless endpoints.
+     All optional: each is Promise.allSettled so partial failure doesn't
+     tank the report. */
+  const metadataUri = onChain.tokenURI;
+  const metadataFetchable = metadataUri && /^(ipfs|ar|data|https?):/i.test(metadataUri);
+
+  const [deployerHistRes, metadataRes, priorRugRes, fundingRes, collectionRes] = await Promise.allSettled([
+    fetch('/api/deployer-history?addr=' + addr, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
+    metadataFetchable
+      ? fetch('/api/metadata-fetch?uri=' + encodeURIComponent(metadataUri), { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
+      : Promise.resolve(null),
+    // Fire this in parallel with the others — prior-rug-check re-fetches the
+    // deployer's tx history from Blockscout server-side, so we can't reuse
+    // deployerHist's cached copy, but the endpoint's own bsCache dedupes hits.
+    // cache: 'no-store' so the browser doesn't hold onto a stale 502 across
+    // scans (Blockscout has real transient failures on RHC).
+    fetch('/api/prior-rug-check?addr=' + addr, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
+    // Batch 3: deployer funding trace (freshFunding signal) — one-hop back
+    // through incoming ETH transfers on the deployer wallet.
+    fetch('/api/deployer-funding?addr=' + addr, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
+    // Batch 3: OpenSea collection stats (noMarket signal). Also serves double
+    // duty enriching the metadata/socials for downstream signals.
+    fetch('/api/collection-detail?contract=' + addr, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
+  ]);
+  const deployerHist   = deployerHistRes.status === 'fulfilled' ? deployerHistRes.value : null;
+  const metadata       = metadataRes.status === 'fulfilled' ? metadataRes.value : null;
+  const priorRugData   = priorRugRes.status === 'fulfilled' ? priorRugRes.value : null;
+  const fundingData    = fundingRes.status === 'fulfilled' ? fundingRes.value : null;
+  const collectionData = collectionRes.status === 'fulfilled' ? collectionRes.value : null;
+
+  /* Third wave — socials, depend on extracted metadata */
+  const extracted = (metadata && metadata.extracted) || {};
+  const websiteUrl = extracted.website || extracted.external_url || null;
+  const twitterRef = extracted.twitter || null;
+  let socials = null;
+  if (websiteUrl || twitterRef) {
+    try {
+      const p = new URLSearchParams();
+      if (websiteUrl) p.set('website', websiteUrl);
+      if (twitterRef) p.set('twitter', twitterRef);
+      const r = await fetch('/api/socials-check?' + p.toString());
+      if (r.ok) socials = await r.json();
+    } catch (e) {}
+  }
+
+  const cats = { contract: [], deployer: [], distribution: [], socials: [], metadata: [] };
+
+  // isUtility is used by both the contract signals (transferBlocked skips
+  // utility contracts, which legitimately have custom transfer logic) and
+  // the distribution signals (topHeavy / sniperStack skip utility LPs). Compute
+  // once here so both sections can reference it.
+  const nameForCheck   = onChain.name   || explorer.tokenName   || explorer.explorerName;
+  const symbolForCheck = onChain.symbol || explorer.tokenSymbol;
+  const isUtility = isUtilityName(nameForCheck, symbolForCheck);
+
+  /* --- contract --- */
+  pushSig(cats, 'contract', 'unverified',
+    explorer.verified === undefined ? 'unknown' : (explorer.verified ? 'good' : 'bad'));
+
+  pushSig(cats, 'contract', 'proxy', onChain.isProxy ? 'bad' : 'good');
+
+  // Owner-active: gets a multi-sig softening when the owner is a Safe. A
+  // multi-sig owner is a *positive* signal even though "owner is still set" —
+  // the pattern requires N signers to conspire before any admin call lands.
+  let ownerState, ownerOverride;
+  if (!onChain.ownerCallable) {
+    ownerState = 'good';
+    ownerOverride = { good: 'no owner() function. contract has no admin.' };
+  } else if (onChain.ownerRenounced) {
+    ownerState = 'good';
+    ownerOverride = { good: 'ownership renounced. no admin key.' };
+  } else if (onChain.ownerIsMultiSig) {
+    ownerState = 'good';
+    ownerOverride = { good:
+      `owner is a <b>${onChain.ownerThreshold}-of-N multi-sig</b> at <code>${short(onChain.owner)}</code>. admin actions need multiple signers.` };
+  } else {
+    ownerState = 'bad';
+    ownerOverride = { bad:
+      `owner is <code>${short(onChain.owner)}</code>. one wallet holds admin keys.` };
+  }
+  pushSig(cats, 'contract', 'ownerActive', ownerState, ownerOverride);
+
+  const hasAdminMint = onChain.hasSelector.ownerMint || onChain.hasSelector.ownerMintTo;
+  pushSig(cats, 'contract', 'adminMint', hasAdminMint ? 'bad' : 'good');
+  pushSig(cats, 'contract', 'openBaseURI', onChain.hasSelector.setBaseURI ? 'bad' : 'good');
+  pushSig(cats, 'contract', 'transferLock', onChain.hasSelector.pause ? 'bad' : 'good');
+
+  // currentlyPaused — a live state check. Only meaningful when paused() exists;
+  // otherwise unknown with an honest explanation.
+  let pausedState = 'unknown', pausedOverride = null;
+  if (!onChain.hasSelector.pause) {
+    pausedOverride = { unknown: 'no <code>pause()</code> selector — pause state doesn\'t apply to this contract.' };
+  } else if (onChain.isPaused === null) {
+    pausedOverride = { unknown: 'contract has <code>pause()</code> but <code>paused()</code> call reverted or timed out. can\'t confirm current state.' };
+  } else if (onChain.isPaused === true) {
+    pausedState = 'bad';
+    pausedOverride = { bad: 'contract is currently paused. every transfer reverts right now — you can\'t sell what you buy.' };
+  } else {
+    pausedState = 'good';
+    pausedOverride = { good: 'contract is not paused. transfers flowing.' };
+  }
+  pushSig(cats, 'contract', 'currentlyPaused', pausedState, pausedOverride);
+
+  // withdrawExposure — combines a bytecode grep (does withdraw() exist?) with
+  // a live balance read. Both must be true to score BAD. If withdraw() exists
+  // but balance is empty, that's not a live risk yet — but call it out.
+  const hasWithdraw   = !!onChain.hasSelector.withdraw;
+  const contractEth   = onChain.contractBalanceEth;
+  let drainState = 'unknown', drainOverride = null;
+  if (!hasWithdraw) {
+    drainState = 'good';
+    drainOverride = { good: 'no <code>withdraw()</code> selector. no drain path for owner.' };
+  } else if (contractEth === null) {
+    drainOverride = { unknown: 'contract has <code>withdraw()</code> but grug couldn\'t read the ETH balance. try again in a moment.' };
+  } else if (contractEth >= 0.01) {
+    drainState = 'bad';
+    drainOverride = { bad:
+      `contract has <code>withdraw()</code> and currently holds <b>${contractEth.toFixed(4)} ETH</b>. owner can pull the pot at any time.` };
+  } else {
+    drainState = 'good';
+    drainOverride = { good:
+      `contract has <code>withdraw()</code> but is empty (<b>${(contractEth ?? 0).toFixed(6)} ETH</b>). no proceeds sitting on the contract right now.` };
+  }
+  pushSig(cats, 'contract', 'withdrawExposure', drainState, drainOverride);
+
+  // transferBlocked — the honeypot check. Grab a real (holder, tokenId) pair
+  // from an observed transfer and try to move that token via eth_call. Revert
+  // reasons split three ways: (1) a lock keyword like "paused"/"locked" is a
+  // definitive honeypot; (2) an approval-style revert is the standard ERC-721
+  // permission check and means transfers work fine; (3) anything else is
+  // unknown — we can't confidently interpret without the exact revert data.
+  let transferBlockedState = 'unknown', transferBlockedOverride = null;
+  const validTransfers = (explorer.firstTransfers || []).filter(
+    t => t.from && t.to && t.tokenId != null && !/^0x0+$/.test(t.to)
+  );
+  if (isUtility) {
+    transferBlockedOverride = { unknown: 'skipped — utility contracts often have custom transfer logic by design.' };
+  } else if (validTransfers.length === 0) {
+    transferBlockedOverride = { unknown: 'no transfers with token IDs visible to simulate against. can\'t test the transfer path.' };
+  } else {
+    const t = validTransfers[0];
+    const holder = t.to;
+    // Pick a nonzero dead-ish destination — some contracts have a to-blocklist
+    // that reverts on the true zero address for reasons other than "paused",
+    // muddying the signal.
+    const dest = '0x000000000000000000000000000000000000dEaD';
+    try {
+      const sim = await simulateTransfer(addr, holder, dest, t.tokenId, onChain.is1155);
+      if (sim.success) {
+        transferBlockedState = 'good';
+        transferBlockedOverride = { good: 'simulated transfer succeeded end-to-end. no honeypot / transfer lock.' };
+      } else {
+        const reason = (sim.reason || '').toLowerCase();
+        // Lock keywords cover the usual rug patterns (pause/lock/blacklist) and
+        // the "legit but bad-for-buyers" patterns (soulbound / non-transferable
+        // reward tokens) — from a rug-radar's job, both mean "you can't sell
+        // what you buy", which is the same warning we want to surface.
+        const lockRe   = /paus|lock|frozen|blocked|forbidden|blacklist|not allowed|disabled|restrict|non[- ]?transfer|soul[- ]?bound|untransferable/;
+        const normalRe = /approv|not owner|not authorized|nor approved|caller/;
+        if (lockRe.test(reason)) {
+          transferBlockedState = 'bad';
+          transferBlockedOverride = { bad:
+            `simulated transfer reverted with a lock reason: <code>${escapeHtml(sim.reason.slice(0, 80))}</code>. probable honeypot.` };
+        } else if (normalRe.test(reason)) {
+          transferBlockedState = 'good';
+          transferBlockedOverride = { good:
+            'simulated transfer reverted only on the standard ERC-721 permission check (approval / owner). transfers work fine when authorized.' };
+        } else {
+          transferBlockedOverride = { unknown:
+            `simulated transfer reverted with an unrecognized reason: <code>${escapeHtml((sim.reason || '(no reason)').slice(0, 80))}</code>. grug can\'t judge from this alone.` };
+        }
+      }
+    } catch (e) {
+      transferBlockedOverride = { unknown: 'transfer simulation crashed on the RPC. try scanning again in a moment.' };
+    }
+  }
+  pushSig(cats, 'contract', 'transferBlocked', transferBlockedState, transferBlockedOverride);
+
+  // freshDeploy — deploy timestamp vs first-mint timestamp. A gap under an
+  // hour is a rug tell (typical "deploy → mint → dump" pattern); a gap over
+  // a day is a sign of a real testing window before launch.
+  let freshDeployState = 'unknown', freshDeployOverride = null;
+  const deployTs = deployerHist?.deployTimestamp || null;
+  // firstTransfers is newest-first, so the oldest visible transfer is the last item.
+  const firstTs = Array.isArray(explorer.firstTransfers) && explorer.firstTransfers.length
+    ? explorer.firstTransfers[explorer.firstTransfers.length - 1]?.timestamp
+    : null;
+  if (!deployTs || !firstTs) {
+    freshDeployOverride = { unknown: 'grug couldn\'t read the deploy or first-transfer timestamps. one or both endpoints didn\'t respond.' };
+  } else {
+    const gapH = (new Date(firstTs).getTime() - new Date(deployTs).getTime()) / 3_600_000;
+    if (gapH < 0) {
+      // Shouldn't happen — sanity check.
+      freshDeployOverride = { unknown: 'first transfer appears before deploy. timestamps look wrong; skipped.' };
+    } else if (gapH < 1) {
+      freshDeployState = 'bad';
+      freshDeployOverride = { bad:
+        `first mint happened <b>${(gapH * 60).toFixed(0)}m</b> after deploy. hot launch, thin testing window.` };
+    } else if (gapH < 24) {
+      freshDeployOverride = { unknown:
+        `deploy → first mint gap: <b>${gapH.toFixed(1)}h</b>. borderline — some testing but same-day launch.` };
+    } else {
+      const days = Math.floor(gapH / 24);
+      freshDeployState = 'good';
+      freshDeployOverride = { good:
+        `contract deployed <b>${days}d</b> before first mint. mature launch.` };
+    }
+  }
+  pushSig(cats, 'contract', 'freshDeploy', freshDeployState, freshDeployOverride);
+
+  // mutableRoyalty — small signal, purely bytecode. Adds a mild penalty for
+  // contracts where the owner can change the royalty rate later.
+  pushSig(cats, 'contract', 'mutableRoyalty',
+    onChain.hasSelector.setDefaultRoyalty ? 'bad' : 'good');
+
+  /* --- deployer --- */
+  // Prefer richer serverless data when it came back, fall back to inline explorer read
+  const dTxCount = (deployerHist && typeof deployerHist.txCount === 'number')
+    ? deployerHist.txCount
+    : (typeof explorer.deployerTxCount === 'number' ? explorer.deployerTxCount : null);
+
+  let freshState = 'unknown';
+  let freshOverride = null;
+  if (dTxCount !== null) {
+    if (dTxCount < 20) {
+      freshState = 'bad';
+      freshOverride = { bad: `deployer wallet has only <b>${dTxCount}</b> transactions. no track record.` };
+    } else {
+      freshState = 'good';
+      freshOverride = { good: `deployer wallet has <b>${dTxCount.toLocaleString()}</b> transactions. established history.` };
+    }
+  } else {
+    freshOverride = { unknown: 'deployer address didn\'t resolve on Blockscout. often means the /addresses endpoint is having a bad day — try again in a bit.' };
+  }
+  pushSig(cats, 'deployer', 'freshWallet', freshState, freshOverride);
+
+  // Deployer wallet balance — near-empty deployer is a classic rug signal
+  let balState = 'unknown', balOverride = null;
+  if (deployerHist && typeof deployerHist.coinBalanceEth === 'number') {
+    const eth = deployerHist.coinBalanceEth;
+    if (eth < 0.0001) {
+      balState = 'bad';
+      balOverride = { bad: `deployer wallet holds only <b>${eth.toFixed(6)} ETH</b>. rug pattern: deploy and vanish.` };
+    } else {
+      balState = 'good';
+      balOverride = { good: `deployer wallet holds <b>${eth.toFixed(4)} ETH</b>. skin in the game.` };
+    }
+  } else {
+    balOverride = { unknown: 'grug couldn\'t read the deployer\'s wallet balance. Blockscout /addresses is flaky on RHC.' };
+  }
+  pushSig(cats, 'deployer', 'emptyBalance', balState, balOverride);
+
+  // Deployed-contracts heuristic — only score when there's clear signal, because
+  // the endpoint sees a bounded page of recent txs. Absence of deploys in that
+  // window is inconclusive for an active wallet with many pages of history.
+  let firstState = 'unknown', firstOverride = null;
+  if (deployerHist) {
+    const recent = deployerHist.deployedContractCountRecent;
+    const morePages = !!deployerHist.hasMorePages;
+    const totalTx = deployerHist.txCount;
+    if (recent >= 2) {
+      firstState = 'good';
+      firstOverride = { good: `deployer has shipped <b>${recent}+</b> contracts in the recent window. some reputation.` };
+    } else if (recent === 0 && !morePages && (typeof totalTx === 'number' && totalTx < 20)) {
+      // Truly a first-timer: no deploys visible AND no more history to check
+      firstState = 'bad';
+      firstOverride = { bad: `deployer has shipped no other contracts grug can see. no reputation.` };
+    } else if (recent === 1) {
+      firstOverride = { unknown: 'deployer has 1 other contract in the recent window. reputation unclear — could be second try, could be legit follow-up.' };
+    } else if (morePages) {
+      firstOverride = { unknown: `deployer's tx history has more pages than grug paged through. can't rule out older deploys.` };
+    }
+  } else {
+    firstOverride = { unknown: 'deployer history endpoint didn\'t respond. grug will retry next scan.' };
+  }
+  pushSig(cats, 'deployer', 'firstDeploy', firstState, firstOverride);
+
+  // Mixer-funded check — needs a curated list of known mixer/tumbler contracts.
+  // No such infrastructure has landed on Robinhood Chain yet (early L2, no
+  // Tornado-equivalent deployed as of scanner build), so we return unknown
+  // with an honest explanation rather than falsely marking every deployer clean.
+  pushSig(cats, 'deployer', 'mixerFunded', 'unknown',
+    { unknown: 'no mixer contracts registered on Robinhood Chain yet. grug can\'t trace fund origin.' });
+
+  // Prior-rug check — proxy signal: a deployer with several past contracts
+  // that all show zero on-chain activity is a serial deployer. We only have
+  // access to a bounded page of their tx history, so we only score BAD when
+  // the pattern is unambiguous. Everything else stays unknown.
+  // Prior-rug pattern — check the deployer's other token contracts for signs
+  // of abandonment. The /api/prior-rug-check endpoint fans out one probe per
+  // sister contract, filters to token contracts only (so factories and
+  // routers don't count), and returns a verdict.
+  let priorRugState = 'unknown', priorRugOverride = null;
+  if (priorRugData && priorRugData.verdict) {
+    const p = priorRugData;
+    if (p.verdict === 'rug_pattern') {
+      priorRugState = 'bad';
+      priorRugOverride = { bad:
+        `deployer has <b>${p.dead}/${p.othersChecked}</b> other token contracts that never traded. serial-deploy pattern — walk away.` };
+    } else if (p.verdict === 'clean') {
+      priorRugState = 'good';
+      priorRugOverride = { good:
+        `checked <b>${p.othersChecked}</b> other token contracts by this deployer — <b>${p.alive}</b> have on-chain activity. no rug pattern.` };
+    } else if (p.verdict === 'watch') {
+      priorRugOverride = { unknown:
+        `<b>${p.dead}/${p.othersChecked}</b> of the deployer's other token contracts show no activity. could be a pattern, could be early. watch.` };
+    } else if (p.othersChecked === 0 && p.deployer) {
+      // Distinguish "no other deploys at all" (probably first drop) from
+      // "deployer built infra contracts, no other tokens" (Uniswap-style).
+      const skipped = p.othersSkippedNonToken || 0;
+      if (skipped > 0) {
+        priorRugOverride = { unknown:
+          `deployer's other <b>${skipped}</b> contracts are infrastructure (factories, routers), not tokens. nothing to compare against for a rug pattern.` };
+      } else {
+        priorRugOverride = { unknown: p.note || 'no other token contracts by this deployer in the recent tx window.' };
+      }
+    } else if (!p.deployer) {
+      priorRugOverride = { unknown: 'deployer address didn\'t resolve. grug can\'t check the wallet\'s other contracts this scan.' };
+    }
+  } else {
+    priorRugOverride = { unknown: 'prior-rug endpoint didn\'t respond. grug will retry next scan.' };
+  }
+  pushSig(cats, 'deployer', 'priorRug', priorRugState, priorRugOverride);
+
+  // freshFunding — trace deployer's ETH one hop back. Fresh wallet funded by
+  // another fresh wallet is the classic disposable-identity rug pattern.
+  let fundingState = 'unknown', fundingOverride = null;
+  if (fundingData && fundingData.verdict) {
+    const f = fundingData;
+    if (f.verdict === 'fresh_chain') {
+      fundingState = 'bad';
+      const top = f.funders?.[0];
+      fundingOverride = { bad:
+        `deployer funded by <code>${short(top?.address || '?')}</code>, a wallet with only <b>${top?.txCount ?? '?'}</b> txs. burnable-identity chain.` };
+    } else if (f.verdict === 'clean') {
+      fundingState = 'good';
+      fundingOverride = { good: f.note || 'deployer funded from an established wallet.' };
+    } else if (f.verdict === 'watch') {
+      fundingOverride = { unknown: f.note || 'deployer funding source has borderline history.' };
+    } else {
+      fundingOverride = { unknown: f.note || 'no clear funding transfer to profile.' };
+    }
+  } else {
+    fundingOverride = { unknown: 'deployer-funding endpoint didn\'t respond. grug will retry next scan.' };
+  }
+  pushSig(cats, 'deployer', 'freshFunding', fundingState, fundingOverride);
+
+  /* --- distribution --- */
+  // isUtility hoisted above the contract section — see the comment there for
+  // why. topHeavy + sniperStack still skip utility LPs since an LP contract
+  // "owning" 50% of positions isn't a rug, it's how the protocol works. The
+  // banner in renderReport() surfaces that suppression to the user.
+
+  let topHeavyState = 'unknown';
+  let topHeavyOverride = null;
+  const hasTopHolders = explorer.topHolders && explorer.topHolders.length > 0 && explorer.totalSupply;
+  if (isUtility) {
+    topHeavyOverride = { unknown: 'skipped — utility/factory contracts concentrate by design (pool contracts hold positions).' };
+  } else if (!hasTopHolders) {
+    topHeavyOverride = { unknown: 'holders list from Blockscout was empty or the /holders endpoint didn\'t respond.' };
+  }
+  if (hasTopHolders && !isUtility) {
+    try {
+      const total = BigInt(explorer.totalSupply);
+      if (total > 0n) {
+        const top = explorer.topHolders.reduce((acc, h) => acc + BigInt(h.value || '0'), 0n);
+        const pct = Number((top * 10000n) / total) / 100;
+        const pctStr = pct.toFixed(1) + '%';
+        topHeavyState = pct > 50 ? 'bad' : 'good';
+        topHeavyOverride = {
+          bad:  `top 10 wallets hold <b>${pctStr}</b> of supply. one dump kills floor.`,
+          good: `top 10 wallets hold <b>${pctStr}</b> of supply. distribution reasonable.`,
+        };
+      }
+    } catch (e) {}
+  }
+  pushSig(cats, 'distribution', 'topHeavy', topHeavyState, topHeavyOverride);
+
+  // Dead contract check — 0 transfers means nothing is happening. Blockscout's
+  // token_transfers_count on /addresses is unreliable on RHC (often reports 0
+  // even when transfers exist), so cross-check against the actual first-page
+  // transfer list. If either signal shows activity, the contract is live.
+  let deadState = 'unknown', deadOverride = null;
+  const counterN = typeof explorer.contractTransferCount === 'number'
+    ? explorer.contractTransferCount : null;
+  const firstNObserved = Array.isArray(explorer.firstTransfers)
+    ? explorer.firstTransfers.length : 0;
+  if (firstNObserved > 0) {
+    // Direct evidence beats counter — we saw transfer rows.
+    const useCounter = typeof counterN === 'number' && counterN > firstNObserved;
+    const total = useCounter ? counterN : firstNObserved;
+    // Append "+" whenever we're capped by the visible page (either the
+    // counter said 0 despite live activity, or it wasn't returned at all).
+    const capped = !useCounter && firstNObserved >= 30;
+    deadState = 'good';
+    deadOverride = { good: `<b>${total.toLocaleString()}${capped ? '+' : ''}</b> token transfers observed. live activity.` };
+  } else if (counterN === 0) {
+    deadState = 'bad';
+    deadOverride = { bad: 'contract has <b>zero</b> token transfers on-chain. nothing minted, nothing traded.' };
+  } else if (counterN && counterN > 0) {
+    deadState = 'good';
+    deadOverride = { good: `contract has <b>${counterN.toLocaleString()}</b> token transfers. live activity.` };
+  } else {
+    deadOverride = { unknown: 'Blockscout /counters and /transfers both came back empty. either brand-new contract or the endpoint didn\'t respond.' };
+  }
+  pushSig(cats, 'distribution', 'deadContract', deadState, deadOverride);
+
+  // Sniper stack — concentration of mint recipients. Blockscout returns
+  // transfers newest-first so we can't isolate "block 0" without paging to
+  // the end. Instead: filter to actual mints (from = zero address) from the
+  // first page we do have, and check if those mints cluster in few wallets.
+  // If mints all go to a handful of addresses, insiders grabbed supply
+  // regardless of exact block. Leave unknown when we don't have enough
+  // mint rows on this page — a chatty active contract's first page may be
+  // all trades and no mints, which is a real limitation, not a red flag.
+  let sniperState = 'unknown', sniperOverride = null;
+  if (isUtility) {
+    sniperOverride = { unknown: 'skipped — utility contracts mint on user actions (LP opens, wraps), not a launch event.' };
+  } else if (!Array.isArray(explorer.firstTransfers) || explorer.firstTransfers.length === 0) {
+    sniperOverride = { unknown: 'no transfers on Blockscout for this contract yet. can\'t look for a sniper cluster on nothing.' };
+  } else if (Array.isArray(explorer.firstTransfers) && explorer.firstTransfers.length > 0) {
+    const ft = explorer.firstTransfers;
+    const zeroAddr = /^0x0+$/;
+    // Keep only mints — from == zero address
+    const mints = ft.filter(t => t.from && zeroAddr.test(t.from));
+    if (mints.length < 10) {
+      sniperOverride = { unknown: `only <b>${mints.length}</b> mint rows visible on this page (rest are trades). not enough to spot a cluster.` };
+    }
+    if (mints.length >= 10) {
+      const counts = new Map();
+      for (const t of mints) {
+        const to = (t.to || '').toLowerCase();
+        if (!to) continue;
+        counts.set(to, (counts.get(to) || 0) + 1);
+      }
+      const total = mints.length;
+      const sortedCounts = [...counts.values()].sort((a, b) => b - a);
+      const top3 = sortedCounts.slice(0, 3).reduce((a, b) => a + b, 0);
+      const ratio = top3 / total;
+      const uniqueRecipients = counts.size;
+      if (ratio > 0.6) {
+        sniperState = 'bad';
+        sniperOverride = { bad:
+          `top 3 wallets took <b>${(ratio * 100).toFixed(0)}%</b> of the ${total} mints in view ` +
+          `(only <b>${uniqueRecipients}</b> unique recipients). insider cluster.` };
+      } else if (uniqueRecipients >= total * 0.6) {
+        sniperState = 'good';
+        sniperOverride = { good:
+          `<b>${uniqueRecipients}</b> unique wallets across ${total} mints in view. ` +
+          `spread launch, no sniper cluster.` };
+      }
+    }
+    // else: page had too few mint rows to judge (active trading contract or
+    // brand-new) — leave as unknown, don't fake a verdict.
+  }
+  pushSig(cats, 'distribution', 'sniperStack', sniperState, sniperOverride);
+
+  // Wash trades — same buyer/seller across recent transfers. On RHC's public
+  // Blockscout tier this needs deep transfer paging that we don't do yet,
+  // so it stays as an unknown honestly labeled. TODO: when we have a paid
+  // indexer / subgraph, cross-check top holders' send/receive lists.
+  pushSig(cats, 'distribution', 'washTrades', 'unknown',
+    { unknown: 'wash-trade detection needs transfer-log analysis grug can\'t do on the free Blockscout tier yet.' });
+
+  // noMarket — OpenSea sales activity. A collection that has been live for
+  // more than 24h with zero secondary-market activity is a strong dead-signal.
+  // Fresh collections (< 24h) get an unknown pass — takes a beat for the
+  // secondary market to spin up.
+  let marketState = 'unknown', marketOverride = null;
+  const stats = collectionData?.stats;
+  const collectionAgeH = collectionData?.createdDate
+    ? (Date.now() - new Date(collectionData.createdDate).getTime()) / 3_600_000
+    : null;
+  if (isUtility) {
+    marketOverride = { unknown: 'skipped — utility contracts don\'t trade on secondary markets by design.' };
+  } else if (!collectionData || collectionData.ok === false) {
+    marketOverride = { unknown: 'OpenSea doesn\'t know this contract yet. no secondary-market data to check.' };
+  } else if (!stats || stats.totalSales == null) {
+    marketOverride = { unknown: 'OpenSea returned no stats for this collection. try again in a moment.' };
+  } else if (stats.totalSales > 5) {
+    marketState = 'good';
+    const volStr = stats.totalVolume ? ` (<b>${Number(stats.totalVolume).toFixed(2)} ETH</b> total)` : '';
+    marketOverride = { good: `collection has <b>${stats.totalSales}</b> secondary-market sales${volStr}. real market activity.` };
+  } else if (stats.totalSales === 0 && collectionAgeH !== null && collectionAgeH > 24) {
+    marketState = 'bad';
+    const days = Math.floor(collectionAgeH / 24);
+    marketOverride = { bad: `collection has been on OpenSea for <b>${days}d</b> with <b>zero sales</b>. nobody\'s buying.` };
+  } else if (stats.totalSales === 0) {
+    marketOverride = { unknown: 'collection has zero sales but is very fresh on OpenSea. too early to judge.' };
+  } else {
+    // 1-5 sales: borderline, still forming a market
+    marketOverride = { unknown: `only <b>${stats.totalSales}</b> secondary sales so far. market forming — hard to call clean or dead yet.` };
+  }
+  pushSig(cats, 'distribution', 'noMarket', marketState, marketOverride);
+
+  /* --- socials --- */
+  let webState = 'unknown', webOverride = null;
+  if (socials && socials.website) {
+    const w = socials.website;
+    if (w.ok) {
+      webState = 'good';
+      webOverride = { good: `<a href="${escapeHtml(safeHref(websiteUrl))}" target="_blank" rel="noopener">${escapeHtml(websiteUrl)}</a> is up${w.title ? ' — “' + escapeHtml(w.title) + '”' : ''}.` };
+    } else {
+      webState = 'bad';
+      webOverride = { bad: `website in metadata (${escapeHtml(websiteUrl || 'unknown')}) not reachable.` };
+    }
+  } else if (metadata && !websiteUrl) {
+    // We fetched metadata successfully but it doesn't advertise a website —
+    // that's data, not a data-quality problem. Say so.
+    webOverride = { unknown: 'no website listed in the contract\'s metadata. nothing for grug to check.' };
+  } else if (!metadata) {
+    webOverride = { unknown: 'grug couldn\'t fetch the metadata JSON to look for a website.' };
+  }
+  pushSig(cats, 'socials', 'websiteReachable', webState, webOverride);
+
+  let twState = 'unknown', twOverride = null;
+  if (socials && socials.twitter) {
+    const t = socials.twitter;
+    if (t.exists) {
+      twState = 'good';
+      twOverride = { good: `<a href="${escapeHtml(safeHref(t.url))}" target="_blank" rel="noopener">@${escapeHtml(t.handle)}</a> exists on twitter. <i>(posting-regularity check needs API key)</i>` };
+    } else if (t.exists === false) {
+      twState = 'bad';
+      twOverride = { bad: `twitter handle <b>@${escapeHtml(t.handle || '')}</b> in metadata does not exist.` };
+    }
+  } else if (metadata && !twitterRef) {
+    twOverride = { unknown: 'no twitter handle in the contract\'s metadata. nothing for grug to check.' };
+  } else if (!metadata) {
+    twOverride = { unknown: 'grug couldn\'t fetch the metadata JSON to look for a twitter handle.' };
+  }
+  pushSig(cats, 'socials', 'twitterExists', twState, twOverride);
+
+  /* --- metadata --- */
+  let centralState = 'unknown';
+  let centralOverride = null;
+  let pinState = 'unknown';
+  let pinOverride = null;
+  if (!onChain.tokenURI) {
+    // tokenURI(0) and tokenURI(1) both reverted — happens for factory
+    // contracts where token IDs are non-sequential (Uniswap positions),
+    // or for contracts whose base URI isn't set until first mint.
+    centralOverride = { unknown: 'tokenURI() reverts for token 0 and 1. can\'t tell if metadata is on-chain or hosted.' };
+    pinOverride     = { unknown: 'no tokenURI to check pins against.' };
+  } else {
+    const u = onChain.tokenURI.trim();
+    const preview = u.slice(0, 48) + (u.length > 48 ? '…' : '');
+    const isIpfsScheme  = /^ipfs:\/\//i.test(u);
+    const isArweave     = /^ar:\/\//i.test(u);
+    const isGatewayHttp = /^https?:\/\/[^/]+\/ipfs\/[A-Za-z0-9]+/i.test(u);
+    const isDataUri     = /^data:/i.test(u);
+
+    if (isIpfsScheme || isArweave) {
+      centralState = 'good';
+      centralOverride = { good: `metadata pinned via content-addressed URI: <code>${escapeHtml(preview)}</code>` };
+    } else if (isGatewayHttp) {
+      centralState = 'good';
+      centralOverride = { good: `metadata via IPFS gateway URL: <code>${escapeHtml(preview)}</code>` };
+    } else if (isDataUri) {
+      centralState = 'good';
+      centralOverride = { good: 'metadata is on-chain (data: URI). cannot be swapped.' };
+      pinState = 'good';
+      pinOverride = { good: 'metadata lives on-chain. no pin needed.' };
+    } else if (/^https?:\/\//i.test(u)) {
+      centralState = 'bad';
+      centralOverride = { bad: `metadata on server URL: <code>${escapeHtml(preview)}</code>. team can flip it.` };
+      // Non-IPFS metadata has no pin to check — say so instead of leaving the
+      // default "grug still learning" placeholder that looks like a missing check.
+      pinOverride = { unknown: 'metadata is on a server URL, not IPFS. no pin to check.' };
+    }
+
+    // Real IPFS pin check via serverless proxy. Public gateways are flaky and
+    // often rate-limit or challenge us, so we treat "reachable on any gateway"
+    // as GOOD but "reachable on none" as UNKNOWN (not BAD) — a network blip
+    // shouldn't turn a legitimate project red. If you want a strict "unpinned"
+    // penalty, pin your metadata to two providers and this check will confirm.
+    if (isIpfsScheme || isGatewayHttp) {
+      try {
+        const r = await fetch('/api/ipfs-check?uri=' + encodeURIComponent(u));
+        if (r.ok) {
+          const j = await r.json();
+          if (j.pinned) {
+            pinState = 'good';
+            pinOverride = { good: `metadata reachable on <b>${j.reachableCount}/${j.gatewaysChecked}</b> public IPFS gateways.` };
+          } else {
+            // Public gateway blip vs genuine dead pin — grug can't distinguish
+            // cheaply. Explain the ambiguity instead of leaving a bare "?".
+            pinOverride = { unknown: `metadata didn\'t respond on <b>${j.gatewaysChecked || 0}</b> public IPFS gateways. could be a real dead pin — could also just be gateway rate-limits. try again in a bit.` };
+          }
+        } else {
+          pinOverride = { unknown: 'IPFS pin checker is offline. grug will retry next scan.' };
+        }
+      } catch (e) {
+        pinOverride = { unknown: 'IPFS pin checker unreachable. grug can\'t verify pins right now.' };
+      }
+    }
+  }
+  pushSig(cats, 'metadata', 'centralArt', centralState, centralOverride);
+  pushSig(cats, 'metadata', 'unpinned', pinState, pinOverride);
+  pushSig(cats, 'metadata', 'noRoyalty',
+    onChain.hasRoyalty2981 === null ? 'unknown' : (onChain.hasRoyalty2981 ? 'good' : 'bad'));
+
+  /* --- score --- */
+  let score = 0;
+  for (const list of Object.values(cats)) {
+    for (const s of list) if (s.state === 'bad') score += s.weight;
+  }
+  if (score > 100) score = 100;
+
+  const projectName = onChain.name || explorer.tokenName || explorer.explorerName || 'Unknown Project';
+  const symbol      = onChain.symbol || explorer.tokenSymbol || '';
+  const tokenType   = explorer.tokenType || (onChain.is721 ? 'ERC-721' : onChain.is1155 ? 'ERC-1155' : (onChain.hasSelector.ownerMint ? 'Token' : 'Contract'));
+
+  return {
+    addr, name: projectName, symbol, tokenType, score, cats,
+    mode: 'real', isUtility,
+    // Pass raw data through so the info panels can render without another
+    // fetch. Deliberately snapshot only the fields the UI needs — the full
+    // objects contain internal debug fields (upstream statuses, raw bodies)
+    // that shouldn't leak into the report state.
+    raw: {
+      hasSelector: onChain.hasSelector || {},
+      is721:  onChain.is721,
+      is1155: onChain.is1155,
+      hasRoyalty2981: onChain.hasRoyalty2981,
+      isProxy: onChain.isProxy,
+      ownerRenounced: onChain.ownerRenounced,
+      ownerCallable: onChain.ownerCallable,
+      owner: onChain.owner,
+      // New live-state fields — surface them so the capability panel can
+      // show the actual current state, not just "has this selector."
+      isPaused: onChain.isPaused,
+      contractBalanceEth: onChain.contractBalanceEth,
+      ownerIsMultiSig: onChain.ownerIsMultiSig,
+      ownerThreshold: onChain.ownerThreshold,
+      tokenURI: onChain.tokenURI,
+      verified: explorer.verified,
+      compilerVersion: explorer.compilerVersion,
+      holdersCount: explorer.holdersCount,
+      totalSupply: explorer.totalSupply,
+      creator: explorer.creator,
+      deployer: deployerHist ? {
+        address: deployerHist.creator,
+        txCount: deployerHist.txCount,
+        tokenTransferCount: deployerHist.tokenTransferCount,
+        deployedContractCountRecent: deployerHist.deployedContractCountRecent,
+        hasMorePages: deployerHist.hasMorePages,
+        coinBalanceEth: deployerHist.coinBalanceEth,
+        firstTxTimestampSeen: deployerHist.firstTxTimestampSeen,
+        deployTimestamp: deployerHist.deployTimestamp,
+        deployBlock: deployerHist.deployBlock,
+        labelName: deployerHist.labelName,
+      } : null,
+      // Serial-rug analysis result. Deployer profile panel uses this to
+      // render "N of M other contracts dead" if there's anything to say.
+      priorRug: priorRugData ? {
+        verdict: priorRugData.verdict,
+        dead: priorRugData.dead,
+        alive: priorRugData.alive,
+        othersChecked: priorRugData.othersChecked,
+        othersSkippedNonToken: priorRugData.othersSkippedNonToken,
+        others: priorRugData.others,
+      } : null,
+    },
+  };
+}
+
+function buildPresetReport(addr, presetKey) {
+  const p = PRESETS[presetKey];
+  const cats = { contract: [], deployer: [], distribution: [], socials: [], metadata: [] };
+  for (const catKey of Object.keys(CATALOG)) {
+    for (const meta of CATALOG[catKey]) {
+      const bad = p.triggered.has(meta.id);
+      cats[catKey].push({
+        id: meta.id,
+        name: meta.name,
+        weight: meta.weight,
+        badText: meta.bad,
+        goodText: meta.good,
+        state: bad ? 'bad' : 'good',
+      });
+    }
+  }
+  let score = 0;
+  for (const list of Object.values(cats)) {
+    for (const s of list) if (s.state === 'bad') score += s.weight;
+  }
+  if (score > 100) score = 100;
+  return { addr, name: p.name, symbol: '', tokenType: 'DEMO', score, cats, mode: 'demo' };
+}
+
+/* ================ Rendering ================ */
+
+function verdictFor(score) {
+  if (score < 25) return { tone: 'green',  text: 'grug approve', quote: 'grug think this one okay. grug still watch though.' };
+  if (score < 60) return { tone: 'yellow', text: 'grug wary',    quote: 'something smell funny. maybe rug. maybe just messy. tribe read the flags.' };
+  return              { tone: 'red',    text: 'grug run',     quote: 'grug not like this. many warning. grug go back in cave.' };
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function short(a) {
+  if (!a) return '';
+  return a.slice(0, 6) + '…' + a.slice(-4);
+}
+function safeHref(url) {
+  // Only allow http(s) links from external content — no javascript:/data: hrefs.
+  if (!url) return '#';
+  try {
+    const u = new URL(url);
+    return /^https?:$/.test(u.protocol) ? u.href : '#';
+  } catch (e) { return '#'; }
+}
+
+function iconFor(state) {
+  return state === 'bad' ? '×' : state === 'good' ? '✓' : '?';
+}
+function pointsFor(sig) {
+  if (sig.state === 'bad')  return { text: '+' + sig.weight, cls: '' };
+  if (sig.state === 'good') return { text: '−' + sig.weight, cls: 'good' };
+  return { text: 'unknown', cls: 'unknown' };
+}
+function rowClass(sig) {
+  if (sig.state === 'bad') return sig.weight >= 18 ? 'danger' : 'warn';
+  if (sig.state === 'unknown') return 'info';
+  return '';
+}
+
+function renderSignals(containerId, items) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  for (const sig of items) {
+    const row = document.createElement('div');
+    row.className = 'signal ' + rowClass(sig);
+    const p = pointsFor(sig);
+    const desc = sig.state === 'bad'  ? sig.badText
+               : sig.state === 'good' ? sig.goodText
+               : (sig.unknownText || 'grug still learning to sniff this one. not counted in score.');
+    row.innerHTML = `
+      <div class="signal-icon">${iconFor(sig.state)}</div>
+      <div class="signal-body">
+        <p class="signal-name">${escapeHtml(sig.name)}${sig.state === 'unknown' ? '<span class="est-tag">ESTIMATE</span>' : ''}</p>
+        <p class="signal-desc">${desc}</p>
+      </div>
+      <div class="signal-points ${p.cls}">${p.text}</div>
+    `;
+    el.appendChild(row);
+  }
+}
+
+function renderDataQuality(report) {
+  const el = document.getElementById('data-quality');
+  const all = [].concat(...Object.values(report.cats));
+  const good = all.filter(s => s.state === 'good').length;
+  const bad  = all.filter(s => s.state === 'bad').length;
+  const unk  = all.filter(s => s.state === 'unknown').length;
+  el.innerHTML = `
+    <span class="dq bad">${bad} FLAGGED</span>
+    <span class="dq good">${good} OK</span>
+    <span class="dq unk">${unk} ESTIMATE</span>
+  `;
+  el.hidden = false;
+}
+
+// Turn an ISO timestamp into "42d ago" / "12h ago" style text.
+function relTime(iso) {
+  if (!iso) return null;
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return null;
+  const diff = Date.now() - then;
+  if (diff < 0) return null;
+  const day = 86_400_000;
+  if (diff < 3600_000) return Math.max(1, Math.floor(diff / 60_000)) + 'm ago';
+  if (diff < day)      return Math.floor(diff / 3600_000) + 'h ago';
+  if (diff < 60 * day) return Math.floor(diff / day) + 'd ago';
+  return Math.floor(diff / (30 * day)) + 'mo ago';
+}
+
+function renderDeployerProfile(report) {
+  const el = document.getElementById('deployer-profile');
+  const grid = document.getElementById('deployer-profile-grid');
+  if (!el || !grid) return;
+  const d = report.raw?.deployer;
+  if (!d || !d.address) {
+    el.hidden = true;
+    grid.innerHTML = '';
+    return;
+  }
+  const cells = [];
+
+  // Address (linked to Blockscout)
+  cells.push({
+    k: 'WALLET',
+    v: `<a href="${EXPLORER}${escapeHtml(d.address)}" target="_blank" rel="noopener">${escapeHtml(short(d.address))}</a>`,
+  });
+
+  // Blockscout label — some wallets are named ("Deployer", "Uniswap V3 Factory")
+  if (d.labelName) {
+    cells.push({ k: 'LABEL', v: escapeHtml(d.labelName), tone: 'good' });
+  }
+
+  // Wallet age (from oldest seen tx). Note: firstTxTimestampSeen may be the
+  // oldest on our page, not the true first tx — deployer-history flags this
+  // via hasMorePages. Show it either way, the tooltip explains.
+  if (d.firstTxTimestampSeen) {
+    const ago = relTime(d.firstTxTimestampSeen);
+    const label = d.hasMorePages ? 'first tx grug saw' : 'wallet age';
+    const tone = ago && /^\d+d/.test(ago) && parseInt(ago) < 30 ? 'warn'
+               : ago && /(mo ago|d ago)/.test(ago) ? 'good'
+               : null;
+    cells.push({ k: label.toUpperCase(), v: escapeHtml(ago || '—'), tone });
+  }
+
+  // Transaction count
+  if (typeof d.txCount === 'number') {
+    const tone = d.txCount < 20 ? 'bad' : d.txCount > 500 ? 'good' : null;
+    cells.push({ k: 'TX COUNT', v: d.txCount.toLocaleString(), tone });
+  }
+
+  // ETH balance
+  if (typeof d.coinBalanceEth === 'number') {
+    const tone = d.coinBalanceEth < 0.0001 ? 'bad' : d.coinBalanceEth > 0.05 ? 'good' : null;
+    cells.push({
+      k: 'ETH BALANCE',
+      v: (d.coinBalanceEth < 0.0001 ? d.coinBalanceEth.toFixed(6) : d.coinBalanceEth.toFixed(4)) + ' ETH',
+      tone,
+    });
+  }
+
+  // Recent contract deploys.
+  //   "N contracts (recent)"      — bounded scan, but might be older ones too
+  //   "N contracts (all seen)"    — no more pages, so this is the lifetime count
+  //   "0 seen, older history not paged" — nothing visible but wallet is chatty
+  if (typeof d.deployedContractCountRecent === 'number') {
+    const n = d.deployedContractCountRecent;
+    let tone = null;
+    if (n === 0 && !d.hasMorePages) tone = 'warn';
+    else if (n >= 4) tone = 'warn';
+    let text;
+    if (n === 0 && d.hasMorePages) {
+      text = '0 seen · older history not paged';
+    } else if (d.hasMorePages) {
+      text = `${n}+ contract${n === 1 ? '' : 's'} (recent window)`;
+    } else {
+      text = `${n} contract${n === 1 ? '' : 's'} total`;
+    }
+    cells.push({ k: 'RECENT DEPLOYS', v: text, tone });
+  }
+
+  // Token-transfer count (has the wallet ever moved tokens?)
+  if (typeof d.tokenTransferCount === 'number') {
+    cells.push({
+      k: 'TOKEN TRANSFERS',
+      v: d.tokenTransferCount.toLocaleString(),
+      tone: d.tokenTransferCount > 100 ? 'good' : null,
+    });
+  }
+
+  // This contract's deploy timestamp — nice when we have it
+  if (d.deployTimestamp) {
+    const ago = relTime(d.deployTimestamp);
+    cells.push({ k: 'CONTRACT DEPLOYED', v: escapeHtml(ago || '—') });
+  }
+
+  // Prior-rug pattern summary — worth showing whenever we actually checked
+  // at least one sister contract. For a "clean" verdict we want the reader
+  // to see grug did the work; for "watch"/"rug_pattern" it's a red flag.
+  const pr = report.raw?.priorRug;
+  if (pr && pr.othersChecked > 0) {
+    let tone = null;
+    if (pr.verdict === 'rug_pattern') tone = 'bad';
+    else if (pr.verdict === 'watch')  tone = 'warn';
+    else if (pr.verdict === 'clean')  tone = 'good';
+    cells.push({
+      k: 'OTHER TOKENS BY DEPLOYER',
+      v: `<b>${pr.alive}</b> live · <b>${pr.dead}</b> dead <span style="color:var(--ash)">(of ${pr.othersChecked} checked)</span>`,
+      tone,
+    });
+  }
+
+  grid.innerHTML = cells.map(c =>
+    `<div class="cell"><span class="k">${escapeHtml(c.k)}</span><span class="v ${c.tone || ''}">${c.v}</span></div>`
+  ).join('');
+  el.hidden = false;
+}
+
+/* Which admin functions this bytecode exposes, as a row of chips.
+   Colour codes:
+     good   — safety property present (renounceOwnership, no admin mint, verified, immutable)
+     warn   — admin power is live (owner set, admin mint, pause, withdraw)
+     bad    — same but weightier for the specific kind of risk
+     neutral — informational, not risky (interface flags, compiler)
+   The panel is intentionally chatty — even for a clean contract, showing
+   "renounceOwnership() found" reassures the reader that we actually looked. */
+function renderContractCapabilities(report) {
+  const el = document.getElementById('contract-capabilities');
+  const grid = document.getElementById('cap-grid');
+  if (!el || !grid) return;
+  const r = report.raw;
+  if (!r || !r.hasSelector) {
+    el.hidden = true;
+    grid.innerHTML = '';
+    return;
+  }
+  const sel = r.hasSelector;
+  const chips = [];
+
+  const chip = (label, tone) => chips.push({ label, tone: tone || '' });
+
+  // Standard interfaces / token type
+  if (r.is721)   chip('ERC-721', 'good');
+  if (r.is1155)  chip('ERC-1155', 'good');
+  if (r.hasRoyalty2981 === true)  chip('EIP-2981 royalties', 'good');
+  if (r.hasRoyalty2981 === false) chip('no EIP-2981 royalties', 'warn');
+
+  // Proxy status
+  if (r.isProxy) chip('upgradeable proxy', 'bad');
+  else           chip('non-proxy (code fixed)', 'good');
+
+  // Ownership
+  if (!r.ownerCallable) {
+    chip('no owner() function', 'good');
+  } else if (r.ownerRenounced) {
+    chip('ownership renounced', 'good');
+  } else {
+    chip('owner set (admin key live)', 'warn');
+  }
+  if (sel.renounceOwnership) chip('renounce possible', 'good');
+  if (sel.transferOwnership) chip('owner transferable', '');
+
+  // Mint capabilities
+  if (sel.ownerMint || sel.ownerMintTo) chip('admin mint()', 'warn');
+  else                                  chip('no admin mint', 'good');
+
+  // Metadata mutability
+  if (sel.setBaseURI)   chip('setBaseURI()', 'warn');
+  if (sel.setTokenURI)  chip('setTokenURI()', 'warn');
+  if (!sel.setBaseURI && !sel.setTokenURI) chip('metadata locked', 'good');
+
+  // Pause / transfer lock
+  if (sel.pause)   chip('pause()', 'warn');
+  if (sel.unpause) chip('unpause()', '');
+  if (!sel.pause)  chip('no pause/lock', 'good');
+
+  // Value drain
+  if (sel.withdraw) chip('withdraw()', 'warn');
+
+  // Fee/royalty admin
+  if (sel.setDefaultRoyalty) chip('setDefaultRoyalty()', 'warn');
+
+  // Explorer / source
+  if (r.verified === true)  chip('source verified', 'good');
+  if (r.verified === false) chip('source unverified', 'bad');
+  if (r.compilerVersion)    chip('solc ' + r.compilerVersion.replace(/^v/, ''), '');
+
+  grid.innerHTML = chips.map(c =>
+    `<span class="cap-chip ${c.tone}">${escapeHtml(c.label)}</span>`
+  ).join('');
+  el.hidden = false;
+}
+
+function renderContractNote(report) {
+  const el = document.getElementById('contract-note');
+  if (!el) return;
+  if (report.isUtility) {
+    el.innerHTML = `
+      <span class="cn-title">grug word</span>
+      this look like <b>utility / factory contract</b>, not mint drop. things
+      like Uniswap positions, wrappers, vault receipts. some rug signal
+      (top-heavy holders, sniper cluster) not apply here — grug skipped
+      those. read the rest with a pinch of salt.
+    `;
+    el.hidden = false;
+  } else {
+    el.hidden = true;
+    el.innerHTML = '';
+  }
+}
+
+function renderReport(report) {
+  document.getElementById('addr-echo').textContent = short(report.addr);
+  document.getElementById('explorer-link').href = EXPLORER + report.addr;
+  document.getElementById('project-name').textContent = report.name || 'Unknown Project';
+
+  const metaEl = document.getElementById('project-meta');
+  const metaBits = [];
+  if (report.mode === 'demo') {
+    metaBits.push('DEMO SCAN');
+  } else {
+    if (report.tokenType) metaBits.push(report.tokenType);
+    if (report.symbol)    metaBits.push('$' + report.symbol);
+  }
+  if (metaBits.length) {
+    metaEl.textContent = metaBits.join(' · ');
+    metaEl.hidden = false;
+  } else {
+    metaEl.hidden = true;
+  }
+
+  const v = verdictFor(report.score);
+  const verdictEl = document.getElementById('verdict');
+  verdictEl.className = 'verdict ' + v.tone;
+  verdictEl.textContent = v.text;
+  document.getElementById('grug-quote').textContent = v.quote;
+  document.getElementById('score-num').textContent = report.score;
+
+  const gauge = document.getElementById('gauge-fill');
+  const CIRC = 2 * Math.PI * 50;
+  gauge.setAttribute('stroke-dasharray', CIRC.toFixed(2));
+  gauge.setAttribute('stroke-dashoffset', CIRC.toFixed(2));
+  gauge.setAttribute('class', 'gauge-fill ' + v.tone);
+  requestAnimationFrame(() => {
+    gauge.setAttribute('stroke-dashoffset', (CIRC * (1 - report.score / 100)).toFixed(2));
+  });
+
+  renderDataQuality(report);
+  renderContractNote(report);
+  renderDeployerProfile(report);
+  renderContractCapabilities(report);
+  renderSignals('signals-contract',     report.cats.contract);
+  renderSignals('signals-deployer',     report.cats.deployer);
+  renderSignals('signals-distribution', report.cats.distribution);
+  renderSignals('signals-socials',      report.cats.socials || []);
+  renderSignals('signals-metadata',     report.cats.metadata);
+
+  const res = document.getElementById('result');
+  res.classList.add('on');
+  res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ================ Flow ================ */
+
+function showError(msg) {
+  const err = document.getElementById('scan-error');
+  err.innerHTML = msg;
+  err.classList.add('on');
+}
+function clearError() {
+  document.getElementById('scan-error').classList.remove('on');
+}
+
+let loadingTimer = null;
+function startLoading() {
+  clearError();
+  document.getElementById('result').classList.remove('on');
+  document.getElementById('loading').classList.add('on');
+  const sub = document.getElementById('loading-sub');
+  let i = 0;
+  sub.textContent = LOADING_MESSAGES[0];
+  loadingTimer = setInterval(() => {
+    i = (i + 1) % LOADING_MESSAGES.length;
+    sub.textContent = LOADING_MESSAGES[i];
+  }, 700);
+}
+function stopLoading() {
+  clearInterval(loadingTimer);
+  document.getElementById('loading').classList.remove('on');
+}
+
+async function runScan(addr, opts = {}) {
+  const clean = (addr || '').trim();
+  if (!isValidAddress(clean)) {
+    showError('grug not understand. paste real 0x address (40 hex chars after 0x).');
+    return;
+  }
+  document.getElementById('addr').value = clean;
+  startLoading();
+
+  try {
+    let report;
+    if (opts.preset) {
+      // Demo: hand-scripted so the story reads
+      await new Promise(r => setTimeout(r, 900));
+      report = buildPresetReport(clean, opts.preset);
+      if (opts.name) report.name = opts.name;
+    } else {
+      report = await computeRealReport(clean);
+    }
+    stopLoading();
+    renderReport(report);
+  } catch (e) {
+    stopLoading();
+    if (e.code === 'not_a_contract') {
+      showError('grug find no code at this address. it is a wallet or empty, not a contract.');
+    } else {
+      showError('grug hit a rock: ' + escapeHtml(e.message || 'chain call failed') + '. try again in a moment.');
+    }
+  }
+}
+
+document.getElementById('scan-btn').addEventListener('click', () => {
+  runScan(document.getElementById('addr').value);
+});
+document.getElementById('addr').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') runScan(document.getElementById('addr').value);
+});
+document.querySelectorAll('.example').forEach(btn => {
+  btn.addEventListener('click', () => {
+    runScan(btn.dataset.addr, { preset: btn.dataset.preset, name: btn.dataset.name });
+  });
+});
+
+/* Deep link for share cards. Accepts either:
+     scanner.html?addr=0x…   (query — normal case)
+     scanner.html#addr=0x…   (hash — survives clean-URL rewrites) */
+(() => {
+  const fromQuery = new URLSearchParams(location.search).get('addr');
+  const fromHash  = new URLSearchParams((location.hash || '').replace(/^#/, '')).get('addr');
+  const a = fromQuery || fromHash;
+  if (a && isValidAddress(a)) setTimeout(() => runScan(a), 200);
+})();
+</script>
+
+<!-- Render the loader grug with the same pixel-art engine that draws the
+     homepage walkers/attackers. Kept in a separate <script type="module">
+     so the main scanner logic can stay in a classic <script> tag. If the
+     module fails to load (network, CSP, etc), the machine still animates
+     and the loader still says "GRUG SNIFFING" — no user-facing break. -->
+<script type="module">
+  import { drawBody, drawHead, drawHair, drawHat, W, H, SCALE } from './scripts/grug-body.mjs';
+
+  // Compose a background-less sprite (matches renderGrugSprite() on the
+  // homepage). preserveAspectRatio + overflow:visible so the wild hair
+  // and club rock can poke above the viewBox on impact frames.
+  function renderGrugSprite(t) {
+    const body = drawBody(t) + drawHead(t) + drawHair(t) + drawHat(t);
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W*SCALE} ${H*SCALE}"
+              preserveAspectRatio="xMidYMax meet"
+              style="image-rendering:pixelated;display:block;overflow:visible">${body}</svg>`;
+  }
+
+  // Fixed "angry grug with a club" traits — same recipe the homepage uses
+  // for the attackers on the machine hero scene. Not randomized because the
+  // loader should feel deliberate: same grug every time you scan.
+  const attackerTraits = {
+    skin: 'mid',
+    brow: 'ultra heavy',
+    eyes: 'wide',
+    mouth: 'yell',
+    teeth: 'some',
+    facePaint: 'none',
+    hairColor: 'black',
+    hairStyle: 'wild',
+    hat: 'none',
+    clothing: 'brown pelt',
+    item: 'club',
+    legs: 'loincloth',
+  };
+
+  const host = document.getElementById('gs-attacker');
+  if (host) host.innerHTML = renderGrugSprite(attackerTraits);
+</script>
+
+<!-- Rug Radar gate. Currently disabled (GATE_ENABLED=false in gate.mjs); flip
+     the flag in that file on mint day to require 5 Grugs to use the radar. -->
+<script type="module" src="/scripts/gate.mjs"></script>
+
+</body>
+</html>

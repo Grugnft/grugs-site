@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Twitter banner source</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; padding:0; background:#000; }
+  body { font-family:'Press Start 2P', monospace; color:#F4E4C8; }
+
+  /* Twitter header: 1500x500. Safe zone (visible on all clients incl. mobile
+     crop): middle band from ~y=90 to ~y=410, and avoid the lower-left
+     ~200x200 where the profile picture sits. */
+  .banner {
+    width: 1500px; height: 500px;
+    position: relative; overflow: hidden;
+    background:
+      radial-gradient(ellipse 40% 70% at 50% 50%, rgba(232,161,71,0.10) 0%, rgba(0,0,0,0) 75%),
+      linear-gradient(180deg, #241A12 0%, #1A140F 50%, #100a04 100%);
+    box-sizing: border-box;
+    color: #F4E4C8;
+  }
+  /* Faint pixel-art cave-wall speckle so it doesn't feel flat.
+     Kept subtle — the banner reads as clean/minimal. */
+  .speckle {
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 5% 20%,  rgba(58,42,30,0.35) 1px, transparent 2px),
+      radial-gradient(circle at 15% 70%, rgba(58,42,30,0.25) 1px, transparent 2px),
+      radial-gradient(circle at 25% 30%, rgba(58,42,30,0.30) 1px, transparent 2px),
+      radial-gradient(circle at 40% 80%, rgba(58,42,30,0.20) 1px, transparent 2px),
+      radial-gradient(circle at 55% 15%, rgba(58,42,30,0.30) 1px, transparent 2px),
+      radial-gradient(circle at 70% 55%, rgba(58,42,30,0.25) 1px, transparent 2px),
+      radial-gradient(circle at 85% 25%, rgba(58,42,30,0.30) 1px, transparent 2px),
+      radial-gradient(circle at 95% 75%, rgba(58,42,30,0.20) 1px, transparent 2px);
+    background-size: 220px 220px;
+    opacity: 0.55; pointer-events: none;
+  }
+  .wordmark {
+    position: absolute;
+    top: 42%; left: 50%; transform: translate(-50%, -50%);
+    font-family:'Press Start 2P', monospace;
+    font-size: 110px; letter-spacing: 12px;
+    color: #F4E4C8;
+    text-shadow:
+      5px 5px 0 #1A140F,
+      10px 10px 0 rgba(209,75,47,0.55),
+      0 0 60px rgba(232,161,71,0.25);
+    white-space: nowrap;
+  }
+  .underline {
+    position: absolute;
+    top: 60%; left: 50%; transform: translate(-50%, 0);
+    width: 320px; height: 6px;
+    background: linear-gradient(90deg, transparent, #E8A147, transparent);
+  }
+  .sublabel {
+    position: absolute;
+    top: 65%; left: 50%; transform: translate(-50%, 0);
+    font-family: 'VT323', monospace;
+    font-size: 32px; color: #E8A147;
+    letter-spacing: 6px;
+    text-shadow: 2px 2px 0 #1A140F;
+    white-space: nowrap;
+  }
+  /* Two hero grugs, one on each side — bold, clean, poster-style.
+     Positioned so the wordmark has a big open middle to breathe in. */
+  .grug-left, .grug-right {
+    position: absolute; top: 50%;
+    transform: translateY(-50%);
+    filter: drop-shadow(0 6px 0 rgba(0,0,0,0.55));
+  }
+  .grug-left  { left:  90px; }
+  .grug-right { right: 90px; }
+  .grug-left  .g, .grug-right .g { height: 340px; width: 255px; display:flex; align-items:flex-end; }
+  .grug-left  .g svg, .grug-right .g svg { height: 340px; width: 255px; display:block; image-rendering: pixelated; }
+  /* Subtle vignette edges so the grugs fade into the darkness at the frame */
+  .vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 100% 80% at 50% 50%, transparent 45%, #100a04 100%);
+    pointer-events: none;
+  }
+
+  /* Bottom-right footer — small, in safe zone. Lower-left is reserved for
+     the Twitter profile picture overlay so nothing important goes there. */
+  .tagline {
+    position: absolute; right: 40px; bottom: 24px;
+    font-family: 'VT323', monospace;
+    font-size: 26px; color: #8a6a4a;
+    letter-spacing: 2px;
+  }
+  .chain {
+    position: absolute; right: 40px; top: 30px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px; color: #8a6a4a;
+    letter-spacing: 3px;
+  }
+  .chain::before {
+    content:""; display: inline-block;
+    width: 10px; height: 10px; background: #5F8C4B;
+    box-shadow: 0 0 8px #5F8C4B; margin-right: 10px;
+    vertical-align: 1px;
+  }
+</style>
+</head>
+<body>
+<div class="banner">
+  <div class="speckle"></div>
+
+  <div class="chain">ROBINHOOD CHAIN</div>
+
+  <div class="grug-left"  id="grug-left"></div>
+  <div class="grug-right" id="grug-right"></div>
+
+  <div class="wordmark">GRUGS</div>
+  <div class="underline"></div>
+  <div class="sublabel">10,000 · ON CHAIN</div>
+
+  <div class="vignette"></div>
+  <div class="tagline">grugnft.xyz</div>
+</div>
+
+<script>
+// One hero grug on each side. Two curated picks so the framing feels
+// intentional rather than random. Swap IDs to preview others.
+const LEFT_IDS  = ['0512'];
+const RIGHT_IDS = ['7712'];
+
+async function loadSide(id, targetId) {
+  const holder = document.getElementById(targetId);
+  const svgs = await Promise.all(id.map(x => fetch('out/svg/' + x + '.svg').then(r => r.text())));
+  holder.innerHTML = svgs.map(s => '<div class="g">' + s + '</div>').join('');
+}
+
+Promise.all([
+  loadSide(LEFT_IDS, 'grug-left'),
+  loadSide(RIGHT_IDS, 'grug-right'),
+])
+  .then(() => document.fonts ? document.fonts.ready : null)
+  .then(() => document.body.setAttribute('data-ready', '1'))
+  .catch(err => document.body.setAttribute('data-error', String(err)));
+</script>
+</body>
+</html>

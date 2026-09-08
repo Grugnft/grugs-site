@@ -1,0 +1,54 @@
+{
+  "_note": "Curated list of upcoming and recent NFT mints on Robinhood Chain. Add a new entry to publish it. `contract` may be empty for pre-launch drops.",
+  "mints": [
+    {
+      "name": "Grugs",
+      "symbol": "GRUG",
+      "contract": "",
+      "chain": "RHC",
+      "mintStart": "2026-10-15T18:00:00Z",
+      "priceLabel": "5,000 FREE / 5,000 at 0.001 ETH",
+      "supply": 10000,
+      "twitter": "https://twitter.com/GrugNFT",
+      "website": "https://grugnft.xyz",
+      "tagline": "10,000 caveman on Robinhood Chain. anti-machine. anti-rug.",
+      "badge": "featured"
+    },
+    {
+      "name": "Howl Street",
+      "symbol": "HOWL",
+      "contract": "0x4A2C6e28D1FbAdeE3c11C4B4157f4bf2fe2A1f1a",
+      "chain": "RHC",
+      "mintStart": "2026-08-20T14:00:00Z",
+      "priceLabel": "0.008 ETH",
+      "supply": null,
+      "twitter": null,
+      "website": null,
+      "tagline": "generative street portraits."
+    },
+    {
+      "name": "Robinhood Gift",
+      "symbol": "GIFT",
+      "contract": "0xEdAe666f11d768Dc6a589d2c6938CBA7E43Dbf76",
+      "chain": "RHC",
+      "mintStart": "2026-07-01T00:00:00Z",
+      "priceLabel": "gifted",
+      "supply": null,
+      "twitter": "https://twitter.com/RobinhoodApp",
+      "website": "https://robinhood.com/chain",
+      "tagline": "chain-launch commemorative NFTs from Robinhood."
+    },
+    {
+      "name": "Fee Beneficiary",
+      "symbol": "FEEB",
+      "contract": "0xd35E9CA72F64C7F93BE30fad67524323396B36D7",
+      "chain": "RHC",
+      "mintStart": "2026-07-05T00:00:00Z",
+      "priceLabel": "protocol",
+      "supply": null,
+      "twitter": null,
+      "website": null,
+      "tagline": "protocol fee-collector NFT."
+    }
+  ]
+}

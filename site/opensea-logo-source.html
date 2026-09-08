@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OpenSea logo source</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; padding:0; background:#000; }
+  .logo {
+    width: 500px; height: 500px;
+    position: relative; overflow: hidden;
+    background:
+      radial-gradient(ellipse 65% 55% at 50% 70%, rgba(232,161,71,0.30) 0%, rgba(232,161,71,0.08) 45%, rgba(0,0,0,0) 75%),
+      linear-gradient(180deg, #241A12 0%, #1A140F 55%, #100a04 100%);
+    box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* Subtle pixel wall speckle */
+  .speckle {
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 12% 22%, rgba(58,42,30,0.35) 1px, transparent 2px),
+      radial-gradient(circle at 78% 30%, rgba(58,42,30,0.25) 1px, transparent 2px),
+      radial-gradient(circle at 30% 78%, rgba(58,42,30,0.30) 1px, transparent 2px),
+      radial-gradient(circle at 82% 82%, rgba(58,42,30,0.20) 1px, transparent 2px);
+    background-size: 180px 180px;
+    opacity: 0.55; pointer-events: none;
+  }
+  /* Torch dots top corners */
+  .torch { position: absolute; top: 16px; width: 8px; height: 8px; background:#FFC864; box-shadow: 0 0 18px 4px rgba(255,200,100,0.55); }
+  .torch.l { left: 22px; }
+  .torch.r { right: 22px; }
+  .g {
+    height: 420px; width: 315px;
+    display: flex; align-items: flex-end;
+    filter: drop-shadow(0 8px 0 rgba(0,0,0,0.55));
+    position: relative;
+    z-index: 2;
+  }
+  .g svg { height: 420px; width: 315px; display:block; image-rendering: pixelated; }
+</style>
+</head>
+<body>
+<div class="logo">
+  <div class="speckle"></div>
+  <div class="torch l"></div>
+  <div class="torch r"></div>
+  <div class="g" id="g"></div>
+</div>
+<script>
+// Pick one strong hero grug for the logo. 4284 has a good silhouette.
+const ID = '4284';
+fetch('out/svg/' + ID + '.svg').then(r => r.text()).then(svg => {
+  document.getElementById('g').innerHTML = svg;
+  return document.fonts ? document.fonts.ready : null;
+}).then(() => document.body.setAttribute('data-ready', '1'))
+  .catch(err => document.body.setAttribute('data-error', String(err)));
+</script>
+</body>
+</html>

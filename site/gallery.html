@@ -1,0 +1,78 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Grug Gallery — 10,000 tribe</title>
+<style>
+  body { background:#0a0604; color:#e8dcc0; font-family:ui-monospace,monospace; padding:24px; margin:0; }
+  h1 { font-family:'Press Start 2P',monospace; color:#e8a147; letter-spacing:3px; margin:0 0 6px; }
+  .sub { color:#a89680; font-size:14px; margin-bottom:20px; }
+  .controls { display:flex; gap:12px; margin-bottom:20px; align-items:center; flex-wrap:wrap; }
+  input, select { background:#1a1108; border:2px solid #3a2818; color:#e8dcc0; padding:8px 12px; font-family:inherit; }
+  button { background:#e8a147; border:none; color:#1a1108; padding:8px 16px; font-weight:bold; cursor:pointer; font-family:inherit; }
+  .mode { display:inline-flex; gap:4px; }
+  .mode button { background:#1a1108; color:#a89680; border:2px solid #3a2818; padding:8px 12px; }
+  .mode button.on { background:#e8a147; color:#1a1108; border-color:#e8a147; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
+  .cell { background:#1a1108; border:2px solid #3a2818; padding:6px; text-align:center; position:relative; }
+  .cell img { display:block; width:100%; height:auto; image-rendering:pixelated; }
+  .id { font-size:11px; color:#a89680; margin-top:4px; letter-spacing:1px; }
+  .cell.legendary { border-color:#e8a147; box-shadow:0 0 12px rgba(232,161,71,0.2); }
+  .cell.legendary::before { content:'★'; position:absolute; top:2px; right:4px; color:#e8a147; font-size:14px; }
+  .traits { color:#8ac560; font-size:9px; margin-top:2px; }
+</style></head><body>
+<h1>GRUG GALLERY</h1>
+<div class="sub" id="sub">10,000 grug · click a grug to see traits · legendary (1%) marked with ★</div>
+<div class="controls">
+  <div class="mode">
+    <button id="m-all" class="on" onclick="setMode('all')">ALL</button>
+    <button id="m-legendary" onclick="setMode('legendary')">LEGENDARY</button>
+    <button id="m-two-leg" onclick="setMode('two-leg')">DOUBLE LEGENDARY</button>
+  </div>
+  <label>show: <input id="count" type="number" value="60" min="1" max="200" style="width:70px"></label>
+  <label>start at: <input id="start" type="number" value="1" min="1" max="10000" style="width:80px"></label>
+  <button onclick="load()">RELOAD</button>
+</div>
+<div id="grid" class="grid"></div>
+<script>
+let mode = 'all';
+let legendaries = [];
+async function loadLegendaries() {
+  const r = await fetch('out/legendaries.json');
+  legendaries = await r.json();
+}
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode button').forEach(b => b.classList.remove('on'));
+  document.getElementById('m-' + m).classList.add('on');
+  load();
+}
+async function load() {
+  if (!legendaries.length) await loadLegendaries();
+  const start = parseInt(document.getElementById('start').value, 10);
+  const count = parseInt(document.getElementById('count').value, 10);
+  const grid = document.getElementById('grid');
+  const sub = document.getElementById('sub');
+  grid.innerHTML = '';
+  let items = [];
+  if (mode === 'all') {
+    for (let i = 0; i < count; i++) items.push({ id: String(start + i).padStart(4, '0'), legs: [] });
+    sub.textContent = `10,000 grug · showing ${count} starting at #${String(start).padStart(4,'0')} · legendary (1%) marked with ★`;
+  } else if (mode === 'legendary') {
+    items = legendaries.slice(start - 1, start - 1 + count);
+    sub.textContent = `${legendaries.length} legendary grug (contains at least one 1%-weight trait) · showing ${items.length}`;
+  } else if (mode === 'two-leg') {
+    items = legendaries.filter(g => g.legs.length >= 2);
+    sub.textContent = `${items.length} DOUBLE LEGENDARY grug — the rarest of the tribe (from a target of 3-5)`;
+  }
+  const legendaryIds = new Set(legendaries.map(g => g.id));
+  for (const it of items) {
+    const cell = document.createElement('div');
+    const isLeg = legendaryIds.has(it.id);
+    cell.className = 'cell' + (isLeg ? ' legendary' : '');
+    const legInfo = it.legs && it.legs.length ? `<div class="traits">${it.legs.join('<br>')}</div>` : '';
+    cell.innerHTML = `<img src="out/svg/${it.id}.svg" loading="lazy"><div class="id">#${it.id}</div>${legInfo}`;
+    cell.onclick = () => window.open('out/svg/' + it.id + '.svg', '_blank');
+    grid.appendChild(cell);
+  }
+}
+load();
+</script>
+</body></html>

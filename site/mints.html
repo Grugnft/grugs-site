@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mints — Grugs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="upcoming NFT mints on Robinhood Chain. grug rate each one out of 100 so you know if project safe.">
+<meta name="theme-color" content="#1A140F">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Grugs">
+<meta property="og:title" content="Mints — grug rate every drop">
+<meta property="og:description" content="upcoming NFT mints on Robinhood Chain, each pre-scored by grug.">
+<meta property="og:url" content="https://grugnft.xyz/mints">
+<meta property="og:image" content="https://grugnft.xyz/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@GrugNFT">
+<meta name="twitter:title" content="Mints — grug rate every drop">
+<meta name="twitter:description" content="upcoming NFT mints on Robinhood Chain, each pre-scored by grug.">
+<meta name="twitter:image" content="https://grugnft.xyz/og.png">
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%231a140f'/><rect x='4' y='3' width='8' height='9' fill='%237b5a3e'/><rect x='3' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='12' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='4' y='5' width='2' height='1' fill='%23000'/><rect x='10' y='5' width='2' height='1' fill='%23000'/><rect x='5' y='6' width='1' height='1' fill='%23fff'/><rect x='10' y='6' width='1' height='1' fill='%23fff'/><rect x='6' y='9' width='4' height='1' fill='%23000'/><rect x='4' y='2' width='8' height='2' fill='%23000'/></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --stone: #1A140F;
+  --stone-2: #241A12;
+  --wall: #2B1F17;
+  --wall-2: #3A2A1E;
+  --torch: #E8A147;
+  --torch-hot: #FFC864;
+  --ember: #D14B2F;
+  --ember-hot: #F26A47;
+  --ember-deep: #7C2718;
+  --bone: #EDE1CE;
+  --bone-dim: #B8AA95;
+  --ash: #6B584A;
+  --moss: #7A9B5C;
+  --moss-hot: #8ac560;
+  --danger: #ff5a4a;
+  --warn: #ffb040;
+}
+
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(232,161,71,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 90%, rgba(209,75,47,0.05) 0%, transparent 40%),
+    var(--stone);
+  color: var(--bone);
+  font-family: 'VT323', ui-monospace, monospace;
+  font-size: 22px;
+  line-height: 1.35;
+  padding-bottom: 60px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* NAV (matches other pages) */
+header.nav {
+  position: sticky; top: 0; z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 14px 32px;
+  gap: 16px;
+  background: linear-gradient(to bottom, rgba(26,20,15,0.98), rgba(26,20,15,0.90));
+  border-bottom: 3px double var(--wall-2);
+  backdrop-filter: blur(6px);
+}
+.wordmark {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: var(--torch);
+  letter-spacing: 2px;
+  text-shadow: 0 0 14px rgba(232,161,71,0.35);
+  cursor: pointer;
+  user-select: none;
+  justify-self: start;
+  text-decoration: none;
+}
+.tabs { display: flex; gap: 4px; justify-self: center; }
+.tab {
+  padding: 8px 16px;
+  color: var(--bone-dim);
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: transparent;
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  letter-spacing: 1px;
+  text-transform: lowercase;
+  text-decoration: none;
+}
+.tab:hover { color: var(--bone); border-color: var(--wall-2); }
+.tab.active {
+  color: var(--stone);
+  background: var(--torch);
+  border-color: var(--torch);
+}
+.nav-right { justify-self: end; display: inline-flex; align-items: center; gap: 10px; }
+.chain-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border: 2px solid var(--wall-2);
+  color: var(--bone-dim);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px; letter-spacing: 1px;
+}
+.chain-badge::before {
+  content: ""; width: 8px; height: 8px;
+  background: var(--moss);
+  box-shadow: 0 0 6px var(--moss);
+}
+.nav-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
+  color: var(--bone-dim);
+  border: 2px solid var(--wall-2);
+  text-decoration: none;
+  transition: color 120ms, border-color 120ms, transform 120ms;
+}
+.nav-x:hover { color: var(--torch); border-color: var(--torch); transform: translateY(-1px); }
+
+main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
+
+.page-hero {
+  text-align: center;
+  padding: 12px 0 28px;
+  border-bottom: 3px double var(--wall-2);
+  margin-bottom: 24px;
+}
+.page-hero h1 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(28px, 5vw, 44px);
+  letter-spacing: 4px;
+  color: var(--bone);
+  margin: 6px 0 10px;
+  text-shadow: 3px 3px 0 var(--ember-deep), 6px 6px 0 rgba(0,0,0,0.5);
+}
+.page-hero .tagline {
+  color: var(--torch);
+  font-size: clamp(20px, 2vw, 26px);
+  letter-spacing: 2px;
+  margin: 0 0 4px;
+}
+.page-hero .sub {
+  color: var(--bone-dim);
+  font-size: 18px;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.disclaimer-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  margin: 0 0 32px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-left: 5px solid var(--warn);
+  color: var(--bone);
+  font-size: 18px;
+  line-height: 1.45;
+  letter-spacing: 0.3px;
+}
+.disclaimer-bar .dis-icon {
+  color: var(--warn);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 18px;
+  line-height: 1.3;
+}
+.disclaimer-bar .dis-text b { color: var(--torch); }
+
+.section-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  color: var(--torch);
+  letter-spacing: 3px;
+  margin: 32px 0 20px;
+  text-transform: lowercase;
+}
+.section-title::before { content: "▸ "; color: var(--ember); }
+.section-sub {
+  color: var(--bone-dim);
+  font-size: 18px;
+  margin: -12px 0 20px;
+  letter-spacing: 0.5px;
+}
+
+.sources-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 20px;
+  font-size: 15px;
+}
+.filter-row {
+  margin: -8px 0 16px;
+  padding: 10px 14px;
+  background: var(--stone-2);
+  border: 1px solid var(--wall-2);
+  border-left: 4px solid var(--ash);
+}
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--bone-dim);
+  font-size: 17px;
+  cursor: pointer;
+  user-select: none;
+}
+.filter-toggle input {
+  width: 16px; height: 16px;
+  accent-color: var(--torch);
+  cursor: pointer;
+}
+.filter-hint {
+  color: var(--ash);
+  font-size: 15px;
+  margin-left: 4px;
+}
+.mint-card.filtered-out { display: none; }
+.src-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--stone-2);
+  border: 1px solid var(--wall-2);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--bone-dim);
+}
+.src-chip.curated::before { content:""; width:7px; height:7px; background:var(--torch); }
+.src-chip.opensea::before { content:""; width:7px; height:7px; background:var(--moss-hot); }
+.src-chip.nft::before     { content:""; width:7px; height:7px; background:var(--ember); }
+.src-chip.pending::before { content:""; width:7px; height:7px; background:var(--ash); }
+.src-chip a { color: var(--torch); text-decoration: underline; }
+.src-chip a:hover { color: var(--torch-hot); }
+
+.mint-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+.mint-card {
+  padding: 22px 22px 18px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-left: 6px solid var(--ash);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 260px;
+  transition: transform 0.15s, border-color 0.15s;
+  position: relative;
+}
+.mint-card.featured { border-left-color: var(--torch); background: linear-gradient(to bottom, rgba(232,161,71,0.04), var(--stone-2) 30%); }
+.mint-card.green   { border-left-color: var(--moss-hot); }
+.mint-card.yellow  { border-left-color: var(--warn); }
+.mint-card.red     { border-left-color: var(--danger); }
+.mint-card:hover { transform: translateY(-2px); }
+.featured-badge {
+  position: absolute;
+  top: -8px; right: 12px;
+  padding: 2px 8px;
+  background: var(--torch);
+  color: var(--stone);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+/* "NEW" tag on the top-N recently-indexed on-chain cards. Sits opposite the
+   featured badge so the two never overlap. Blockscout's /tokens is sorted
+   newest-first at deploy time, so position IS the freshness signal — no
+   extra API call needed. When enrichment succeeds later, the mc-deployed
+   text can replace/augment the badge. */
+.new-badge {
+  position: absolute;
+  top: -8px; left: 12px;
+  padding: 2px 8px;
+  background: var(--moss-hot);
+  color: var(--stone);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+.mc-deployed {
+  display: inline-block;
+  margin-left: 6px;
+  color: var(--bone-dim);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.mc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.mc-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--bone);
+  letter-spacing: 1px;
+  margin: 0 0 4px;
+  word-break: break-word;
+  line-height: 1.25;
+}
+.mc-symbol {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--bone-dim);
+}
+.mc-score {
+  flex: 0 0 auto;
+  min-width: 50px;
+  max-width: 68px;              /* stop long verdicts like "grug approve" from squeezing the name at 260px card widths */
+  padding: 6px 8px;
+  background: var(--stone);
+  border: 2px solid var(--wall-2);
+  text-align: center;
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1.1;
+}
+.mc-score .n {
+  font-size: 18px;
+  color: var(--bone-dim);
+  display: block;
+}
+.mc-score .l {
+  font-size: 7px;
+  color: var(--bone-dim);
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  display: block;
+  word-break: break-word;       /* allow "grug approve" to wrap onto two lines rather than push the score cell wider */
+}
+.mc-score.pending { border-color: var(--ash); }
+.mc-score.pending .n { color: var(--ash); font-size: 12px; padding: 4px 0; }
+.mc-score.green  { border-color: var(--moss-hot); }
+.mc-score.green .n  { color: var(--moss-hot); }
+.mc-score.yellow { border-color: var(--warn); }
+.mc-score.yellow .n { color: var(--warn); }
+.mc-score.red    { border-color: var(--danger); }
+.mc-score.red .n    { color: var(--danger); }
+
+.mc-tagline {
+  color: var(--bone);
+  font-size: 18px;
+  line-height: 1.4;
+  margin: 0;
+}
+.mc-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  padding: 10px 0;
+  border-top: 1px dashed var(--wall-2);
+  border-bottom: 1px dashed var(--wall-2);
+  font-size: 16px;
+  color: var(--bone-dim);
+}
+.mc-meta .k {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--ash);
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 2px;
+}
+.mc-meta .v { color: var(--bone); font-size: 17px; }
+
+.mc-cta {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 6px;
+  flex-wrap: wrap;
+}
+.mc-btn {
+  flex: 1 1 auto;
+  padding: 10px 14px;
+  background: var(--moss);
+  color: var(--stone);
+  border: none;
+  border-bottom: 4px solid #4a6a3a;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: filter 0.15s, transform 0.06s;
+}
+.mc-btn:hover { filter: brightness(1.1); }
+.mc-btn:active { transform: translateY(2px); border-bottom-width: 2px; }
+.mc-btn.secondary {
+  background: transparent;
+  color: var(--torch);
+  border: 2px solid var(--torch);
+  border-bottom: 4px solid #8A5A20;
+  flex: 0 0 auto;
+  padding: 8px 12px;
+}
+.mc-btn.secondary:hover { background: var(--torch); color: var(--stone); }
+.mc-btn.disabled { opacity: 0.5; pointer-events: none; }
+
+.mc-links {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 16px;
+  color: var(--bone-dim);
+}
+.mc-links a {
+  color: var(--bone-dim);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: 1px solid var(--wall-2);
+}
+.mc-links a:hover { color: var(--torch); border-color: var(--torch); }
+.mc-timing {
+  display: inline-block;
+  padding: 3px 8px;
+  background: var(--wall);
+  color: var(--bone);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+.mc-timing.live { background: var(--moss); color: var(--stone); }
+.mc-timing.past { color: var(--bone-dim); }
+.mc-timing[data-countdown] { background: var(--wall); color: var(--torch); }
+
+.mc-head-text { min-width: 0; flex: 1; }
+.mc-avatar {
+  width: 44px; height: 44px;
+  flex: 0 0 44px;
+  border: 2px solid var(--wall-2);
+  background: var(--stone);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.mc-avatar-img {
+  width: 100%; height: 100%; object-fit: cover;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.mc-avatar-fallback {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 18px;
+  color: var(--torch);
+  background: linear-gradient(135deg, var(--wall) 0%, var(--stone-2) 100%);
+}
+.mc-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.src-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  background: var(--stone);
+  border: 1px solid var(--wall-2);
+  color: var(--bone-dim);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+.src-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.src-badge--opensea    { color: var(--moss-hot); border-color: #2a4020; }
+.src-badge--opensea::before    { background: var(--moss-hot); }
+.src-badge--nft        { color: var(--ember);   border-color: #7a2a10; }
+.src-badge--nft::before        { background: var(--ember); }
+
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--bone-dim);
+  font-size: 18px;
+}
+
+/* Submit CTA */
+.submit-panel {
+  margin-top: 48px;
+  padding: 32px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-left: 6px solid var(--torch);
+  text-align: center;
+}
+.submit-panel h2 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: var(--torch);
+  letter-spacing: 2px;
+  margin: 0 0 12px;
+}
+.submit-panel p {
+  color: var(--bone-dim);
+  font-size: 18px;
+  margin: 0 0 18px;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.submit-panel .submit-btn {
+  display: inline-block;
+  padding: 14px 26px;
+  background: var(--torch);
+  color: var(--stone);
+  border: none;
+  border-bottom: 5px solid #8A5A20;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.submit-panel .submit-btn:hover { filter: brightness(1.1); }
+
+@media (max-width: 700px) {
+  .wordmark, .tabs, .nav-right { justify-self: center; }
+  header.nav { grid-template-columns: 1fr; }
+  .tabs { flex-wrap: wrap; justify-content: center; }
+  main { padding: 24px 16px 40px; }
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <a class="wordmark" href="index.html">GRUGS</a>
+  <nav class="tabs" role="tablist">
+    <a class="tab" href="index.html">home</a>
+    <a class="tab" href="scanner.html">rug radar</a>
+    <a class="tab active" href="mints.html">mints</a>
+  </nav>
+  <div class="nav-right">
+    <a class="nav-x" href="https://twitter.com/GrugNFT" target="_blank" rel="noopener noreferrer" title="@GrugNFT on Twitter">
+      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+        <path fill="currentColor" d="M12.6 1.5h2.3l-5 5.7 5.9 7.8h-4.6l-3.6-4.7-4.1 4.7H1.2l5.4-6.1L1 1.5h4.7l3.3 4.4L12.6 1.5zm-.8 12.1h1.3L4.3 2.8H2.9l8.9 10.8z"/>
+      </svg>
+    </a>
+    <div class="chain-badge">RHC</div>
+  </div>
+</header>
+
+<main>
+  <section class="page-hero">
+    <h1>UPCOMING MINTS</h1>
+    <p class="tagline">grug rate every drop</p>
+    <p class="sub">every mint on Robinhood chain, pre-scored by rug radar.</p>
+  </section>
+
+  <aside class="disclaimer-bar" role="note">
+    <span class="dis-icon" aria-hidden="true">⚠</span>
+    <span class="dis-text">
+      <b>grug word:</b> radar not oracle. grug make mistake sometimes. always <b>do your own research</b> before you buy.
+    </span>
+  </aside>
+
+  <div id="sources-info" class="sources-info"></div>
+
+  <!-- The primary feed: scheduled drops from NFT Trencher, OpenSea SeaDrop,
+       and tribe-curated additions. Live countdown, pre-scored — the
+       "never fucking trade" board for Robinhood Chain. -->
+  <section class="mint-section" id="upcoming-section" hidden>
+    <h2 class="section-title">upcoming mints on RHC</h2>
+    <p class="section-sub">every scheduled drop on Robinhood Chain, pre-scored by rug radar. live countdown on each card.</p>
+    <div class="filter-row" id="new-filter-row" hidden>
+      <label class="filter-toggle">
+        <input type="checkbox" id="only-new">
+        <span>show only new since your last visit <span class="filter-hint" id="new-count-hint"></span></span>
+      </label>
+    </div>
+    <div id="upcoming" class="mint-grid"></div>
+  </section>
+
+  <!-- SECTION 3: past picks — hidden entirely when empty. -->
+  <section class="mint-section" id="past-section" hidden>
+    <h2 class="section-title">past picks</h2>
+    <p class="section-sub">already minted from the curated / OpenSea feeds.</p>
+    <div id="past" class="mint-grid"></div>
+  </section>
+
+  <section class="submit-panel">
+    <h2>SUBMIT A MINT</h2>
+    <p>you know a drop coming to Robinhood chain? send it to grug. grug sniff it, add to list.</p>
+    <a class="submit-btn" href="https://twitter.com/GrugNFT" target="_blank" rel="noopener noreferrer">TELL @GRUGNFT</a>
+  </section>
+</main>
+
+<script>
+const RPC_URL        = 'https://rpc.mainnet.chain.robinhood.com';
+const BLOCKSCOUT_API = 'https://robinhoodchain.blockscout.com/api/v2';
+const ZERO_ADDR      = '0x0000000000000000000000000000000000000000';
+const EIP1967_IMPL_SLOT = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc';
+const SEL = { owner: '0x8da5cb5b', supportsInterface: '0x01ffc9a7' };
+const ADMIN_SEL = { ownerMint: '40c10f19', ownerMintTo: '449a52f8', setBaseURI: '55f804b3', pause: '8456cb59' };
+
+/* Same signal weights as scanner.html so the badge here matches a full scan there. */
+const WEIGHTS = {
+  unverified: 20, proxy: 25, ownerActive: 18,
+  adminMint: 15, openBaseURI: 10, transferLock: 12,
+  topHeavy: 15,
+};
+
+async function rpc(method, params) {
+  const r = await fetch(RPC_URL, {
+    method: 'POST',
+    headers: {'content-type': 'application/json'},
+    body: JSON.stringify({jsonrpc:'2.0', id:1, method, params}),
+  });
+  const j = await r.json();
+  if (j.error) throw new Error(j.error.message || 'rpc error');
+  return j.result;
+}
+async function ethCall(to, data) {
+  try { return await rpc('eth_call', [{to, data}, 'latest']); } catch (e) { return null; }
+}
+function decodeAddress(hex) { return (hex && hex.length >= 66) ? ('0x' + hex.slice(-40).toLowerCase()) : null; }
+
+/* A lightweight scan — fewer signals than the full scanner. Just enough
+   to render a green/yellow/red badge on the card. */
+async function quickScan(addr) {
+  const code = await rpc('eth_getCode', [addr, 'latest']).catch(() => null);
+  if (!code || code === '0x' || code === '0x0') return { error: 'not_a_contract' };
+
+  const implSlot = await rpc('eth_getStorageAt', [addr, EIP1967_IMPL_SLOT, 'latest']).catch(() => null);
+  const implAddr = decodeAddress(implSlot);
+  const isProxy = !!(implAddr && implAddr !== ZERO_ADDR);
+  let scanCode = code.toLowerCase();
+  if (isProxy) {
+    const impl = await rpc('eth_getCode', [implAddr, 'latest']).catch(() => null);
+    if (impl && impl !== '0x') scanCode = impl.toLowerCase();
+  }
+
+  const has = {
+    ownerMint:   scanCode.includes(ADMIN_SEL.ownerMint),
+    ownerMintTo: scanCode.includes(ADMIN_SEL.ownerMintTo),
+    setBaseURI:  scanCode.includes(ADMIN_SEL.setBaseURI),
+    pause:       scanCode.includes(ADMIN_SEL.pause),
+  };
+
+  const ownerRaw = await ethCall(addr, SEL.owner);
+  const owner = decodeAddress(ownerRaw);
+  const ownerRenounced = owner === ZERO_ADDR;
+  const ownerCallable = ownerRaw !== null;
+
+  // Verified source from Blockscout
+  let verified = null;
+  try {
+    const r = await fetch(`${BLOCKSCOUT_API}/smart-contracts/${addr}`);
+    if (r.ok) { const j = await r.json(); verified = !!j.is_verified; }
+    else if (r.status === 404) { verified = false; }
+  } catch (e) {}
+
+  let score = 0;
+  if (verified === false) score += WEIGHTS.unverified;
+  if (isProxy) score += WEIGHTS.proxy;
+  if (ownerCallable && !ownerRenounced) score += WEIGHTS.ownerActive;
+  if (has.ownerMint || has.ownerMintTo) score += WEIGHTS.adminMint;
+  if (has.setBaseURI) score += WEIGHTS.openBaseURI;
+  if (has.pause) score += WEIGHTS.transferLock;
+  if (score > 100) score = 100;
+
+  return { score };
+}
+
+function tone(score) {
+  if (score < 25) return 'green';
+  if (score < 60) return 'yellow';
+  return 'red';
+}
+function verdict(score) {
+  if (score < 25) return 'grug approve';
+  if (score < 60) return 'grug wary';
+  return 'grug run';
+}
+
+function formatDate(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch (e) { return iso; }
+}
+function timingLabel(iso) {
+  const t = new Date(iso).getTime();
+  const now = Date.now();
+  const diff = t - now;
+  if (diff > 0) {
+    const days = Math.floor(diff / 86_400_000);
+    const hours = Math.floor((diff % 86_400_000) / 3_600_000);
+    if (days > 0) return { text: `in ${days}d ${hours}h`, cls: '' };
+    return { text: `in ${hours}h`, cls: 'live' };
+  }
+  return { text: 'minted', cls: 'past' };
+}
+
+function el(html) {
+  const t = document.createElement('template');
+  t.innerHTML = html.trim();
+  return t.content.firstChild;
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderCard(mint) {
+  const mintTs = mint.mintStart ? new Date(mint.mintStart).getTime() : null;
+  const isFuture = mintTs && mintTs > Date.now();
+  const isPast   = mintTs && mintTs <= Date.now();
+
+  const scoreHtml = mint.contract
+    ? `<span class="n">…</span><span class="l">SCORE</span>`
+    : `<span class="n">SCAN<br>PENDING</span><span class="l">NO CONTRACT YET</span>`;
+  const scoreCls  = mint.contract ? '' : 'pending';
+
+  const sniffHref = mint.contract ? `scanner.html?addr=${mint.contract}` : 'scanner.html';
+  const sniffDisabled = mint.contract ? '' : 'disabled';
+
+  const supplyLine = mint.supply ? mint.supply.toLocaleString() : '—';
+  const priceLine  = mint.priceLabel || '—';
+  // No mintStart usually means the drop is on the board but the creator
+  // hasn't committed a start time yet — "SCHEDULE TBD" is clearer than "TBA"
+  // and doesn't get confused with "TBA price".
+  const mintLine   = mint.mintStart ? formatDate(mint.mintStart) : 'SCHEDULE TBD';
+
+  // Timing cell: live countdown for future, static "minted" for past,
+  // "awaiting schedule" for drops that are on the board with no start time.
+  let timingHtml;
+  if (isFuture) {
+    timingHtml = `<span class="mc-timing" data-countdown="${mintTs}">…</span>`;
+  } else if (isPast) {
+    timingHtml = `<span class="mc-timing past">minted</span>`;
+  } else {
+    timingHtml = `<span class="mc-timing">awaiting schedule</span>`;
+  }
+
+  const links = [];
+  if (mint.twitter) links.push(`<a href="${esc(mint.twitter)}" target="_blank" rel="noopener noreferrer">twitter ↗</a>`);
+  if (mint.website) links.push(`<a href="${esc(mint.website)}" target="_blank" rel="noopener noreferrer">site ↗</a>`);
+  if (mint.discord) links.push(`<a href="${esc(mint.discord)}" target="_blank" rel="noopener noreferrer">discord ↗</a>`);
+
+  const featuredBadge = mint.badge === 'featured'
+    ? '<span class="featured-badge">FEATURED</span>' : '';
+  const featuredCls = mint.badge === 'featured' ? 'featured' : '';
+  const sourceBadge = mint.source === 'opensea'
+    ? '<span class="src-badge src-badge--opensea">via OpenSea</span>'
+    : mint.source === 'nft-drops'
+    ? '<span class="src-badge src-badge--nft">via NFT feed</span>'
+    : '';
+
+  return el(`
+    <article class="mint-card ${featuredCls}" data-addr="${esc(mint.contract || '')}" data-slug="${esc(mint.openseaSlug || '')}">
+      ${featuredBadge}
+      <div class="mc-head">
+        <div class="mc-avatar">
+          ${mint.image
+            ? `<img class="mc-avatar-img" src="${esc(mint.image)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+               <div class="mc-avatar-fallback" style="display:none">${esc((mint.name||'?').charAt(0).toUpperCase())}</div>`
+            : `<div class="mc-avatar-fallback">${esc((mint.name||'?').charAt(0).toUpperCase())}</div>`
+          }
+        </div>
+        <div class="mc-head-text">
+          <h3 class="mc-name">${esc(mint.name)}</h3>
+          <div class="mc-sub">
+            <span class="mc-symbol">$${esc(mint.symbol || '—')} · ${esc(mint.chain)}</span>
+            ${sourceBadge}
+          </div>
+        </div>
+        <div class="mc-score ${scoreCls}">
+          ${scoreHtml}
+        </div>
+      </div>
+      <p class="mc-tagline">${esc(mint.tagline || '')}</p>
+      <div class="mc-meta">
+        <div><span class="k">MINT</span><span class="v">${esc(mintLine)}</span></div>
+        <div><span class="k">${isFuture ? 'COUNTDOWN' : 'TIMING'}</span>${timingHtml}</div>
+        <div><span class="k">PRICE</span><span class="v">${esc(priceLine)}</span></div>
+        <div><span class="k">SUPPLY</span><span class="v">${esc(supplyLine)}</span></div>
+      </div>
+      ${links.length ? `<div class="mc-links">${links.join('')}</div>` : ''}
+      <div class="mc-cta">
+        <a class="mc-btn ${sniffDisabled}" href="${sniffHref}">
+          ${mint.contract ? 'FULL RUG BREAKDOWN' : 'AWAITING DEPLOY'}
+        </a>
+      </div>
+    </article>
+  `);
+}
+
+async function scanCard(card) {
+  const addr = card.dataset.addr;
+  if (!addr) return;
+  const scoreEl = card.querySelector('.mc-score');
+  try {
+    const res = await quickScan(addr);
+    if (res.error) {
+      scoreEl.className = 'mc-score pending';
+      scoreEl.innerHTML = `<span class="n">NO CODE</span><span class="l">EOA / EMPTY</span>`;
+      return;
+    }
+    const t = tone(res.score);
+    scoreEl.className = 'mc-score ' + t;
+    scoreEl.innerHTML = `<span class="n">${res.score}</span><span class="l">${verdict(res.score)}</span>`;
+    card.classList.add(t);
+  } catch (e) {
+    scoreEl.className = 'mc-score pending';
+    scoreEl.innerHTML = `<span class="n">?</span><span class="l">CHAIN ERROR</span>`;
+  }
+}
+
+function partition(mints) {
+  const now = Date.now();
+  const upcoming = [], past = [];
+  for (const m of mints) {
+    // Drops with no mintStart yet stay in upcoming — they're on the board but
+    // the schedule is TBD; showing them in "past picks" would be wrong.
+    // Live/upcoming status from the API also wins over the timestamp check:
+    // a stage that says state="live" is still relevant even if `start` was
+    // in the past by a few minutes.
+    if (!m.mintStart || m.status === 'live' || m.status === 'upcoming') {
+      upcoming.push(m);
+      continue;
+    }
+    const t = new Date(m.mintStart).getTime();
+    if (t > now) upcoming.push(m); else past.push(m);
+  }
+  upcoming.sort((a, b) => {
+    // Scheduled mints first (soonest at top), then schedule-TBD drops.
+    const at = a.mintStart ? new Date(a.mintStart).getTime() : Infinity;
+    const bt = b.mintStart ? new Date(b.mintStart).getTime() : Infinity;
+    return at - bt;
+  });
+  past.sort((a, b) => new Date(b.mintStart) - new Date(a.mintStart));
+  return { upcoming, past };
+}
+
+/* Merge curated + auto-fetched sources, dedupe by contract address (or slug). */
+function dedupe(mints) {
+  const seen = new Set();
+  const out = [];
+  for (const m of mints) {
+    const key = (m.contract || '').toLowerCase() || m.openseaSlug || m.name;
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(m);
+  }
+  return out;
+}
+
+/* Live countdown timers — one tick per second, cheap. */
+function startCountdowns() {
+  const tick = () => {
+    const now = Date.now();
+    document.querySelectorAll('[data-countdown]').forEach(el => {
+      const t = Number(el.dataset.countdown);
+      if (!t) return;
+      const diff = t - now;
+      if (diff <= 0) {
+        el.textContent = 'LIVE NOW';
+        el.classList.remove('past');
+        el.classList.add('live');
+        el.removeAttribute('data-countdown');
+        return;
+      }
+      const d = Math.floor(diff / 86_400_000);
+      const h = Math.floor((diff % 86_400_000) / 3_600_000);
+      const m = Math.floor((diff % 3_600_000) / 60_000);
+      const s = Math.floor((diff % 60_000) / 1000);
+      el.textContent = d > 0
+        ? `${d}d ${h}h ${m}m`
+        : h > 0
+          ? `${h}h ${m}m ${String(s).padStart(2,'0')}s`
+          : `${m}m ${String(s).padStart(2,'0')}s`;
+    });
+  };
+  tick();
+  setInterval(tick, 1000);
+}
+
+/* Simple concurrency pool — prevents hammering Blockscout with N parallel scans
+   when the on-chain section has 30+ cards. Runs up to `parallel` promises at a
+   time, in the order given. */
+async function pool(items, parallel, work) {
+  let i = 0;
+  const workers = new Array(parallel).fill(0).map(async () => {
+    while (i < items.length) {
+      const idx = i++;
+      try { await work(items[idx]); } catch (e) { /* keep going */ }
+    }
+  });
+  await Promise.all(workers);
+}
+
+(async () => {
+  const upcomingEl = document.getElementById('upcoming');
+  const pastEl     = document.getElementById('past');
+  const sourcesEl  = document.getElementById('sources-info');
+
+  // "New since your last visit" state. Persists the `built` timestamp of
+  // the last successful NFT-feed load so we can highlight drops that
+  // appeared or changed since then. First-ever visit → no baseline, no
+  // highlights (just save `built` for next time).
+  const LAST_BUILT_KEY = 'grug_nft_last_built';
+  const lastBuilt = (() => {
+    try { return localStorage.getItem(LAST_BUILT_KEY) || ''; }
+    catch (e) { return ''; }
+  })();
+
+  const noStore = { cache: 'no-store' };
+  const [curatedRes, openseaRes, nftRes, changesRes] = await Promise.allSettled([
+    fetch('mints.json').then(r => r.ok ? r.json() : { mints: [] }),
+    fetch('/api/opensea-drops', noStore).then(r => r.ok ? r.json() : { configured: false, mints: [] }),
+    fetch('/api/nft-drops', noStore).then(r => r.ok ? r.json() : { configured: false, mints: [] }),
+    // Only query /changes when we have a baseline — no baseline means we
+    // can't distinguish "new" from "everything." First visit gets a clean
+    // page; the baseline gets set on the way out.
+    lastBuilt
+      ? fetch('/api/nft-changes?since=' + encodeURIComponent(lastBuilt), noStore)
+          .then(r => r.ok ? r.json() : { configured: false, changedIds: [] })
+      : Promise.resolve({ configured: false, changedIds: [] }),
+  ]);
+  const curated  = curatedRes.status === 'fulfilled' ? (curatedRes.value.mints || []) : [];
+  const opensea  = openseaRes.status === 'fulfilled' ? (openseaRes.value.mints || []) : [];
+  const nftFeed  = nftRes.status === 'fulfilled' ? (nftRes.value.mints || []) : [];
+  const openseaConfigured = openseaRes.status === 'fulfilled' && openseaRes.value.configured === true;
+  const nftConfigured     = nftRes.status === 'fulfilled' && nftRes.value.configured === true;
+  const nftBuilt          = nftRes.status === 'fulfilled' ? (nftRes.value.built || null) : null;
+
+  // Build the set of contract addresses that changed since last visit.
+  // Falls through cleanly when /changes returned an error or wasn't queried.
+  const changedIds = changesRes.status === 'fulfilled' ? (changesRes.value.changedIds || []) : [];
+  const newSince = new Set(changedIds.map(x => (x.contract || '').toLowerCase()).filter(Boolean));
+
+  // Sources chip row — one chip per data source, showing count or setup state.
+  const bits = [`<span class="src-chip curated">CURATED · ${curated.length}</span>`];
+  if (openseaConfigured) {
+    bits.push(`<span class="src-chip opensea">OPENSEA · ${opensea.length}</span>`);
+  } else {
+    bits.push(`<span class="src-chip pending">OPENSEA · set up API key</span>`);
+  }
+  if (nftConfigured) {
+    bits.push(`<span class="src-chip nft">NFT · ${nftFeed.length}</span>`);
+  } else {
+    bits.push(`<span class="src-chip pending">NFT · set up API key</span>`);
+  }
+  sourcesEl.innerHTML = bits.join(' ');
+
+  // Merge every source, dedupe by contract. Order matters: curated wins over
+  // OpenSea wins over NFT if a contract appears in multiple — curated has
+  // editorial context we don't want to lose.
+  const scheduled = dedupe([...curated, ...opensea, ...nftFeed]);
+  const { upcoming, past } = partition(scheduled);
+
+  const upcomingSection = document.getElementById('upcoming-section');
+  const pastSection     = document.getElementById('past-section');
+
+  if (upcoming.length > 0) {
+    let newCount = 0;
+    upcoming.forEach(m => {
+      const card = renderCard(m);
+      if (m.contract && newSince.has(m.contract.toLowerCase())) {
+        card.dataset.fresh = '1';
+        const badge = document.createElement('span');
+        badge.className = 'new-badge';
+        badge.textContent = 'NEW';
+        card.appendChild(badge);
+        newCount++;
+      }
+      upcomingEl.appendChild(card);
+    });
+    upcomingSection.hidden = false;
+
+    // If any drops are new since last visit, show a filter toggle above
+    // the grid. Skip the row entirely when there's nothing new — the UI
+    // shouldn't advertise a feature that has nothing to offer this session.
+    if (newCount > 0) {
+      const row  = document.getElementById('new-filter-row');
+      const hint = document.getElementById('new-count-hint');
+      const cb   = document.getElementById('only-new');
+      hint.textContent = `(${newCount} new)`;
+      row.hidden = false;
+      cb.addEventListener('change', () => {
+        const onlyNew = cb.checked;
+        upcomingEl.querySelectorAll('.mint-card').forEach(card => {
+          card.classList.toggle('filtered-out', onlyNew && card.dataset.fresh !== '1');
+        });
+      });
+    }
+  }
+  if (past.length > 0) {
+    past.forEach(m => pastEl.appendChild(renderCard(m)));
+    pastSection.hidden = false;
+  }
+
+  // Persist the current build timestamp so next visit can diff against it.
+  // Only save when the NFT feed actually returned a built (otherwise we'd
+  // overwrite a good baseline with nothing on a bad load).
+  if (nftBuilt) {
+    try { localStorage.setItem(LAST_BUILT_KEY, nftBuilt); } catch (e) {}
+  }
+
+  startCountdowns();
+
+  // Throttled scan — max 3 in flight at a time so Blockscout's public tier stays happy
+  const cards = [...document.querySelectorAll('.mint-card[data-addr]')].filter(c => c.dataset.addr);
+  pool(cards, 3, scanCard);
+
+  // Enrich every card with OpenSea metadata (pfp / twitter / website / discord).
+  // In practice: on-chain deploys never carry socials, and even the OpenSea
+  // /drops feed omits twitter for a lot of collections — so we let enrichCard
+  // run over every card, and the "existing link" set prevents duplicates.
+  // Silent no-op when OPENSEA_API_KEY isn't configured.
+  const allCards = [...document.querySelectorAll('.mint-card[data-addr]')];
+  pool(allCards, 3, enrichCard);
+})();
+
+// "3d ago" / "12h ago" / "just now". Assumes ISO string or ms timestamp.
+function timeAgo(input) {
+  if (!input) return null;
+  const then = typeof input === 'number' ? input : new Date(input).getTime();
+  if (!Number.isFinite(then)) return null;
+  const diff = Date.now() - then;
+  if (diff < 0) return null;               // "created in the future" — skip rather than lie
+  const min  = 60_000;
+  const hour = 60 * min;
+  const day  = 24 * hour;
+  if (diff < 10 * min) return 'just now';
+  if (diff < hour)     return `${Math.floor(diff / min)}m ago`;
+  if (diff < day)      return `${Math.floor(diff / hour)}h ago`;
+  if (diff < 60 * day) return `${Math.floor(diff / day)}d ago`;
+  const months = Math.floor(diff / (30 * day));
+  return `${months}mo ago`;
+}
+
+async function enrichCard(card) {
+  const addr = card.dataset.addr;
+  if (!addr) return;
+  try {
+    const r = await fetch('/api/collection-detail?contract=' + addr, { cache: 'no-store' });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (!j.ok) return;
+
+    // Swap in the OpenSea PFP if the Blockscout icon was missing or generic
+    if (j.image) {
+      const img = card.querySelector('.mc-avatar-img');
+      const fb  = card.querySelector('.mc-avatar-fallback');
+      const avatar = card.querySelector('.mc-avatar');
+      if (avatar) {
+        avatar.innerHTML = `<img class="mc-avatar-img" src="${j.image.replace(/"/g,'&quot;')}" alt="" loading="lazy">`;
+      }
+    }
+
+    // Show "listed 3d ago" if OpenSea knows when the collection was
+    // registered. It's a close proxy for on-chain deploy date (usually
+    // within a day) and works when Blockscout's creation_tx_hash lookup
+    // doesn't — which is most contracts on RHC right now.
+    if (j.createdDate) {
+      const ago = timeAgo(j.createdDate);
+      if (ago) {
+        const sub = card.querySelector('.mc-sub');
+        if (sub && !sub.querySelector('.mc-deployed')) {
+          const chip = document.createElement('span');
+          chip.className = 'mc-deployed';
+          chip.textContent = '· listed ' + ago;
+          chip.title = 'listed on OpenSea ' + new Date(j.createdDate).toLocaleDateString();
+          sub.appendChild(chip);
+        }
+      }
+    }
+
+    // Add / merge social links
+    const linksBox = card.querySelector('.mc-links') || (() => {
+      const wrap = document.createElement('div');
+      wrap.className = 'mc-links';
+      const cta = card.querySelector('.mc-cta');
+      card.insertBefore(wrap, cta);
+      return wrap;
+    })();
+    const existing = new Set([...linksBox.querySelectorAll('a')].map(a => a.textContent.trim()));
+    const add = (label, href) => {
+      if (!href || existing.has(label)) return;
+      const a = document.createElement('a');
+      a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.textContent = label;
+      linksBox.appendChild(a);
+      existing.add(label);
+    };
+    add('twitter ↗', j.twitter);
+    add('site ↗',    j.website);
+    add('discord ↗', j.discord);
+    if (j.openseaUrl) add('opensea ↗', j.openseaUrl);
+  } catch (e) { /* silent — enrichment is best-effort */ }
+}
+</script>
+
+</body>
+</html>
