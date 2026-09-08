@@ -657,10 +657,12 @@ function renderCard(mint) {
   const featuredBadge = mint.badge === 'featured'
     ? '<span class="featured-badge">FEATURED</span>' : '';
   const featuredCls = mint.badge === 'featured' ? 'featured' : '';
+  // NFT-feed cards get no source badge — the vast majority of cards come from
+  // that feed, so tagging each one added noise without informational value.
+  // OpenSea cards keep their badge because they're rare enough to be worth
+  // flagging as "extra-verified via OpenSea listings."
   const sourceBadge = mint.source === 'opensea'
     ? '<span class="src-badge src-badge--opensea">via OpenSea</span>'
-    : mint.source === 'nft-drops'
-    ? '<span class="src-badge src-badge--nft">via NFT feed</span>'
     : '';
 
   return el(`
