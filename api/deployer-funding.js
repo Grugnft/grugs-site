@@ -45,13 +45,31 @@ const BACKOFFS = [500, 1500, 3000];
 const bsCache = (globalThis.__grugFundingBsCache ||= new Map());
 const outCache = (globalThis.__grugFundingOutCache ||= new Map());
 
+// Full browser-like header set — see api/explorer-info.js.
+function browserHeaders() {
+  return {
+    'user-agent': UA,
+    'accept': 'application/json, text/plain, */*',
+    'accept-language': 'en-US,en;q=0.9',
+    'accept-encoding': 'gzip, deflate, br',
+    'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'referer': 'https://robinhoodchain.blockscout.com/',
+    'origin': 'https://robinhoodchain.blockscout.com',
+  };
+}
+
 async function fetchOnce(url, timeoutMs) {
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), timeoutMs);
   try {
     const r = await fetch(url, {
       signal: ac.signal,
-      headers: { 'user-agent': UA, 'accept': 'application/json,*/*;q=0.8' },
+      headers: browserHeaders(),
     });
     clearTimeout(t);
     if (!r.ok) return { value: null, status: r.status };
@@ -64,15 +82,14 @@ async function fetchOnce(url, timeoutMs) {
   }
 }
 
-// 4-attempt retry with growing backoff, matches the other Blockscout-fronting
-// endpoints. Previous version only did 2 attempts and was noticeably worse
-// at coming back with a verdict on flaky Blockscout minutes.
+// 4-attempt retry with growing backoff. Retries on Cloudflare 403 / 429 in
+// addition to 0 / 5xx (see explorer-info.js for the reasoning).
 async function bsGet(url) {
   const now = Date.now();
   const hit = bsCache.get(url);
   if (hit && hit.expiresAt > now) return hit.value;
 
-  const flaky = r => r.value === null && (r.status === 0 || r.status >= 500);
+  const flaky = r => r.value === null && (r.status === 0 || r.status === 403 || r.status === 429 || r.status >= 500);
   let result = await fetchOnce(url, TIMEOUT_FIRST_MS);
   for (let i = 0; i < BACKOFFS.length && flaky(result); i++) {
     await new Promise(r => setTimeout(r, BACKOFFS[i]));
