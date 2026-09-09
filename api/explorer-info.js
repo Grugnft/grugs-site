@@ -55,13 +55,34 @@ const cache = (globalThis.__grugExplorerInfoCache ||= new Map());
 // the wrong shape would throw. Keep them isolated.
 const bsCache = (globalThis.__grugExplorerBsCache ||= new Map());
 
+// Full browser-like header set to pass Cloudflare's bot check. Blockscout on
+// RHC sits behind CF and rejects requests that look bare (only UA+accept)
+// with a 403. Real Chrome sends the full sec-* fetch metadata block plus
+// language/encoding hints — matching that shape passes the check.
+function browserHeaders() {
+  return {
+    'user-agent': UA,
+    'accept': 'application/json, text/plain, */*',
+    'accept-language': 'en-US,en;q=0.9',
+    'accept-encoding': 'gzip, deflate, br',
+    'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'referer': 'https://robinhoodchain.blockscout.com/',
+    'origin': 'https://robinhoodchain.blockscout.com',
+  };
+}
+
 async function fetchOnce(url, timeoutMs) {
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), timeoutMs);
   try {
     const r = await fetch(url, {
       signal: ac.signal,
-      headers: { 'user-agent': UA, 'accept': 'application/json,*/*;q=0.8' },
+      headers: browserHeaders(),
     });
     clearTimeout(t);
     if (!r.ok) return { status: r.status, value: null, error: `http_${r.status}` };
@@ -78,14 +99,16 @@ async function fetchOnce(url, timeoutMs) {
 // Returns { value, status }. Retries up to 3 times (4 attempts total) on
 // transient failures with growing backoff (500ms → 1500ms → 3000ms). Status
 // is preserved so callers can distinguish "not found (404)" from "flaky
-// (0/5xx)". Blockscout on RHC is stable under 200/404 responses but flakes
-// hard under load — 4 attempts turns that into a clean read most of the time.
+// (0/5xx/403)". We include 403 in the retry set because Cloudflare hands
+// them out for rate-limit and browser-check reasons that often clear on
+// the second attempt — a truly forbidden request will keep 403'ing and
+// eventually surface as null (unknown) to the caller.
 async function j(url) {
   const now = Date.now();
   const hit = bsCache.get(url);
   if (hit && hit.expiresAt > now) return hit.result;
 
-  const shouldRetry = r => r.value === null && (r.status === 0 || r.status >= 500);
+  const shouldRetry = r => r.value === null && (r.status === 0 || r.status === 403 || r.status === 429 || r.status >= 500);
 
   let result = await fetchOnce(url, TIMEOUT_FIRST_MS);
   for (let i = 0; i < BACKOFFS.length && shouldRetry(result); i++) {
