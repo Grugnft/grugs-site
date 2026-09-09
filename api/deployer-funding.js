@@ -28,20 +28,26 @@
  * airdrops and rounding transfers are filtered out.
  */
 
+// Function budget — see explorer-info.js. 4-attempt retry loop needs room.
+export const config = { maxDuration: 30 };
+
 const BS = 'https://robinhoodchain.blockscout.com/api/v2';
-const TIMEOUT_MS = 10000;
+const TIMEOUT_FIRST_MS = 8000;
+const TIMEOUT_RETRY_MS = 5000;
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36';
 const TTL = 15 * 60 * 1000;
 const MIN_FUNDING_ETH = 0.001;   // ignore dust
 const MAX_FUNDERS_TO_CHECK = 3;  // top-N incoming transfers to profile
+// 4 attempts total, matches the retry cadence of the other scanner endpoints.
+const BACKOFFS = [500, 1500, 3000];
 
 // Shared cache across Blockscout endpoints, keyed by URL.
 const bsCache = (globalThis.__grugFundingBsCache ||= new Map());
 const outCache = (globalThis.__grugFundingOutCache ||= new Map());
 
-async function fetchOnce(url) {
+async function fetchOnce(url, timeoutMs) {
   const ac = new AbortController();
-  const t = setTimeout(() => ac.abort(), TIMEOUT_MS);
+  const t = setTimeout(() => ac.abort(), timeoutMs);
   try {
     const r = await fetch(url, {
       signal: ac.signal,
@@ -58,16 +64,19 @@ async function fetchOnce(url) {
   }
 }
 
+// 4-attempt retry with growing backoff, matches the other Blockscout-fronting
+// endpoints. Previous version only did 2 attempts and was noticeably worse
+// at coming back with a verdict on flaky Blockscout minutes.
 async function bsGet(url) {
   const now = Date.now();
   const hit = bsCache.get(url);
   if (hit && hit.expiresAt > now) return hit.value;
 
   const flaky = r => r.value === null && (r.status === 0 || r.status >= 500);
-  let result = await fetchOnce(url);
-  if (flaky(result)) {
-    await new Promise(r => setTimeout(r, 500));
-    result = await fetchOnce(url);
+  let result = await fetchOnce(url, TIMEOUT_FIRST_MS);
+  for (let i = 0; i < BACKOFFS.length && flaky(result); i++) {
+    await new Promise(r => setTimeout(r, BACKOFFS[i]));
+    result = await fetchOnce(url, TIMEOUT_RETRY_MS);
   }
   if (result.value !== null) bsCache.set(url, { value: result.value, expiresAt: now + TTL });
   return result.value;
