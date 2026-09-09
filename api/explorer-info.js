@@ -26,13 +26,24 @@
  * blow the cache. Same server-side retry logic as api/deployer-history.
  */
 
+// Vercel function budget — 4-attempt retry loop can burn 20s+ per URL if
+// Blockscout goes fully dark, and Promise.all across 6 URLs runs them in
+// parallel so the slowest one dominates. 30s gives room for one very bad
+// upstream day without dumping half the response.
+export const config = { maxDuration: 30 };
+
 const BS = 'https://robinhoodchain.blockscout.com/api/v2';
-// Blockscout's /smart-contracts endpoint is noticeably slower than the others
-// (large payload, sometimes fetches source code inline). 10s gives it room
-// without leaving the client hanging forever.
-const TIMEOUT_MS = 10000;
+// Per-attempt timeout. First attempt gets full 8s (RHC's /smart-contracts is
+// slow), retries get 5s (if it's going to answer, it usually answers quickly
+// on the second try).
+const TIMEOUT_FIRST_MS = 8000;
+const TIMEOUT_RETRY_MS = 5000;
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36';
 const TTL = 5 * 60 * 1000;
+// Backoff sleeps BETWEEN attempts (attempt 1 → 500ms → attempt 2 → 1500ms →
+// attempt 3 → 3000ms → attempt 4). Total worst-case = 4×5s + 5s = 25s under
+// the 30s function budget.
+const BACKOFFS = [500, 1500, 3000];
 
 const cache = (globalThis.__grugExplorerInfoCache ||= new Map());
 // IMPORTANT: use a distinct globalThis key from api/deployer-history.js. That
@@ -44,9 +55,9 @@ const cache = (globalThis.__grugExplorerInfoCache ||= new Map());
 // the wrong shape would throw. Keep them isolated.
 const bsCache = (globalThis.__grugExplorerBsCache ||= new Map());
 
-async function fetchOnce(url) {
+async function fetchOnce(url, timeoutMs) {
   const ac = new AbortController();
-  const t = setTimeout(() => ac.abort(), TIMEOUT_MS);
+  const t = setTimeout(() => ac.abort(), timeoutMs);
   try {
     const r = await fetch(url, {
       signal: ac.signal,
@@ -64,9 +75,11 @@ async function fetchOnce(url) {
   }
 }
 
-// Returns { value, status }. Retries up to twice on transient failures with
-// growing backoff (500ms, then 1200ms). Status is preserved so callers can
-// distinguish "not found (404)" from "flaky (0/5xx)".
+// Returns { value, status }. Retries up to 3 times (4 attempts total) on
+// transient failures with growing backoff (500ms → 1500ms → 3000ms). Status
+// is preserved so callers can distinguish "not found (404)" from "flaky
+// (0/5xx)". Blockscout on RHC is stable under 200/404 responses but flakes
+// hard under load — 4 attempts turns that into a clean read most of the time.
 async function j(url) {
   const now = Date.now();
   const hit = bsCache.get(url);
@@ -74,14 +87,10 @@ async function j(url) {
 
   const shouldRetry = r => r.value === null && (r.status === 0 || r.status >= 500);
 
-  let result = await fetchOnce(url);
-  if (shouldRetry(result)) {
-    await new Promise(r => setTimeout(r, 500));
-    result = await fetchOnce(url);
-  }
-  if (shouldRetry(result)) {
-    await new Promise(r => setTimeout(r, 1200));
-    result = await fetchOnce(url);
+  let result = await fetchOnce(url, TIMEOUT_FIRST_MS);
+  for (let i = 0; i < BACKOFFS.length && shouldRetry(result); i++) {
+    await new Promise(r => setTimeout(r, BACKOFFS[i]));
+    result = await fetchOnce(url, TIMEOUT_RETRY_MS);
   }
   if (result.value !== null) {
     bsCache.set(url, { result, expiresAt: now + TTL });
