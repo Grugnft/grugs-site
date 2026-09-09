@@ -187,9 +187,22 @@ export default async function handler(req, res) {
   // Step 2: fetch the deployer's outgoing txs and pull out contract creations.
   const txs = await bsGet(`${BS}/addresses/${deployer}/transactions?filter=from`);
   const txItems = Array.isArray(txs?.items) ? txs.items : [];
+  // Blockscout stores the newly-created contract in one of three ways
+  // depending on version and tx state:
+  //   1) `created_contract.hash` — the modern shape
+  //   2) `to.hash` on a tx whose `tx_types` includes 'contract_creation'
+  //   3) `created_contract_address_hash` — an older key some indexers still emit
+  // Previously we only read (1), which is why deployer-history could see
+  // "2 recent deploys" while this endpoint reported 0 checked — same tx list,
+  // one field the other looked at was empty. Now we try all three.
   const otherDeploys = txItems
-    .filter(t => t.created_contract || t.tx_types?.includes?.('contract_creation'))
-    .map(t => (t.created_contract?.hash || '').toLowerCase())
+    .filter(t => t.created_contract || t.tx_types?.includes?.('contract_creation') || t.created_contract_address_hash)
+    .map(t => (
+      t.created_contract?.hash
+      || t.created_contract_address_hash
+      || (t.tx_types?.includes?.('contract_creation') ? t.to?.hash : null)
+      || ''
+    ).toLowerCase())
     .filter(a => a && a !== addr);   // exclude the target
   const others = [...new Set(otherDeploys)].slice(0, MAX_TO_CHECK);
 
