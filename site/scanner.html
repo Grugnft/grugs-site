@@ -2027,7 +2027,14 @@ async function computeRealReport(addr) {
       fundingState = 'good';
       fundingOverride = { good: f.note || 'deployer funded from an established wallet.' };
     } else if (f.verdict === 'watch') {
-      fundingOverride = { unknown: f.note || 'deployer funding source has borderline history.' };
+      // "watch" = top funder has 5-100 txs. Real projects fund from CEXes or
+      // long-lived treasuries with thousands of txs — a top funder with 19
+      // txs is a real risk indicator, not a data gap. Score it as bad and
+      // tell the user what we saw.
+      fundingState = 'bad';
+      const top = f.funders?.[0];
+      fundingOverride = { bad: f.note ||
+        `top funder (<code>${short(top?.address || '?')}</code>) has ${top?.txCount ?? '?'} txs — borderline history. real projects fund from established wallets or exchanges.` };
     } else {
       fundingOverride = { unknown: f.note || 'no clear funding transfer to profile.' };
     }
