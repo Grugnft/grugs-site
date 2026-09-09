@@ -28,14 +28,20 @@
  * upstream so repeats are cheap.
  */
 
+// Function budget — this endpoint fires up to 20 Blockscout URLs per call
+// (deploy discovery + per-contract probes for up to 10 sibling contracts) and
+// each URL now has up to 4 retry attempts. 30s ceiling matches the other
+// scanner endpoints.
+export const config = { maxDuration: 30 };
+
 const BS = 'https://robinhoodchain.blockscout.com/api/v2';
-// Match explorer-info + deployer-history's 10s ceiling — /smart-contracts
-// especially is notoriously slow on RHC. 8s was cutting off borderline
-// legit responses and forcing "unknown" verdicts.
-const TIMEOUT_MS = 10000;
+const TIMEOUT_FIRST_MS = 8000;
+const TIMEOUT_RETRY_MS = 5000;
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36';
 const TTL = 15 * 60 * 1000;
 const MAX_TO_CHECK = 10;
+// 4-attempt retry schedule matches explorer-info + deployer-history.
+const BACKOFFS = [500, 1500, 3000];
 
 // Shared with other Blockscout endpoints — keyed by URL so response shapes
 // stay consistent across the codebase.
@@ -44,9 +50,9 @@ const outCache = (globalThis.__grugPriorRugOutCache ||= new Map());
 
 // Single Blockscout fetch — returns { value, status } so the retry helper
 // can distinguish transient failures (retry) from 404s (definitive).
-async function fetchOnce(url) {
+async function fetchOnce(url, timeoutMs) {
   const ac = new AbortController();
-  const t = setTimeout(() => ac.abort(), TIMEOUT_MS);
+  const t = setTimeout(() => ac.abort(), timeoutMs);
   try {
     const r = await fetch(url, {
       signal: ac.signal,
@@ -64,22 +70,18 @@ async function fetchOnce(url) {
 }
 
 // Cached, retrying wrapper. Matches the retry pattern in explorer-info +
-// deployer-history — grows delay across attempts, only retries transient
-// (0/5xx) failures, and stores the parsed value on hit.
+// deployer-history — 4 attempts total, only retries transient (0/5xx)
+// failures, and stores the parsed value on hit.
 async function bsGet(url) {
   const now = Date.now();
   const hit = bsCache.get(url);
   if (hit && hit.expiresAt > now) return hit.value;
 
   const shouldRetry = r => r.value === null && (r.status === 0 || r.status >= 500);
-  let result = await fetchOnce(url);
-  if (shouldRetry(result)) {
-    await new Promise(r => setTimeout(r, 500));
-    result = await fetchOnce(url);
-  }
-  if (shouldRetry(result)) {
-    await new Promise(r => setTimeout(r, 1200));
-    result = await fetchOnce(url);
+  let result = await fetchOnce(url, TIMEOUT_FIRST_MS);
+  for (let i = 0; i < BACKOFFS.length && shouldRetry(result); i++) {
+    await new Promise(r => setTimeout(r, BACKOFFS[i]));
+    result = await fetchOnce(url, TIMEOUT_RETRY_MS);
   }
   if (result.value !== null) bsCache.set(url, { value: result.value, expiresAt: now + TTL });
   return result.value;
