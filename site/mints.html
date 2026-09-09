@@ -354,6 +354,10 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
 .mc-score.yellow .n { color: var(--warn); }
 .mc-score.red    { border-color: var(--danger); }
 .mc-score.red .n    { color: var(--danger); }
+/* Grey tone — engine returned confidence < 60%. The score isn't wrong; we
+   just didn't check enough of the contract to promise anything. */
+.mc-score.grey   { border-color: var(--bone-dim); }
+.mc-score.grey .n { color: var(--bone-dim); }
 
 .mc-tagline {
   color: var(--bone);
