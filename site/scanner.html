@@ -285,6 +285,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
 .gauge-fill.green  { stroke: var(--moss-hot); filter: drop-shadow(0 0 10px rgba(138,197,96,0.5)); }
 .gauge-fill.yellow { stroke: var(--warn);     filter: drop-shadow(0 0 10px rgba(255,176,64,0.5)); }
 .gauge-fill.red    { stroke: var(--danger);   filter: drop-shadow(0 0 10px rgba(255,90,74,0.5)); }
+.gauge-fill.grey   { stroke: var(--bone-dim); filter: none; }
 .gauge-num {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center; flex-direction: column;
@@ -314,6 +315,26 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
 .verdict.green  { color: var(--moss-hot); }
 .verdict.yellow { color: var(--warn); }
 .verdict.red    { color: var(--danger); }
+/* Grey verdict — for scans where too many checks didn't complete to make a
+   real judgment. Reads as "haven't got enough info to say", not "safe". */
+.verdict.grey   { color: var(--bone-dim); }
+
+/* Confidence readout — the small caption under the gauge that shows how
+   many of the 28 signals actually resolved. Colored by band so the user
+   sees at a glance whether the score is trustworthy. */
+.score-confidence {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  margin-top: 6px;
+  line-height: 1.35;
+  color: var(--bone-dim);
+}
+.score-confidence .conf-sub { color: var(--ash); font-size: 7px; }
+.score-confidence b { font-weight: normal; }
+.score-confidence.good b { color: var(--moss-hot); }
+.score-confidence.ok   b { color: var(--warn); }
+.score-confidence.low  b { color: var(--danger); }
 .contract-line {
   font-size: 18px;
   color: var(--bone-dim);
@@ -364,6 +385,10 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
 .signal.warn { border-left-color: var(--warn); }
 .signal.danger { border-left-color: var(--danger); }
 .signal.info { border-left-color: var(--ash); }
+/* Cosmetic-bad signals get a muted border — a bad flag shouldn't show
+   as green (default), but a "source unverified" also shouldn't scream in
+   orange. Bone-dim reads as "noted, not urgent". */
+.signal.cosmetic { border-left-color: var(--bone-dim); }
 
 .signal-icon {
   font-family: 'Press Start 2P', monospace;
@@ -375,6 +400,8 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
 .signal.warn .signal-icon { color: var(--warn); }
 .signal.danger .signal-icon { color: var(--danger); }
 .signal.info .signal-icon { color: var(--bone-dim); }
+.signal.cosmetic .signal-icon { color: var(--bone-dim); }
+.signal.cosmetic .signal-points { color: var(--bone-dim); }
 
 .signal-body { min-width: 0; }
 .signal-name {
@@ -559,6 +586,27 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
   letter-spacing: 0.5px;
   vertical-align: middle;
 }
+
+/* Tier badge — shown before the signal name so users can tell at a glance
+   whether a flag is category-different (DEALBREAKER = wallet-loss risk) or
+   just a common cosmetic gripe. Border-colored per tier; muted fill so the
+   flag copy stays the visual focus. */
+.tier-tag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 5px;
+  background: var(--stone);
+  border: 1px solid var(--wall-2);
+  color: var(--ash);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+.tier-tag.tier-DEALBREAKER { color: var(--danger);  border-color: var(--danger); }
+.tier-tag.tier-SERIOUS     { color: var(--warn);    border-color: var(--warn); }
+.tier-tag.tier-WARNING     { color: var(--torch);   border-color: var(--wall-2); }
+.tier-tag.tier-COSMETIC    { color: var(--bone-dim);border-color: var(--wall-2); }
 
 /* ============ LOADING ============ */
 /* The loader is the same little grug-with-a-club that runs across the
@@ -1072,6 +1120,17 @@ const SEL = {
   // Live-state checks — these are eth_call view reads, not bytecode grep.
   paused:            '0x5c975abb', // paused() view — returns bool
   getThreshold:      '0xe75235b8', // Gnosis Safe getThreshold() — reveals multi-sig
+  totalSupply:       '0x18160ddd', // totalSupply() — RPC fallback for topHeavy math
+  contractURI:       '0xe8a3d485', // contractURI() view — collection-level metadata JSON
+  baseURI:           '0x6c0360eb', // baseURI() view — collection-level base URL
+};
+
+/* Wallet-drainer selectors — see grug-score-engine.mjs for the reasoning.
+   Keep this in sync with that file's DRAINER_SEL. */
+const DRAINER_SEL = {
+  executeAddrBytes:  '1cff79cd', // execute(address,bytes) — arbitrary call from owner
+  sweepToken:        'df2ab5bb', // sweepToken(address,uint256,address)
+  executeBytesArr:   '24856bc3', // execute(bytes,bytes[]) — bulk call variant
 };
 
 /* Selectors we grep the bytecode for. Each is the first 4 bytes of
@@ -1117,116 +1176,134 @@ const IFACE = {
   ERC2981: '2a55205a',
 };
 
-/* -------- signal catalog (weights + copy) -------- */
+/* -------- signal catalog (tiered severity — rebalanced 2026-09) -------- */
 /*
- * Signal weights — rebalanced 2026-09.
+ * Weights are assigned by TIER, not per-signal. Every signal belongs to one
+ * of four buckets and inherits that bucket's weight:
  *
- * Guiding principle: a weight is how much *rug risk* this specific pattern
- * adds when triggered, not how bad the pattern is in the abstract. Owner
- * not renounced is common in legit projects (mint managers, whitelist
- * controllers) and shouldn't clobber a good score on its own. A proxy or
- * a known prior rug is nearly always terminal and should still hit hard.
+ *   DEALBREAKER  60   any single signal alone puts the contract in the red
+ *                     zone. Reserved for "user loses money if they mint":
+ *                     drainer bytecode, honeypot, prior rug, upgradeable
+ *                     proxy, mixer-funded deployer.
+ *   SERIOUS      20   strong rug indicator; 2-3 together tip past red.
+ *   WARNING       8   worth noting; common on legit new projects.
+ *   COSMETIC      2   very common on legit projects; non-diagnostic alone.
  *
- * Category totals (max damage if every signal in the group triggers):
- *   contract:    145   (transfer-sim 25 + fresh-deploy 8 + mutable-royalty 6)
- *   deployer:     90   (batch 3: +10 for freshFunding — funding-source trace)
- *   distribution: 59   (batch 3: +6 for noMarket — OpenSea sales activity)
- *   socials:      11   (no socials ≠ rug on its own)
- *   metadata:     17
- * Grand total 322, score still capped at 100. Two signals a rug pattern
- * consistently trips (freshFunding + freshWallet + noMarket) are enough by
- * themselves to move the score past 25 into "wary" without ever touching
- * contract-code signals.
+ * Verdict thresholds (unchanged):  <25 green · <60 yellow · >=60 red.
+ *
+ * Why tiers instead of custom weights: with 28 signals, per-signal weights
+ * silently over-penalized legit-but-new projects — unverified + ownerActive
+ * + adminMint + freshWallet stacked to red on projects that just hadn't
+ * shipped their reveal yet. Tiers make the score read the way a human
+ * would: a drainer is category-different from an unverified deployer.
+ *
+ * Category totals (max damage if every signal in the group triggers) —
+ * kept only as a sanity check; score is still capped at 100:
+ *   contract:    198  (proxy·60 + transferBlocked·60 + walletDrainer·60 + 4 serious·40 + 4 warning·8 + 2 cosmetic·2)
+ *   deployer:    148  (mixerFunded·60 + priorRug·60 + freshFunding·20 + emptyBalance·8 + 2 cosmetic·2)
+ *   distribution: 76  (3 serious·60 + 2 warning·16)
+ *   socials:       4  (2 cosmetic)
+ *   metadata:     18  (2 warning·16 + noRoyalty·2)
  */
+// Tiered severity model — mirrors grug-score-engine.mjs. Any change in tier
+// assignments MUST also happen in that file's SIGNAL_TIER map, or the
+// mint-card badge and the full scan will drift again.
+//   DEALBREAKER 60 · SERIOUS 20 · WARNING 8 · COSMETIC 2
+const TIERS = { DEALBREAKER: 60, SERIOUS: 20, WARNING: 8, COSMETIC: 2 };
+const T = TIERS;
+
 const CATALOG = {
   contract: [
-    { id: 'unverified',   name: 'source unverified',        weight: 15,
+    { id: 'unverified',   name: 'source unverified',        weight: T.COSMETIC, tier: 'COSMETIC',
       bad: 'contract source not published. grug cannot see what code do.',
       good: 'contract source verified on Blockscout.' },
-    { id: 'proxy',        name: 'upgradeable proxy',        weight: 25,
-      bad: 'contract is a proxy. owner can swap the logic any time.',
+    { id: 'proxy',        name: 'upgradeable proxy',        weight: T.DEALBREAKER, tier: 'DEALBREAKER',
+      bad: 'contract is a proxy. owner can swap the logic any time — dealbreaker.',
       good: 'not a proxy. code is fixed.' },
-    { id: 'ownerActive',  name: 'owner not renounced',      weight:  8,
+    { id: 'ownerActive',  name: 'owner not renounced',      weight: T.COSMETIC, tier: 'COSMETIC',
       bad: 'owner is still set. one wallet holds admin keys.',
       good: 'ownership renounced. no admin key exists.' },
-    { id: 'adminMint',    name: 'admin mint function present', weight: 10,
+    { id: 'adminMint',    name: 'admin mint function present', weight: T.WARNING, tier: 'WARNING',
       bad: 'owner-style <code>mint()</code> selector found in bytecode. supply may not be capped.',
       good: 'no admin mint selector found.' },
-    { id: 'openBaseURI',  name: 'baseURI still swappable',  weight:  8,
+    { id: 'openBaseURI',  name: 'baseURI still swappable',  weight: T.WARNING, tier: 'WARNING',
       bad: '<code>setBaseURI()</code> selector found. art can be swapped post-mint.',
       good: 'no <code>setBaseURI()</code> selector found.' },
-    { id: 'transferLock', name: 'admin transfer lock',      weight:  8,
+    { id: 'transferLock', name: 'admin transfer lock',      weight: T.COSMETIC, tier: 'COSMETIC',
       bad: '<code>pause()</code> selector found. owner can freeze transfers.',
       good: 'no pause selector found. transfers permissionless.' },
-    { id: 'currentlyPaused', name: 'contract is paused now', weight: 20,
+    { id: 'currentlyPaused', name: 'contract is paused now', weight: T.SERIOUS, tier: 'SERIOUS',
       bad: 'contract\'s <code>paused()</code> returns true. transfers are frozen right this moment.',
       good: 'contract is not paused. transfers flowing.' },
-    { id: 'withdrawExposure', name: 'owner can drain contract ETH', weight: 12,
+    { id: 'withdrawExposure', name: 'owner can drain contract ETH', weight: T.SERIOUS, tier: 'SERIOUS',
       bad: 'contract holds ETH and exposes a <code>withdraw()</code> function. owner can pull mint proceeds.',
       good: 'no withdraw exposure — contract holds no ETH or has no <code>withdraw()</code>.' },
-    { id: 'transferBlocked', name: 'transfer simulation reverts', weight: 25,
-      bad: 'simulated transfer reverts with a lock-style reason. contract may be a honeypot.',
+    { id: 'transferBlocked', name: 'transfer simulation reverts', weight: T.DEALBREAKER, tier: 'DEALBREAKER',
+      bad: 'simulated transfer reverts with a lock-style reason. contract is a honeypot — dealbreaker.',
       good: 'simulated transfer would succeed. no transfer lock detected.' },
-    { id: 'freshDeploy',     name: 'launched minutes after deploy', weight: 8,
+    { id: 'freshDeploy',     name: 'launched minutes after deploy', weight: T.WARNING, tier: 'WARNING',
       bad: 'contract minted almost immediately after deploy. no testing window — typical hot rug.',
       good: 'deploy → first mint gap looks mature. team had time to test.' },
-    { id: 'mutableRoyalty',  name: 'royalty rate mutable',   weight: 6,
+    { id: 'mutableRoyalty',  name: 'royalty rate mutable',   weight: T.WARNING, tier: 'WARNING',
       bad: '<code>setDefaultRoyalty()</code> selector found. owner can change the royalty at any time.',
       good: 'no royalty setter. royalty rate is fixed.' },
+    { id: 'walletDrainer',   name: 'wallet-drainer patterns', weight: T.DEALBREAKER, tier: 'DEALBREAKER',
+      bad: 'contract exposes arbitrary-call or token-sweep functions. approvals granted here could be swept — dealbreaker.',
+      good: 'no arbitrary-call, sweep, or execute selectors found in bytecode.' },
   ],
   deployer: [
-    { id: 'freshWallet',   name: 'deployer wallet fresh',     weight: 12,
+    { id: 'freshWallet',   name: 'deployer wallet fresh',     weight: T.COSMETIC, tier: 'COSMETIC',
       bad: 'deployer wallet is new or has little history.',
       good: 'deployer wallet has established history.' },
-    { id: 'emptyBalance',  name: 'deployer wallet empty',     weight:  8,
+    { id: 'emptyBalance',  name: 'deployer wallet empty',     weight: T.WARNING, tier: 'WARNING',
       bad: 'deployer wallet has almost no ETH. common rug pattern (deploy and vanish).',
       good: 'deployer wallet holds a healthy balance.' },
-    { id: 'firstDeploy',   name: 'first contract by deployer', weight:  5,
+    { id: 'firstDeploy',   name: 'first contract by deployer', weight: T.COSMETIC, tier: 'COSMETIC',
       bad: 'this is the deployer\'s first contract. no reputation to lean on.',
       good: 'deployer has shipped multiple contracts. some reputation.' },
-    { id: 'mixerFunded',   name: 'funded from mixer',         weight: 25,
-      bad: 'deployer funded from a privacy mixer.',
+    { id: 'mixerFunded',   name: 'funded from mixer',         weight: T.DEALBREAKER, tier: 'DEALBREAKER',
+      bad: 'deployer funded from a privacy mixer — untraceable identity, dealbreaker.',
       good: 'deployer funded from a known source.' },
-    { id: 'priorRug',      name: 'past rug on same wallet',   weight: 30,
-      bad: 'deployer wallet linked to a prior rug.',
+    { id: 'priorRug',      name: 'past rug on same wallet',   weight: T.DEALBREAKER, tier: 'DEALBREAKER',
+      bad: 'deployer wallet linked to a prior rug — dealbreaker.',
       good: 'no prior rugs on record for this deployer.' },
-    { id: 'freshFunding',  name: 'funded by fresh wallet',    weight: 10,
+    { id: 'freshFunding',  name: 'funded by fresh wallet',    weight: T.SERIOUS, tier: 'SERIOUS',
       bad: 'deployer\'s ETH came from a wallet with almost no history. disposable-identity chain.',
       good: 'deployer funded from an established source.' },
   ],
   distribution: [
-    { id: 'topHeavy',     name: 'top 10 hold > 50%',        weight: 18,
+    { id: 'topHeavy',     name: 'top 10 hold > 50%',        weight: T.SERIOUS, tier: 'SERIOUS',
       bad: 'top 10 wallets hold most of the supply. one dump kills floor.',
       good: 'top 10 hold under 50%. distribution reasonable.' },
-    { id: 'deadContract', name: 'no on-chain activity',     weight: 10,
+    { id: 'deadContract', name: 'no on-chain activity',     weight: T.WARNING, tier: 'WARNING',
       bad: 'contract has zero token transfers. nothing trading, nothing minted.',
       good: 'contract has seen live transfer activity.' },
-    { id: 'sniperStack',  name: 'block-0 sniper cluster',   weight: 15,
+    { id: 'sniperStack',  name: 'block-0 sniper cluster',   weight: T.SERIOUS, tier: 'SERIOUS',
       bad: 'cluster of wallets minted at block 0 and never traded.',
       good: 'block-0 mints spread across many wallets.' },
-    { id: 'washTrades',   name: 'wash-trade pattern',       weight: 10,
+    { id: 'washTrades',   name: 'wash-trade pattern',       weight: T.SERIOUS, tier: 'SERIOUS',
       bad: 'same wallets round-tripping. volume looks fake.',
       good: 'volume looks organic.' },
-    { id: 'noMarket',     name: 'no secondary market yet',  weight:  6,
+    { id: 'noMarket',     name: 'no secondary market yet',  weight: T.WARNING, tier: 'WARNING',
       bad: 'collection has been live but nobody has bought or sold on OpenSea.',
       good: 'collection has real secondary-market activity on OpenSea.' },
   ],
   socials: [
-    { id: 'websiteReachable', name: 'website reachable',    weight:  6,
+    { id: 'websiteReachable', name: 'website reachable',    weight: T.COSMETIC, tier: 'COSMETIC',
       bad: 'website listed in metadata but not reachable. broken or gone.',
       good: 'website in metadata is up.' },
-    { id: 'twitterExists',    name: 'twitter handle valid', weight:  5,
+    { id: 'twitterExists',    name: 'twitter handle valid', weight: T.COSMETIC, tier: 'COSMETIC',
       bad: 'twitter handle in metadata does not resolve.',
       good: 'twitter handle in metadata exists.' },
   ],
   metadata: [
-    { id: 'centralArt',   name: 'art on centralized url',   weight: 10,
+    { id: 'centralArt',   name: 'art on centralized url',   weight: T.WARNING, tier: 'WARNING',
       bad: 'metadata points to a server, not IPFS/Arweave. team can flip it.',
       good: 'metadata pinned to IPFS or Arweave.' },
-    { id: 'unpinned',     name: 'IPFS not pinned',          weight:  4,
+    { id: 'unpinned',     name: 'IPFS not pinned',          weight: T.WARNING, tier: 'WARNING',
       bad: 'metadata on IPFS but no pin found. could disappear.',
       good: 'metadata pinned by more than one provider.' },
-    { id: 'noRoyalty',    name: 'off-chain royalty only',   weight:  3,
+    { id: 'noRoyalty',    name: 'off-chain royalty only',   weight: T.COSMETIC, tier: 'COSMETIC',
       bad: 'no on-chain ERC-2981 royalty function.',
       good: 'royalty declared on-chain via EIP-2981.' },
   ],
@@ -1244,7 +1321,7 @@ const PRESETS = {
   },
   red: {
     name: 'Moonshot Yeti',
-    triggered: new Set(['unverified', 'proxy', 'ownerActive', 'adminMint', 'transferLock', 'currentlyPaused', 'withdrawExposure', 'transferBlocked', 'freshDeploy', 'mutableRoyalty', 'freshWallet', 'mixerFunded', 'freshFunding', 'topHeavy', 'sniperStack', 'noMarket', 'centralArt']),
+    triggered: new Set(['unverified', 'proxy', 'ownerActive', 'adminMint', 'transferLock', 'currentlyPaused', 'withdrawExposure', 'transferBlocked', 'freshDeploy', 'mutableRoyalty', 'walletDrainer', 'freshWallet', 'mixerFunded', 'freshFunding', 'topHeavy', 'sniperStack', 'noMarket', 'centralArt']),
   },
 };
 
@@ -1396,6 +1473,14 @@ async function readContractOnChain(addr) {
     out.hasSelector[k] = scanCode.includes(sel);
   }
 
+  // Drainer-selector scan. Any hit is a strong red flag on a mint contract —
+  // see DRAINER_SEL definition. Kept as a list so the report can show which
+  // ones fired.
+  out.drainerHits = [];
+  for (const [k, sel] of Object.entries(DRAINER_SEL)) {
+    if (scanCode.includes(sel)) out.drainerHits.push(k);
+  }
+
   // Interface support (parallel)
   const [is721, is1155, is2981, nameRaw, symbolRaw, ownerRaw] = await Promise.all([
     ethCall(addr, SEL.supportsInterface + encodeBytes4(IFACE.ERC721)),
@@ -1414,14 +1499,30 @@ async function readContractOnChain(addr) {
   out.ownerRenounced = out.owner === ZERO_ADDR;
   out.ownerCallable  = ownerRaw !== null;
 
-  // Try tokenURI(1) / uri(1) for metadata origin
+  // Metadata URI resolution — walk down four fallbacks in order so we still
+  // get a valid URI even when the contract is pre-mint (tokenURI(0/1) revert
+  // when the token doesn't exist yet).
+  //   1) tokenURI(1) — most-common ERC-721 case
+  //   2) tokenURI(0) — 0-indexed collections
+  //   3) contractURI() — collection-level metadata (OpenSea convention)
+  //   4) baseURI()    — bare base URL
+  // Any hit populates out.tokenURI so downstream metadata signals can run.
   const uriSel = out.is1155 ? SEL.uri : SEL.tokenURI;
   const uriRaw = await ethCall(addr, uriSel + encodeUint(1));
   out.tokenURI = decodeString(uriRaw);
   if (!out.tokenURI) {
-    // Try tokenURI(0) as fallback (some collections are 0-indexed)
     const uri0 = await ethCall(addr, uriSel + encodeUint(0));
     out.tokenURI = decodeString(uri0);
+  }
+  if (!out.tokenURI) {
+    const cUri = await ethCall(addr, SEL.contractURI);
+    out.tokenURI = decodeString(cUri);
+    if (out.tokenURI) out.tokenURIFromContractURI = true;
+  }
+  if (!out.tokenURI) {
+    const bUri = await ethCall(addr, SEL.baseURI);
+    out.tokenURI = decodeString(bUri);
+    if (out.tokenURI) out.tokenURIFromBaseURI = true;
   }
 
   // ============================================================================
@@ -1442,6 +1543,18 @@ async function readContractOnChain(addr) {
   const balHex = await rpc('eth_getBalance', [addr, 'latest']).catch(() => null);
   out.contractBalanceWei = balHex ? BigInt(balHex).toString() : null;
   out.contractBalanceEth = balHex ? Number(BigInt(balHex)) / 1e18 : null;
+
+  // RPC fallback for totalSupply. Blockscout's /tokens on RHC often returns
+  // null for total_supply even when the contract has one, which used to
+  // silently break topHeavy. Read totalSupply() directly and store as a
+  // string so the caller can pick whichever value it can get.
+  const supplyRaw = await ethCall(addr, SEL.totalSupply);
+  if (supplyRaw && supplyRaw !== '0x' && supplyRaw.length >= 3) {
+    try { out.totalSupplyOnChain = BigInt(supplyRaw).toString(); }
+    catch (e) { out.totalSupplyOnChain = null; }
+  } else {
+    out.totalSupplyOnChain = null;
+  }
 
   // Multi-sig owner detection — Gnosis Safe (and every safe fork) responds to
   // getThreshold() with the number of required confirmations. Any other
@@ -1512,6 +1625,7 @@ function pushSig(cats, catKey, id, state, override) {
     id,
     name: meta.name,
     weight: meta.weight,
+    tier: meta.tier, // 'DEALBREAKER' | 'SERIOUS' | 'WARNING' | 'COSMETIC'
     badText: (override && override.bad) || meta.bad,
     goodText: (override && override.good) || meta.good,
     // Signals that stay 'unknown' can carry their own explanation of *why*
@@ -1564,10 +1678,18 @@ async function computeRealReport(addr) {
   const fundingData    = fundingRes.status === 'fulfilled' ? fundingRes.value : null;
   const collectionData = collectionRes.status === 'fulfilled' ? collectionRes.value : null;
 
-  /* Third wave — socials, depend on extracted metadata */
+  /* Third wave — socials.
+     Two sources: the contract's tokenURI metadata (authoritative when the
+     team put it there) and OpenSea's collection profile (works when the
+     collection is indexed even if tokenURI isn't set yet — common for
+     pre-mint contracts). Fall back to OpenSea when tokenURI metadata
+     didn't give us anything, so socials signals actually resolve instead
+     of sitting on 'unknown'. */
   const extracted = (metadata && metadata.extracted) || {};
-  const websiteUrl = extracted.website || extracted.external_url || null;
-  const twitterRef = extracted.twitter || null;
+  const websiteUrl = extracted.website || extracted.external_url
+    || collectionData?.website || null;
+  const twitterRef = extracted.twitter
+    || collectionData?.twitter || collectionData?.twitterHandle || null;
   let socials = null;
   if (websiteUrl || twitterRef) {
     try {
@@ -1621,11 +1743,14 @@ async function computeRealReport(addr) {
   pushSig(cats, 'contract', 'openBaseURI', onChain.hasSelector.setBaseURI ? 'bad' : 'good');
   pushSig(cats, 'contract', 'transferLock', onChain.hasSelector.pause ? 'bad' : 'good');
 
-  // currentlyPaused — a live state check. Only meaningful when paused() exists;
-  // otherwise unknown with an honest explanation.
+  // currentlyPaused — a live state check. A contract without pause() in its
+  // bytecode literally cannot be paused, so that's a GOOD state, not
+  // unknown. Only leave it unknown when pause() exists but the live call
+  // failed.
   let pausedState = 'unknown', pausedOverride = null;
   if (!onChain.hasSelector.pause) {
-    pausedOverride = { unknown: 'no <code>pause()</code> selector — pause state doesn\'t apply to this contract.' };
+    pausedState = 'good';
+    pausedOverride = { good: 'no <code>pause()</code> in bytecode. contract can never be paused by anyone.' };
   } else if (onChain.isPaused === null) {
     pausedOverride = { unknown: 'contract has <code>pause()</code> but <code>paused()</code> call reverted or timed out. can\'t confirm current state.' };
   } else if (onChain.isPaused === true) {
@@ -1672,7 +1797,21 @@ async function computeRealReport(addr) {
   if (isUtility) {
     transferBlockedOverride = { unknown: 'skipped — utility contracts often have custom transfer logic by design.' };
   } else if (validTransfers.length === 0) {
-    transferBlockedOverride = { unknown: 'no transfers with token IDs visible to simulate against. can\'t test the transfer path.' };
+    // No transfers observed yet (pre-mint, or Blockscout's /transfers didn't
+    // resolve). Fall back to a bytecode heuristic: if none of the classic
+    // lock selectors (pause/transferOwnership/renounce guards) are present,
+    // it's overwhelmingly unlikely to be a honeypot. Better a heuristic
+    // 'good' than a permanent 'unknown' that leaves every pre-mint contract
+    // partially scored. Proxies stay 'unknown' since we can't grep the impl
+    // reliably.
+    if (onChain.isProxy) {
+      transferBlockedOverride = { unknown: 'contract is a proxy — bytecode grep for lock patterns isn\'t reliable. no transfers yet to simulate against, either.' };
+    } else if (!onChain.hasSelector.pause) {
+      transferBlockedState = 'good';
+      transferBlockedOverride = { good: 'no transfers to simulate against yet, but bytecode has no <code>pause()</code> or lock selectors. transfers should work normally.' };
+    } else {
+      transferBlockedOverride = { unknown: 'contract has <code>pause()</code> in bytecode but no live transfers to simulate. can\'t confirm transfers work end-to-end.' };
+    }
   } else {
     const t = validTransfers[0];
     const holder = t.to;
@@ -1748,6 +1887,22 @@ async function computeRealReport(addr) {
   // contracts where the owner can change the royalty rate later.
   pushSig(cats, 'contract', 'mutableRoyalty',
     onChain.hasSelector.setDefaultRoyalty ? 'bad' : 'good');
+
+  // walletDrainer — bytecode scan for arbitrary-call / sweep selectors that
+  // have no legit purpose on a mint contract. Any hit is bad; two-plus is
+  // near-certain. We report the specific selectors that fired so users can
+  // eyeball what looked wrong.
+  const drainerHits = Array.isArray(onChain.drainerHits) ? onChain.drainerHits : [];
+  let drainerState = 'good';
+  let drainerOverride = null;
+  if (drainerHits.length > 0) {
+    drainerState = 'bad';
+    drainerOverride = { bad:
+      `bytecode exposes ${drainerHits.length === 1 ? 'a drainer-adjacent selector' : `${drainerHits.length} drainer-adjacent selectors`}: <code>${drainerHits.join(', ')}</code>. mint contracts shouldn't have these — approvals granted to this contract could be swept.` };
+  } else {
+    drainerOverride = { good: 'no arbitrary-call, sweep or execute selectors found. mint contract keeps its hands off approvals.' };
+  }
+  pushSig(cats, 'contract', 'walletDrainer', drainerState, drainerOverride);
 
   /* --- deployer --- */
   // Prefer richer serverless data when it came back, fall back to inline explorer read
@@ -1889,7 +2044,12 @@ async function computeRealReport(addr) {
 
   let topHeavyState = 'unknown';
   let topHeavyOverride = null;
-  const hasTopHolders = explorer.topHolders && explorer.topHolders.length > 0 && explorer.totalSupply;
+  // Prefer explorer's totalSupply, fall back to the on-chain totalSupply()
+  // read when Blockscout's /tokens returned null. RHC's Blockscout is spotty
+  // on this field, and the RPC fallback rescues the signal for most
+  // contracts that were previously stuck on "unknown".
+  const supplyStr = explorer.totalSupply || onChain.totalSupplyOnChain || null;
+  const hasTopHolders = explorer.topHolders && explorer.topHolders.length > 0 && supplyStr;
   if (isUtility) {
     topHeavyOverride = { unknown: 'skipped — utility/factory contracts concentrate by design (pool contracts hold positions).' };
   } else if (!hasTopHolders) {
@@ -1897,15 +2057,19 @@ async function computeRealReport(addr) {
   }
   if (hasTopHolders && !isUtility) {
     try {
-      const total = BigInt(explorer.totalSupply);
+      const total = BigInt(supplyStr);
       if (total > 0n) {
         const top = explorer.topHolders.reduce((acc, h) => acc + BigInt(h.value || '0'), 0n);
         const pct = Number((top * 10000n) / total) / 100;
         const pctStr = pct.toFixed(1) + '%';
         topHeavyState = pct > 50 ? 'bad' : 'good';
+        // Note the source when we had to fall back to the RPC read — helpful
+        // for anyone auditing why the signal fired when the explorer panel
+        // shows a blank totalSupply.
+        const src = explorer.totalSupply ? '' : ' <span style="opacity:.6">(supply read via RPC — explorer had none)</span>';
         topHeavyOverride = {
-          bad:  `top 10 wallets hold <b>${pctStr}</b> of supply. one dump kills floor.`,
-          good: `top 10 wallets hold <b>${pctStr}</b> of supply. distribution reasonable.`,
+          bad:  `top 10 wallets hold <b>${pctStr}</b> of supply. one dump kills floor.${src}`,
+          good: `top 10 wallets hold <b>${pctStr}</b> of supply. distribution reasonable.${src}`,
         };
       }
     } catch (e) {}
@@ -2226,7 +2390,15 @@ function buildPresetReport(addr, presetKey) {
 
 /* ================ Rendering ================ */
 
-function verdictFor(score) {
+function verdictFor(score, confidence) {
+  // Low-confidence guard. A "grug approve" verdict is a promise — it should
+  // only fire when we could actually check the contract. Below 60% of the
+  // 28 signals resolving, we don't know enough to make that promise. Show
+  // "grug not sure" (grey tone) instead. The score number still displays,
+  // but the verdict tells the user why they shouldn't trust it yet.
+  if (typeof confidence === 'number' && confidence < 60) {
+    return { tone: 'grey', text: 'grug not sure', quote: 'grug\'s chain explorer went quiet. many checks did not answer. paste again in a minute.' };
+  }
   if (score < 25) return { tone: 'green',  text: 'grug approve', quote: 'grug think this one okay. grug still watch though.' };
   if (score < 60) return { tone: 'yellow', text: 'grug wary',    quote: 'something smell funny. maybe rug. maybe just messy. tribe read the flags.' };
   return              { tone: 'red',    text: 'grug run',     quote: 'grug not like this. many warning. grug go back in cave.' };
@@ -2253,12 +2425,26 @@ function iconFor(state) {
   return state === 'bad' ? '×' : state === 'good' ? '✓' : '?';
 }
 function pointsFor(sig) {
+  // Only BAD signals contribute to the score (the score is "sum of BAD-signal
+  // weights"). Good signals used to display as "−N" which read like a
+  // credit — misleading, because they don't actually subtract anything.
+  // Show them as "OK" so what's on screen matches the score math: nothing
+  // was added, nothing was subtracted.
   if (sig.state === 'bad')  return { text: '+' + sig.weight, cls: '' };
-  if (sig.state === 'good') return { text: '−' + sig.weight, cls: 'good' };
+  if (sig.state === 'good') return { text: 'OK', cls: 'good' };
   return { text: 'unknown', cls: 'unknown' };
 }
 function rowClass(sig) {
-  if (sig.state === 'bad') return sig.weight >= 18 ? 'danger' : 'warn';
+  if (sig.state === 'bad') {
+    // Border-color the row by tier so the visual weight matches the score
+    // math. DEALBREAKER/SERIOUS glow danger red; WARNING glows warn orange;
+    // COSMETIC gets a muted bone-dim border (not orange, not green —
+    // a legit new project shouldn't have every row screaming just because
+    // it's unverified/not-renounced).
+    if (sig.tier === 'DEALBREAKER' || sig.tier === 'SERIOUS') return 'danger';
+    if (sig.tier === 'WARNING') return 'warn';
+    return 'cosmetic';
+  }
   if (sig.state === 'unknown') return 'info';
   return '';
 }
@@ -2273,10 +2459,15 @@ function renderSignals(containerId, items) {
     const desc = sig.state === 'bad'  ? sig.badText
                : sig.state === 'good' ? sig.goodText
                : (sig.unknownText || 'grug still learning to sniff this one. not counted in score.');
+    // Tier badge before the name. Fallback to COSMETIC when the signal
+    // wasn't tagged (shouldn't happen — every CATALOG entry carries a tier —
+    // but the fallback keeps the row rendering rather than throwing).
+    const tier = sig.tier || 'COSMETIC';
+    const tierBadge = `<span class="tier-tag tier-${tier}" title="tier: ${tier.toLowerCase()} · weight ${sig.weight}">${tier}</span>`;
     row.innerHTML = `
       <div class="signal-icon">${iconFor(sig.state)}</div>
       <div class="signal-body">
-        <p class="signal-name">${escapeHtml(sig.name)}${sig.state === 'unknown' ? '<span class="est-tag">ESTIMATE</span>' : ''}</p>
+        <p class="signal-name">${tierBadge}${escapeHtml(sig.name)}${sig.state === 'unknown' ? '<span class="est-tag">ESTIMATE</span>' : ''}</p>
         <p class="signal-desc">${desc}</p>
       </div>
       <div class="signal-points ${p.cls}">${p.text}</div>
@@ -2534,12 +2725,34 @@ function renderReport(report) {
     metaEl.hidden = true;
   }
 
-  const v = verdictFor(report.score);
+  // Confidence = fraction of signals that resolved to good/bad. A score
+  // built off 12/28 resolved signals shouldn't read as "grug approve" —
+  // even if only 1 flag fired, we haven't actually checked whether any of
+  // the other 16 hidden ones would have caught a rug.
+  const allSigs = [].concat(...Object.values(report.cats));
+  const resolved = allSigs.filter(s => s.state === 'good' || s.state === 'bad').length;
+  const confidence = allSigs.length > 0 ? Math.round((resolved / allSigs.length) * 100) : 0;
+
+  const v = verdictFor(report.score, confidence);
   const verdictEl = document.getElementById('verdict');
   verdictEl.className = 'verdict ' + v.tone;
   verdictEl.textContent = v.text;
   document.getElementById('grug-quote').textContent = v.quote;
   document.getElementById('score-num').textContent = report.score;
+
+  // Confidence readout under the gauge. Injected the first time renderReport
+  // runs, updated in place on subsequent scans. Placed under the "/100 RISK"
+  // caption so it reads as "score 2/100 · confidence 43%".
+  let confEl = document.getElementById('score-confidence');
+  if (!confEl) {
+    confEl = document.createElement('div');
+    confEl.id = 'score-confidence';
+    confEl.className = 'score-confidence';
+    document.querySelector('.gauge-num')?.appendChild(confEl);
+  }
+  const confTone = confidence >= 80 ? 'good' : confidence >= 60 ? 'ok' : 'low';
+  confEl.className = 'score-confidence ' + confTone;
+  confEl.innerHTML = `CONF <b>${confidence}%</b><br><span class="conf-sub">${resolved}/${allSigs.length} checks</span>`;
 
   const gauge = document.getElementById('gauge-fill');
   const CIRC = 2 * Math.PI * 50;
