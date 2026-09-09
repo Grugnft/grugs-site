@@ -48,15 +48,32 @@ const BACKOFFS = [500, 1500, 3000];
 const bsCache = (globalThis.__grugPriorRugBsCache ||= new Map());
 const outCache = (globalThis.__grugPriorRugOutCache ||= new Map());
 
-// Single Blockscout fetch — returns { value, status } so the retry helper
-// can distinguish transient failures (retry) from 404s (definitive).
+// Full browser-like header set — see api/explorer-info.js. Blockscout's CF
+// rejects bare requests with 403.
+function browserHeaders() {
+  return {
+    'user-agent': UA,
+    'accept': 'application/json, text/plain, */*',
+    'accept-language': 'en-US,en;q=0.9',
+    'accept-encoding': 'gzip, deflate, br',
+    'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'referer': 'https://robinhoodchain.blockscout.com/',
+    'origin': 'https://robinhoodchain.blockscout.com',
+  };
+}
+
 async function fetchOnce(url, timeoutMs) {
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), timeoutMs);
   try {
     const r = await fetch(url, {
       signal: ac.signal,
-      headers: { 'user-agent': UA, 'accept': 'application/json,*/*;q=0.8' },
+      headers: browserHeaders(),
     });
     clearTimeout(t);
     if (!r.ok) return { value: null, status: r.status };
@@ -69,15 +86,14 @@ async function fetchOnce(url, timeoutMs) {
   }
 }
 
-// Cached, retrying wrapper. Matches the retry pattern in explorer-info +
-// deployer-history — 4 attempts total, only retries transient (0/5xx)
-// failures, and stores the parsed value on hit.
+// Cached, retrying wrapper. 4 attempts total; retries on transient failures
+// including Cloudflare 403 / 429 (see explorer-info.js).
 async function bsGet(url) {
   const now = Date.now();
   const hit = bsCache.get(url);
   if (hit && hit.expiresAt > now) return hit.value;
 
-  const shouldRetry = r => r.value === null && (r.status === 0 || r.status >= 500);
+  const shouldRetry = r => r.value === null && (r.status === 0 || r.status === 403 || r.status === 429 || r.status >= 500);
   let result = await fetchOnce(url, TIMEOUT_FIRST_MS);
   for (let i = 0; i < BACKOFFS.length && shouldRetry(result); i++) {
     await new Promise(r => setTimeout(r, BACKOFFS[i]));
