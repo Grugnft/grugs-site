@@ -44,13 +44,33 @@ const BACKOFFS = [500, 1500, 3000];
 const cache = (globalThis.__grugBsCache ||= new Map());
 const TTL = 5 * 60 * 1000;
 
+// Full browser-like header set — see api/explorer-info.js for the reasoning.
+// Blockscout's Cloudflare rejects bare requests with 403; matching real-
+// browser fetch metadata passes the check.
+function browserHeaders() {
+  return {
+    'user-agent': UA,
+    'accept': 'application/json, text/plain, */*',
+    'accept-language': 'en-US,en;q=0.9',
+    'accept-encoding': 'gzip, deflate, br',
+    'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'referer': 'https://robinhoodchain.blockscout.com/',
+    'origin': 'https://robinhoodchain.blockscout.com',
+  };
+}
+
 async function fetchOnce(url, timeoutMs) {
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), timeoutMs);
   try {
     const r = await fetch(url, {
       signal: ac.signal,
-      headers: { 'user-agent': UA, 'accept': 'application/json,*/*;q=0.8' },
+      headers: browserHeaders(),
     });
     clearTimeout(t);
     // Preserve status alongside null so the caller can skip retries on 404s
@@ -71,9 +91,9 @@ async function j(url) {
   if (hit && hit.expiresAt > now) return hit.value;
 
   // Retry up to 3 times (4 attempts total) with growing backoff on transient
-  // failures (network abort, 5xx, HTML challenge). Skip retries on 404 —
-  // that's a real "not found", not a flake.
-  const shouldRetry = r => r.value === null && (r.status === 0 || r.status >= 500);
+  // failures (network abort, 403 CF-check, 429 rate-limit, 5xx). Skip
+  // retries on 404 — that's a real "not found", not a flake.
+  const shouldRetry = r => r.value === null && (r.status === 0 || r.status === 403 || r.status === 429 || r.status >= 500);
 
   let result = await fetchOnce(url, TIMEOUT_FIRST_MS);
   for (let i = 0; i < BACKOFFS.length && shouldRetry(result); i++) {
