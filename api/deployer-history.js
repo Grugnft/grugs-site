@@ -23,11 +23,19 @@
  *   }
  */
 
+// Function budget — see explorer-info.js for the reasoning. 4-attempt retry
+// across ~6 parallel URLs needs headroom.
+export const config = { maxDuration: 30 };
+
 const BS = 'https://robinhoodchain.blockscout.com/api/v2';
-// Match explorer-info's 10s ceiling — /smart-contracts especially is a
-// slow endpoint on RHC, and 6s was cutting off legitimate responses.
-const TIMEOUT_MS = 10000;
+// Per-attempt timeouts — first attempt gets the slow endpoint the benefit of
+// the doubt, retries are tighter because if it's coming back at all it's
+// usually coming back fast on attempt 2.
+const TIMEOUT_FIRST_MS = 8000;
+const TIMEOUT_RETRY_MS = 5000;
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36';
+// Backoff between attempts. 4 attempts total.
+const BACKOFFS = [500, 1500, 3000];
 
 // In-memory cache — shared across module reloads in dev via globalThis.
 // The dev bridge cache-busts the api module per request, so a plain `const cache`
@@ -36,9 +44,9 @@ const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (
 const cache = (globalThis.__grugBsCache ||= new Map());
 const TTL = 5 * 60 * 1000;
 
-async function fetchOnce(url) {
+async function fetchOnce(url, timeoutMs) {
   const ac = new AbortController();
-  const t = setTimeout(() => ac.abort(), TIMEOUT_MS);
+  const t = setTimeout(() => ac.abort(), timeoutMs);
   try {
     const r = await fetch(url, {
       signal: ac.signal,
@@ -62,19 +70,15 @@ async function j(url) {
   const hit = cache.get(url);
   if (hit && hit.expiresAt > now) return hit.value;
 
-  // Retry up to twice with growing backoff on transient failures (network
-  // abort, 5xx, HTML challenge). Skip retries on 404 — that's a real "not
-  // found", not a flake.
+  // Retry up to 3 times (4 attempts total) with growing backoff on transient
+  // failures (network abort, 5xx, HTML challenge). Skip retries on 404 —
+  // that's a real "not found", not a flake.
   const shouldRetry = r => r.value === null && (r.status === 0 || r.status >= 500);
 
-  let result = await fetchOnce(url);
-  if (shouldRetry(result)) {
-    await new Promise(r => setTimeout(r, 500));
-    result = await fetchOnce(url);
-  }
-  if (shouldRetry(result)) {
-    await new Promise(r => setTimeout(r, 1200));
-    result = await fetchOnce(url);
+  let result = await fetchOnce(url, TIMEOUT_FIRST_MS);
+  for (let i = 0; i < BACKOFFS.length && shouldRetry(result); i++) {
+    await new Promise(r => setTimeout(r, BACKOFFS[i]));
+    result = await fetchOnce(url, TIMEOUT_RETRY_MS);
   }
   if (result.value !== null) cache.set(url, { value: result.value, expiresAt: now + TTL });
   return result.value;
