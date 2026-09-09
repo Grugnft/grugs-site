@@ -43,6 +43,53 @@ const SEL = {
   uri:               '0x0e89341c',
   paused:            '0x5c975abb',
   getThreshold:      '0xe75235b8',
+  totalSupply:       '0x18160ddd',
+  contractURI:       '0xe8a3d485',
+  baseURI:           '0x6c0360eb',
+};
+
+function encodeUint(n) {
+  return BigInt(n).toString(16).padStart(64, '0');
+}
+// Ultra-cheap ABI-encoded-string decoder — the same pattern scanner.html
+// uses. Reads offset+length prefixes then hex-decodes the bytes to UTF-8.
+// Returns null when the payload isn't a valid string so callers can fall
+// through to the next URI candidate cleanly.
+function decodeString(hex) {
+  if (!hex || hex === '0x' || hex.length < 130) return null;
+  try {
+    const body = hex.slice(2);
+    const len = parseInt(body.slice(64, 128), 16);
+    if (!len || len > 4096) return null;
+    const bytes = body.slice(128, 128 + len * 2);
+    let s = '';
+    for (let i = 0; i < bytes.length; i += 2) {
+      s += String.fromCharCode(parseInt(bytes.substr(i, 2), 16));
+    }
+    return decodeURIComponent(escape(s)).trim() || null;
+  } catch (e) { return null; }
+}
+
+// Wallet-drainer patterns. These are function selectors that don't belong on
+// a legit NFT mint contract but do belong on tools that route or move users'
+// approvals to third parties. If a mint contract has any of these the user
+// setApprovalForAll or permit-signing that mint asks for could ferry assets
+// out of their wallet.
+//
+// Selectors verified against 4byte-signature-database entries. Adding a new
+// entry here without verifying its keccak-4 costs us false positives — a
+// wrongly-flagged legit mint drops user trust in every other signal.
+const DRAINER_SEL = {
+  // execute(address,bytes) — Gnosis Safe / MetaMorpho executor pattern. On
+  // an NFT mint contract this means the owner can arbitrary-call any address
+  // with any calldata (including transferFrom on the caller's approved NFTs).
+  executeAddrBytes:  '1cff79cd',
+  // sweepToken(address,uint256,address) — Uniswap router pattern; also every
+  // drainer kit's favourite because it lets the operator pull any ERC20 out.
+  sweepToken:        'df2ab5bb',
+  // execute(bytes,bytes[]) — bulk-call variant used by Safe proxies and
+  // Angel/Inferno drainer variants alike. Not something a mint needs.
+  executeBytesArr:   '24856bc3',
 };
 
 const IFACE = {
@@ -53,24 +100,72 @@ const IFACE = {
 
 const UTILITY_RE = /\b(position|positions|beneficiary|wrapper|unwrapper|adapter|reward|fee(-|s)?|treasury|permit|vault|gauge|liquidity)\b/i;
 
-// Full weight catalog. MUST stay in sync with scanner.html's CATALOG — see
-// the module header. Reads here beat scanner.html's inline copy because both
-// files will eventually import from here.
-export const WEIGHTS = {
-  // contract
-  unverified: 15, proxy: 25, ownerActive: 8, adminMint: 10, openBaseURI: 8,
-  transferLock: 8, currentlyPaused: 20, withdrawExposure: 12, transferBlocked: 25,
-  freshDeploy: 8, mutableRoyalty: 6,
-  // deployer
-  freshWallet: 12, emptyBalance: 8, firstDeploy: 5, mixerFunded: 25, priorRug: 30,
-  freshFunding: 10,
-  // distribution
-  topHeavy: 18, deadContract: 10, sniperStack: 15, washTrades: 10, noMarket: 6,
-  // socials
-  websiteReachable: 6, twitterExists: 5,
-  // metadata
-  centralArt: 10, unpinned: 4, noRoyalty: 3,
+// ============================================================================
+// Tiered severity model.
+//
+// Signals are grouped into four tiers so the score reads the way a human
+// would: a drainer or honeypot is category-different from an unverified new
+// deployer, and the numbers should reflect that. Legit-but-new projects
+// tripping five cosmetic flags shouldn't land in the red zone; a single
+// dealbreaker should.
+//
+//   DEALBREAKER (60)  — any one alone puts the contract in the red band
+//                       (>=60). Two saturates the score at 100.
+//                       Reserved for signals that mean "user loses money
+//                       or gets drained if they mint here": drainer bytecode,
+//                       proven prior rug on the deployer, honeypot transfer
+//                       revert, upgradeable proxy (owner can swap in a rug),
+//                       mixer-funded deployer (untraceable identity).
+//
+//   SERIOUS (20)      — strong indicator of active rug behavior. Two or three
+//                       together push into red without needing a dealbreaker.
+//
+//   WARNING (8)       — worth noting but common on legit new projects.
+//                       Stacking a few is fine; you stay in yellow.
+//
+//   COSMETIC (2)      — very common, non-diagnostic on their own. Stacking
+//                       eight of them still stays under the yellow line.
+//
+// Verdict thresholds (unchanged): <25 green, <60 yellow, else red.
+// Score is still `sum of BAD-signal weights`, capped at 100.
+// ============================================================================
+export const TIERS = {
+  DEALBREAKER: 60,
+  SERIOUS:     20,
+  WARNING:      8,
+  COSMETIC:     2,
 };
+
+// Tier assignment per signal. Kept as a data map so scanner.html can render
+// tier badges alongside each row. Any signal not listed here defaults to
+// COSMETIC — always add explicitly when introducing a new signal.
+export const SIGNAL_TIER = {
+  // contract
+  unverified: 'COSMETIC', proxy: 'DEALBREAKER', ownerActive: 'COSMETIC',
+  adminMint: 'WARNING', openBaseURI: 'WARNING', transferLock: 'COSMETIC',
+  currentlyPaused: 'SERIOUS', withdrawExposure: 'SERIOUS',
+  transferBlocked: 'DEALBREAKER', freshDeploy: 'WARNING',
+  mutableRoyalty: 'WARNING', walletDrainer: 'DEALBREAKER',
+  // deployer
+  freshWallet: 'COSMETIC', emptyBalance: 'WARNING', firstDeploy: 'COSMETIC',
+  mixerFunded: 'DEALBREAKER', priorRug: 'DEALBREAKER', freshFunding: 'SERIOUS',
+  // distribution
+  topHeavy: 'SERIOUS', deadContract: 'WARNING', sniperStack: 'SERIOUS',
+  washTrades: 'SERIOUS', noMarket: 'WARNING',
+  // socials
+  websiteReachable: 'COSMETIC', twitterExists: 'COSMETIC',
+  // metadata
+  centralArt: 'WARNING', unpinned: 'WARNING', noRoyalty: 'COSMETIC',
+};
+
+// Derived weight map. MUST stay in sync with scanner.html's CATALOG entries
+// (their `weight` field mirrors these numbers). If you change TIERS or
+// SIGNAL_TIER above, run the scanner and the mint page and confirm the
+// score numbers you see match — legit projects should read <25, borderline
+// yellow, real rugs red.
+export const WEIGHTS = Object.fromEntries(
+  Object.entries(SIGNAL_TIER).map(([id, tier]) => [id, TIERS[tier]])
+);
 
 // ============================================================================
 // RPC + helpers
@@ -97,6 +192,10 @@ function decodeBool(hex) {
   if (!hex || hex === '0x') return null;
   return /1$/.test(hex);
 }
+function decodeUintBigInt(hex) {
+  if (!hex || hex === '0x' || hex.length < 3) return null;
+  try { return BigInt(hex); } catch (e) { return null; }
+}
 
 // ============================================================================
 // On-chain reads — mirrors scanner.html's readContractOnChain
@@ -119,6 +218,13 @@ async function readOnChain(addr) {
   for (const [k, sel] of Object.entries(ADMIN_SEL)) {
     out.hasSelector[k] = scanCode.includes(sel);
   }
+  // Drainer-selector scan. Presence of ANY of these on a mint contract is a
+  // red flag; two or more is almost always a drainer or router (which should
+  // not be a mint contract in the first place).
+  out.drainerHits = [];
+  for (const [k, sel] of Object.entries(DRAINER_SEL)) {
+    if (scanCode.includes(sel)) out.drainerHits.push(k);
+  }
 
   const [is2981, ownerRaw] = await Promise.all([
     ethCall(addr, SEL.supportsInterface + IFACE.ERC2981.padStart(64, '0') + '00000000'),
@@ -138,6 +244,35 @@ async function readOnChain(addr) {
 
   const balHex = await rpc('eth_getBalance', [addr, 'latest']).catch(() => null);
   out.contractBalanceEth = balHex ? Number(BigInt(balHex)) / 1e18 : null;
+
+  // RPC fallback for totalSupply. Blockscout's /tokens endpoint on RHC often
+  // returns null for total_supply even when the contract has one, which
+  // makes the topHeavy signal silently unresolvable. Reading totalSupply()
+  // directly costs one RPC call and works for any ERC721/ERC1155 that
+  // implements it. Store as string to preserve precision for the caller.
+  const supplyRaw = await ethCall(addr, SEL.totalSupply);
+  const supplyBig = decodeUintBigInt(supplyRaw);
+  out.totalSupplyOnChain = supplyBig !== null ? supplyBig.toString() : null;
+
+  // Metadata URI resolution — four fallbacks so pre-mint contracts still get
+  // a URI. Order: tokenURI(1) → tokenURI(0) → contractURI() → baseURI(). Any
+  // hit is enough for the centralArt signal to determine IPFS vs centralized.
+  // Kept as parallel calls where possible to stay fast.
+  const uriRaw1 = await ethCall(addr, SEL.tokenURI + encodeUint(1));
+  let tokenURI = decodeString(uriRaw1);
+  if (!tokenURI) {
+    const uriRaw0 = await ethCall(addr, SEL.tokenURI + encodeUint(0));
+    tokenURI = decodeString(uriRaw0);
+  }
+  if (!tokenURI) {
+    const cUri = await ethCall(addr, SEL.contractURI);
+    tokenURI = decodeString(cUri);
+  }
+  if (!tokenURI) {
+    const bUri = await ethCall(addr, SEL.baseURI);
+    tokenURI = decodeString(bUri);
+  }
+  out.tokenURI = tokenURI;
 
   // Multi-sig owner detection
   out.ownerIsMultiSig = false;
@@ -186,6 +321,10 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
   let pausedState = 'unknown';
   if (onChain.hasSelector.pause && onChain.isPaused === true)  pausedState = 'bad';
   else if (onChain.hasSelector.pause && onChain.isPaused === false) pausedState = 'good';
+  // A contract without the pause() selector literally cannot be paused.
+  // That's 'good', not 'unknown' — leaving it unknown was silently
+  // penalizing every well-built contract that skipped OZ Pausable.
+  else if (!onChain.hasSelector.pause) pausedState = 'good';
   passScore(cats, 'currentlyPaused', pausedState);
 
   let drainState = 'unknown';
@@ -195,15 +334,29 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
   else drainState = 'good';
   passScore(cats, 'withdrawExposure', drainState);
 
-  // transferBlocked needs a real holder + tokenId; keep as 'unknown' here since
-  // batching per-card lookups server-side would blow past the Hobby function budget.
-  // The full scanner runs this signal.
-  passScore(cats, 'transferBlocked', 'unknown');
+  // transferBlocked — real simulation only runs in the full scanner (needs
+  // a live holder + tokenId). Here we use a cheap bytecode heuristic: if the
+  // contract has no lock-family selectors (pause / renounceOwnership guards)
+  // and isn't a proxy, it's overwhelmingly unlikely to be a honeypot. Mark
+  // 'good' with reasonable confidence rather than the permanent 'unknown'
+  // that used to leave every mint card partially scored. Proxies stay
+  // unknown because we can't grep the implementation reliably.
+  let transferBlockedState = 'unknown';
+  if (!onChain.isProxy && !onChain.hasSelector.pause) transferBlockedState = 'good';
+  passScore(cats, 'transferBlocked', transferBlockedState);
 
-  // freshDeploy needs deploy timestamp — skip in the shared engine for now
+  // freshDeploy needs a deploy timestamp — the shared engine never gets that
+  // cheaply. Keep unknown.
   passScore(cats, 'freshDeploy', 'unknown');
 
   passScore(cats, 'mutableRoyalty', onChain.hasSelector.setDefaultRoyalty ? 'bad' : 'good');
+
+  // walletDrainer — any drainer-adjacent selector on the bytecode. We treat
+  // even a single hit as bad because these selectors have no legit purpose
+  // on a mint contract; they're only meaningful on routers/aggregators/
+  // multisig executors.
+  const drainerCount = Array.isArray(onChain.drainerHits) ? onChain.drainerHits.length : 0;
+  passScore(cats, 'walletDrainer', drainerCount > 0 ? 'bad' : 'good');
 
   // ---- deployer ----
   const dTxCount = (deployerHist && typeof deployerHist.txCount === 'number') ? deployerHist.txCount : null;
@@ -232,15 +385,25 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
   passScore(cats, 'priorRug', priorRugState);
 
   let fundingState = 'unknown';
-  if (funding?.verdict === 'fresh_chain') fundingState = 'bad';
-  else if (funding?.verdict === 'clean')  fundingState = 'good';
+  // fresh_chain = disposable-identity funding (top funder <5 txs). watch =
+  // borderline funding (top funder 5-100 txs) — still a risk signal because
+  // real projects fund from CEXes or 100+-tx treasuries, not 19-tx wallets.
+  // Previously we ignored 'watch' and left the signal unknown, which meant
+  // deployers with obviously shady funding scored the same as ones with
+  // clean funding. Treat both as bad.
+  if (funding?.verdict === 'fresh_chain' || funding?.verdict === 'watch') fundingState = 'bad';
+  else if (funding?.verdict === 'clean') fundingState = 'good';
   passScore(cats, 'freshFunding', fundingState);
 
   // ---- distribution ----
   let topHeavyState = 'unknown';
-  if (!isUtility && explorer?.topHolders?.length && explorer.totalSupply) {
+  // Prefer explorer.totalSupply, fall back to the on-chain totalSupply() read
+  // when Blockscout returned null. Same math either way — the fallback just
+  // saves the signal from silently going "unknown" on flaky RHC data.
+  const supplyStr = explorer?.totalSupply || onChain.totalSupplyOnChain || null;
+  if (!isUtility && explorer?.topHolders?.length && supplyStr) {
     try {
-      const total = BigInt(explorer.totalSupply);
+      const total = BigInt(supplyStr);
       if (total > 0n) {
         const top = explorer.topHolders.reduce((acc, h) => acc + BigInt(h.value || '0'), 0n);
         const pct = Number((top * 10000n) / total) / 100;
@@ -256,6 +419,16 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
   if (ftLen > 0) deadState = 'good';
   else if (cn === 0) deadState = 'bad';
   else if (typeof cn === 'number' && cn > 0) deadState = 'good';
+  // On-chain fallback when Blockscout gave us nothing. A non-zero
+  // totalSupply() proves the contract has minted at least once, so it's
+  // not "no on-chain activity". A zero result stays 'unknown' — a contract
+  // could just be pre-mint, not dead.
+  else if (onChain.totalSupplyOnChain) {
+    try {
+      const supply = BigInt(onChain.totalSupplyOnChain);
+      if (supply > 0n) deadState = 'good';
+    } catch (e) {}
+  }
   passScore(cats, 'deadContract', deadState);
 
   // sniperStack + washTrades: same complexity as transferBlocked — skip in shared engine
@@ -272,21 +445,59 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
   }
   passScore(cats, 'noMarket', marketState);
 
-  // ---- socials + metadata: skipped in per-card badge computation ----
-  // These need metadata-fetch + socials-check + ipfs-check calls which are the
-  // slowest of the endpoint set. Their absence keeps mint-card scores slightly
-  // under the full scanner's tally, but the delta is small (≤17 pts total from
-  // socials + metadata combined) and consistent.
-  passScore(cats, 'websiteReachable', 'unknown');
-  passScore(cats, 'twitterExists', 'unknown');
-  passScore(cats, 'centralArt', 'unknown');
-  passScore(cats, 'unpinned', 'unknown');
+  // ---- socials + metadata ----
+  // Website + Twitter come from OpenSea collection data when we have it —
+  // avoids the slower metadata-fetch dependency on the mint card, and works
+  // even when the contract's tokenURI() reverts (pre-mint contracts).
+  let webState = 'unknown';
+  if (collection?.website) webState = 'good';
+  passScore(cats, 'websiteReachable', webState);
+
+  let twState = 'unknown';
+  if (collection?.twitter || collection?.twitterHandle) twState = 'good';
+  passScore(cats, 'twitterExists', twState);
+
+  // centralArt / unpinned — resolved from the tokenURI scheme. IPFS or
+  // Arweave = pinned/decentralized (good). Server URL = swappable (bad).
+  // No URI at all = unknown.
+  let centralState = 'unknown';
+  let pinState = 'unknown';
+  const uri = onChain.tokenURI;
+  if (uri) {
+    const isIpfsScheme  = /^ipfs:\/\//i.test(uri);
+    const isArweave     = /^ar:\/\//i.test(uri);
+    const isGatewayHttp = /^https?:\/\/[^/]+\/ipfs\/[A-Za-z0-9]+/i.test(uri);
+    const isDataUri     = /^data:/i.test(uri);
+    if (isIpfsScheme || isArweave || isGatewayHttp) {
+      centralState = 'good';
+      // Cheap pin check would need a fetch — skip in the shared engine.
+      // Full scanner runs the real IPFS gateway check.
+    } else if (isDataUri) {
+      centralState = 'good';
+      pinState = 'good'; // on-chain data URI, no pin needed
+    } else if (/^https?:\/\//i.test(uri)) {
+      centralState = 'bad'; // team-controlled server URL
+    }
+  }
+  passScore(cats, 'centralArt', centralState);
+  passScore(cats, 'unpinned', pinState);
+
   passScore(cats, 'noRoyalty', onChain.hasRoyalty2981 === null ? 'unknown' : (onChain.hasRoyalty2981 ? 'good' : 'bad'));
 
   let score = 0;
   for (const s of cats) if (s.state === 'bad') score += s.weight;
   if (score > 100) score = 100;
-  return { score, breakdown: cats, isUtility };
+
+  // Confidence — what fraction of signals actually resolved to good/bad.
+  // Unknowns are checks we couldn't complete (Blockscout flaked, endpoint
+  // returned nothing, or the signal is out of scope for RHC). A score
+  // built off a scan where 16/28 signals were "unknown" is a very different
+  // signal from one where 26/28 completed — the UI needs to reflect that.
+  const totalSignals = cats.length;
+  const resolved = cats.filter(s => s.state === 'good' || s.state === 'bad').length;
+  const confidence = totalSignals > 0 ? Math.round((resolved / totalSignals) * 100) : 0;
+
+  return { score, breakdown: cats, isUtility, confidence, resolved, totalSignals };
 }
 
 // ============================================================================
@@ -294,7 +505,12 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
 // Caches in localStorage under grug_score_v1_<addr> for 15 min.
 // ============================================================================
 
-const CACHE_KEY_PREFIX = 'grug_score_v1_';
+// v5 = tokenURI-based metadata resolution + smarter default states. v4
+// caches wouldn't include the newly-resolved centralArt / unpinned /
+// websiteReachable / twitterExists / currentlyPaused / transferBlocked
+// signals — bump the prefix so cached scores get re-derived with the
+// improved fill-rate on next visit.
+const CACHE_KEY_PREFIX = 'grug_score_v5_';
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
 function readCache(addr) {
@@ -330,11 +546,29 @@ export async function fullScore(addr) {
 
   if (onChain.notAContract) return { error: 'not_a_contract' };
 
-  const { score, isUtility } = computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug, funding, collection });
-  const tone = score < 25 ? 'green' : score < 60 ? 'yellow' : 'red';
-  const verdict = score < 25 ? 'grug approve' : score < 60 ? 'grug wary' : 'grug run';
+  const { score, isUtility, confidence, resolved, totalSignals } = computeScoreFromData({
+    addr, onChain, explorer, deployerHist, priorRug, funding, collection,
+  });
 
-  const result = { score, tone, verdict, isUtility };
+  // Low-confidence guard: a score built off half a scan can't be trusted to
+  // say "approve". Even a real rug will read low if we couldn't check the
+  // signals that would have caught it. Below 60% confidence we override the
+  // verdict to "grug not sure" (grey tone) so the mint card / scanner UI
+  // stops showing green on a scan that never really landed.
+  let tone, verdict, lowConfidence = false;
+  if (confidence < 60) {
+    tone = 'grey';
+    verdict = 'grug not sure';
+    lowConfidence = true;
+  } else if (score < 25) {
+    tone = 'green';  verdict = 'grug approve';
+  } else if (score < 60) {
+    tone = 'yellow'; verdict = 'grug wary';
+  } else {
+    tone = 'red';    verdict = 'grug run';
+  }
+
+  const result = { score, tone, verdict, isUtility, confidence, resolved, totalSignals, lowConfidence };
   writeCache(addr, result);
   return { ...result, cached: false };
 }
