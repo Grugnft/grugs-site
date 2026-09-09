@@ -116,9 +116,29 @@ async function checkContract(addr) {
     bsGet(`${BS}/tokens/${addr}`),
     bsGet(`${BS}/addresses/${addr}/counters`),
   ]);
-  const isToken   = !!tk?.type;      // /tokens/{addr} 404s for non-token contracts
+  const isToken   = !!tk?.type;      // /tokens/{addr} may 404 or return null for non-token contracts
   const transfers = counters ? parseInt(counters.token_transfers_count || '0', 10) : null;
   const holders   = tk?.holders ? parseInt(tk.holders, 10) : null;
+
+  // isDead scoring — the /tokens endpoint on RHC Blockscout is inconsistent:
+  // it sometimes 404s for real ERC-721s where the counters endpoint clearly
+  // shows token_transfers_count > 0. Previously that made isDead=null and we
+  // silently skipped the contract from the rug-pattern ratio. Now we rely
+  // on `transfers` from /addresses/*/counters as the primary source of
+  // truth: any transfer means the contract is definitely alive, zero
+  // transfers with near-zero holders means dead. `isToken` is only used to
+  // skip contracts where BOTH signals are null (genuine non-token infra).
+  let isDead = null;
+  if (transfers !== null) {
+    if (transfers > 0) isDead = false;
+    else if (transfers === 0 && (!holders || holders < 5)) isDead = true;
+    // else: transfers=0 but many holders — leave null (odd shape)
+  } else if (isToken) {
+    // No counters but /tokens confirmed it's a token — fall back to the old
+    // logic so we still score something.
+    isDead = (transfers === 0 && (!holders || holders < 5));
+  }
+
   return {
     address: addr,
     name:   tk?.name || null,
@@ -127,11 +147,7 @@ async function checkContract(addr) {
     transfers,
     holders,
     isToken,
-    // Dead = token contract with zero transfers and near-zero holders. Non-token
-    // contracts get isDead:null so the caller can skip them from the pattern.
-    isDead: isToken && transfers === 0 && (!holders || holders < 5)
-      ? true
-      : (isToken && transfers !== null ? false : null),
+    isDead,
   };
 }
 
@@ -241,11 +257,22 @@ export default async function handler(req, res) {
   // meaningful — 2 dead out of 2 checked is coincidence, 4 dead out of 5
   // is a pattern.
   let verdict = 'unknown';
+  // Lowered sample-size floor from 3 to 2 — many RHC deployers only have one
+  // or two prior contracts, and requiring 3 left the signal permanently
+  // "unknown" for real-looking projects where the deployer clearly has a
+  // small clean track record. 2 clean prior deploys is genuine evidence.
+  // Rug-pattern still needs 3+ dead for confidence — one dead old contract
+  // is common noise (abandoned experiment, factory child).
   if (checked >= 3) {
     const deadRatio = dead / checked;
     if (deadRatio >= 0.6 && dead >= 3) verdict = 'rug_pattern';
     else if (deadRatio >= 0.4)         verdict = 'watch';
     else                                verdict = 'clean';
+  } else if (checked === 2) {
+    // 2 checked: only report clean or watch. Rug-pattern requires 3.
+    if (dead === 2)      verdict = 'watch';   // both dead but tiny sample
+    else if (dead === 0) verdict = 'clean';   // both alive — good sign
+    else                 verdict = 'unknown'; // 1/2 dead is coin-flip
   }
 
   const payload = {
