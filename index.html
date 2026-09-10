@@ -2207,6 +2207,8 @@ section.chamber { margin-top: 72px; }
     <button class="tab" data-tab="mint">get grug</button>
     <button class="tab" data-tab="logs">logs</button>
     <button class="tab" data-tab="smash">smash machine</button>
+    <a class="tab" href="scanner.html">rug radar</a>
+    <a class="tab" href="mints.html">mints</a>
   </nav>
   <div class="nav-right">
     <a class="nav-x" href="https://opensea.io/collection/grugs" target="_blank" rel="noopener noreferrer" title="Grugs on OpenSea" aria-label="Grugs on OpenSea">
@@ -3445,7 +3447,7 @@ function showTab(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === id));
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { if (t.dataset.tab) showTab(t.dataset.tab); }));
 // Chip/pillar → tab links (data-tab-link="mint" etc.)
 document.addEventListener('click', (e) => {
   const link = e.target.closest('[data-tab-link]');
