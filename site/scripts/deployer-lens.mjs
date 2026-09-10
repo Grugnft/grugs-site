@@ -96,6 +96,32 @@ function daysBetween(iso, now = Date.now()) {
   return Math.max(0, Math.floor((now - t) / (1000 * 60 * 60 * 24)));
 }
 
+// Factory-contract detection. Some drops (all OpenSea SeaDrop clones on RHC,
+// most Thirdweb / Manifold releases) are minted through a factory contract
+// that Blockscout records as the "creator" of the clone. The factory itself
+// has huge tx counts, a "Factory" label, and no siblings — reading it as a
+// human deployer produces confidently-wrong answers ("first-time deployer,
+// near-empty balance!"), so treat it as a distinct shape and tell the
+// reader we couldn't recover the human from bytecode alone.
+// Two signals mark a factory:
+//   1. Blockscout has labelled the address (OpenSea SeaDrop, Thirdweb, etc.)
+//   2. Chatty AND zero deploys of its own visible on the deployer-history
+//      page — a real human with 500+ txs would have deployed at least one
+//      other contract we can see. This lets us catch un-labelled factories
+//      too without misclassifying whales.
+const FACTORY_LABEL_RE = /factory/i;
+const FACTORY_TX_FLOOR = 500;
+function looksLikeFactory({ labelName, txCount, deployedContractCountRecent, hasMorePages }) {
+  if (labelName && FACTORY_LABEL_RE.test(labelName)) return true;
+  const noSiblings = (deployedContractCountRecent === 0);
+  const chatty = typeof txCount === 'number' && txCount >= FACTORY_TX_FLOOR;
+  // We only trust the "no siblings" leg when we've paged all the way — an
+  // unpaged history could hide the deploys that would tell us this isn't
+  // a factory. Better to fall through to normal reputation there.
+  if (chatty && noSiblings && !hasMorePages) return true;
+  return false;
+}
+
 // Turn a set of prior-contract scores into a headline reputation label.
 // Logic order matters — a single rug outranks any number of clean deploys
 // (the "reformed rugger" is not a shape we want to reward here).
@@ -164,20 +190,36 @@ export async function getDeployerProfile(contractAddr) {
     fetchJson('/api/prior-rug-check?addr=' + addr),
   ]);
 
-  if (!history) {
-    return { contract: contractAddr, error: 'endpoint_failed' };
-  }
-  if (!history.creator || history.error === 'no_creator_found') {
-    // Genuine "we couldn't find who deployed this" — return a skeleton so
-    // the UI can render the "no deployer info" state instead of crashing.
+  // deployer-history occasionally returns no_creator_found even when the
+  // OTHER two endpoints have successfully found the deployer through their
+  // own Blockscout call (same code path, different call timing — Blockscout
+  // is intermittently 403-ing addresses/<contract>). Fall back through the
+  // three endpoints in order so a flaky-history scan still produces a
+  // profile instead of hiding the panel entirely.
+  const historyCreator = history?.creator || null;
+  const fundingCreator = funding?.deployer || null;
+  const priorRugCreator = priorRug?.deployer || null;
+  const creator = historyCreator || fundingCreator || priorRugCreator;
+
+  if (!creator) {
     return { contract: contractAddr, deployer: null, error: 'no_creator_found' };
   }
+  const partial = !historyCreator;   // history missing → limited wallet metadata
 
-  // Prior deploys the history endpoint already found. Some may still refer
-  // to the target contract if the server-side filter missed it; drop those.
-  const priorAddrs = (history.deployedContracts || [])
-    .map(d => (d.address || '').toLowerCase())
-    .filter(a => a && a !== addr);
+  // Prior deploys: history is the richest source (timestamps + block numbers)
+  // but if it failed we can still pull the addresses from prior-rug-check.
+  // Merge both so a normal scan gets the full history payload and a partial
+  // scan still gets the sibling contract list.
+  const historyByAddr = new Map(
+    (history?.deployedContracts || []).map(d => [(d.address || '').toLowerCase(), d])
+  );
+  const priorRugByAddr = new Map(
+    (priorRug?.others || []).map(d => [(d.address || '').toLowerCase(), d])
+  );
+  const priorAddrsSet = new Set();
+  for (const a of historyByAddr.keys()) if (a && a !== addr) priorAddrsSet.add(a);
+  for (const a of priorRugByAddr.keys()) if (a && a !== addr) priorAddrsSet.add(a);
+  const priorAddrs = [...priorAddrsSet];
 
   // Score up to SCORE_CAP prior contracts in parallel (capped concurrency).
   // Any that fail return an error object so the profile still renders.
@@ -199,11 +241,10 @@ export async function getDeployerProfile(contractAddr) {
     }
   });
 
-  // Merge scored + un-scored into a single priorDeploys list, keeping deploy
-  // timestamps from the history payload so the UI can show "when."
-  const historyByAddr = new Map(
-    (history.deployedContracts || []).map(d => [(d.address || '').toLowerCase(), d])
-  );
+  // Merge scored + un-scored into a single priorDeploys list. Timestamps
+  // come from history when available (richer signal), falling back to null
+  // when we're on the partial-scan path where only prior-rug-check knew
+  // about the siblings.
   const scoredByAddr = new Map(scoredResults.map(r => [r.addr, r]));
   const priorDeploys = priorAddrs.map(a => {
     const h = historyByAddr.get(a) || {};
@@ -228,7 +269,14 @@ export async function getDeployerProfile(contractAddr) {
   const deadCount = priorRug?.dead ?? 0;
   const aliveCount = priorRug?.alive ?? 0;
 
-  const { reputation, line: reputationLine } = computeReputation({
+  const isFactoryDeployed = looksLikeFactory({
+    labelName: history?.labelName,
+    txCount: history?.txCount,
+    deployedContractCountRecent: history?.deployedContractCountRecent,
+    hasMorePages: history?.hasMorePages,
+  });
+
+  let { reputation, line: reputationLine } = computeReputation({
     scoredCount: scoredPrior.length,
     cleanCount,
     ruggedCount,
@@ -237,8 +285,18 @@ export async function getDeployerProfile(contractAddr) {
     totalPrior: priorAddrs.length,
   });
 
-  const walletFirstSeenAt = history.firstTxTimestampSeen || null;
-  const walletAgeIsExact = !history.hasMorePages;   // if there are more pages, the true first tx could be older
+  // Factory-deployed override: whatever the sibling math said is meaningless
+  // when the "creator" is a factory contract. Say so directly instead of
+  // reporting "first-time deployer" for what is often a serial deployer's
+  // fifth SeaDrop clone.
+  if (isFactoryDeployed) {
+    reputation = 'factory-deployed';
+    const via = history?.labelName || 'a factory contract';
+    reputationLine = `minted via ${via}. grug can't see the human wallet from bytecode alone — read the contract outline above as the main signal.`;
+  }
+
+  const walletFirstSeenAt = history?.firstTxTimestampSeen || null;
+  const walletAgeIsExact = history ? !history.hasMorePages : false;
   const walletAgeDays = daysBetween(walletFirstSeenAt);
 
   const fundingSummary = funding ? {
@@ -249,27 +307,32 @@ export async function getDeployerProfile(contractAddr) {
     note: funding.note || null,
   } : null;
 
-  const redFlags = collectRedFlags({
+  // Factory-deployed contracts skip the wallet-shape red flags — a factory
+  // always has "0 balance" (funds are pulled at mint time) and looks nothing
+  // like a fresh rugger's throwaway wallet even though the raw numbers can.
+  const redFlags = isFactoryDeployed ? [] : collectRedFlags({
     walletAgeDays,
     walletAgeIsExact,
-    txCount: history.txCount,
-    coinBalanceEth: history.coinBalanceEth,
+    txCount: history?.txCount,
+    coinBalanceEth: history?.coinBalanceEth,
     funding: fundingSummary,
     reputation,
   });
 
   const profile = {
     contract: addr,
-    deployer: history.creator,
-    deployTimestamp: history.deployTimestamp || null,
-    deployBlock: history.deployBlock ?? null,
+    deployer: creator,
+    partial,
+    isFactoryDeployed,
+    deployTimestamp: history?.deployTimestamp || null,
+    deployBlock: history?.deployBlock ?? null,
     walletAgeDays,
     walletFirstSeenAt,
     walletAgeIsExact,
-    txCount: history.txCount ?? null,
-    tokenTransferCount: history.tokenTransferCount ?? null,
-    coinBalanceEth: history.coinBalanceEth ?? null,
-    labelName: history.labelName || null,
+    txCount: history?.txCount ?? null,
+    tokenTransferCount: history?.tokenTransferCount ?? null,
+    coinBalanceEth: history?.coinBalanceEth ?? null,
+    labelName: history?.labelName || null,
     funding: fundingSummary,
     priorDeploys,
     priorDeployStats: {
