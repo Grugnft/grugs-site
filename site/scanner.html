@@ -551,6 +551,94 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
 .cap-chip.warn { color: var(--warn); }
 .cap-chip.bad  { color: var(--danger); }
 
+/* Contract outline panel — plain-English narrative of what the specific
+   contract does. Divided into subsections (intro, structure, this-instance,
+   claim-checks) with icon-prefixed lines. Tone-coded icons match the same
+   colour vocabulary the rest of the report uses. */
+.outline-body { display: flex; flex-direction: column; gap: 14px; }
+.outline-intro {
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--bone);
+  padding: 12px 14px;
+  background: var(--stone);
+  border-left: 4px solid var(--torch);
+}
+.outline-intro b { color: var(--torch); }
+.outline-section-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--bone-dim);
+  margin: 4px 0 2px;
+  text-transform: lowercase;
+}
+.outline-line {
+  display: flex;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--bone);
+}
+.outline-line .icon {
+  flex: 0 0 18px;
+  text-align: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.outline-line.good .icon    { color: var(--moss-hot); }
+.outline-line.warn .icon    { color: var(--warn); }
+.outline-line.bad  .icon    { color: var(--danger); }
+.outline-line.neutral .icon { color: var(--bone-dim); }
+.outline-line code {
+  font-size: 14px;
+  padding: 1px 4px;
+  background: var(--stone);
+  border: 1px solid var(--wall-2);
+  color: var(--torch);
+  border-radius: 2px;
+}
+
+/* "Claim vs reality" mini-panel — surfaces the specific things devs
+   typically PROMISE ("art immutable", "ownership renounced") and whether
+   the current on-chain state proves those promises true. */
+.outline-claims {
+  margin-top: 4px;
+  padding: 12px 14px;
+  background: var(--stone);
+  border: 1px dashed var(--wall-2);
+}
+.outline-claims .claims-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--torch);
+  margin-bottom: 8px;
+  text-transform: lowercase;
+}
+.outline-claim {
+  display: flex;
+  gap: 10px;
+  padding: 3px 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.outline-claim .verdict {
+  flex: 0 0 auto;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  align-self: flex-start;
+}
+.outline-claim .verdict.true  { color: var(--moss-hot); border: 1px solid var(--moss-hot); }
+.outline-claim .verdict.false { color: var(--danger);   border: 1px solid var(--danger); }
+.outline-claim .verdict.unknown { color: var(--bone-dim); border: 1px solid var(--wall-2); }
+.outline-claim .body { color: var(--bone); }
+.outline-claim .body small { color: var(--bone-dim); display: block; }
+
 /* Banner for edge-case contract kinds where the standard rug signals don't
    map cleanly. Right now: utility/factory contracts. Sits below the score,
    above the signal list, so the reader knows "the signals below have been
@@ -867,6 +955,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
     <a class="tab" href="index.html">home</a>
     <a class="tab active" href="scanner.html">rug radar</a>
     <a class="tab" href="mints.html">mints</a>
+    <a class="tab" href="watchlist.html">watchlist<span style="display:inline-block;margin-left:6px;padding:1px 5px;font-family:'Press Start 2P',monospace;font-size:7px;letter-spacing:1px;background:var(--ember);color:var(--bone);vertical-align:middle;">NEW</span></a>
   </nav>
   <div class="nav-right">
     <a class="nav-x" href="https://twitter.com/GrugNFT" target="_blank" rel="noopener noreferrer" title="@GrugNFT on Twitter" aria-label="Twitter">
@@ -1001,6 +1090,17 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
     <section id="deployer-profile" class="info-panel" hidden>
       <h3 class="panel-title">deployer profile</h3>
       <div class="panel-grid" id="deployer-profile-grid"></div>
+    </section>
+
+    <!-- Contract outline block — plain-English narrative of what this
+         specific contract actually does. Sits above the capabilities chip
+         grid so a non-technical reader can grasp the shape of the contract
+         at a glance without having to know what "EIP-1167" or "setBaseURI"
+         mean. See buildOutline() for the sentence-writing logic. -->
+    <section id="contract-outline" class="info-panel" hidden>
+      <h3 class="panel-title">contract outline</h3>
+      <p class="panel-sub">what this contract actually does — in plain english.</p>
+      <div class="outline-body" id="outline-body"></div>
     </section>
 
     <!-- Contract capabilities block — informational, not scored. Lists what
@@ -1174,6 +1274,45 @@ const IFACE = {
   ERC721:  '80ac58cd',
   ERC1155: 'd9b67a26',
   ERC2981: '2a55205a',
+};
+
+/* EIP-1167 minimal-proxy bytecode. When the ENTIRE contract bytecode is:
+     0x363d3d373d3d3d363d73<20-byte impl>5af43d82803e903d91602b57fd5bf3
+   the contract is a "clone" — 45 bytes of shell that DELEGATECALL every
+   incoming call to the implementation address baked into the bytecode.
+   Unlike an EIP-1967 upgradeable proxy, this impl CANNOT be changed after
+   deploy (it's part of the bytecode itself), so a minimal proxy is not the
+   same rug-risk as an upgradeable proxy — we treat it separately in the
+   outline. */
+const MINIMAL_PROXY_RE = /^0x363d3d373d3d3d363d73([0-9a-f]{40})5af43d82803e903d91602b57fd5bf3$/i;
+
+/* Known-good implementation addresses on Robinhood Chain. When a minimal
+   proxy points at one of these, the shell is a standardised template used
+   by many drops — we tell the reader that plainly, then focus the outline
+   on what varies per instance (owner state, baseURI, deployer track record)
+   instead of listing generic ERC-721 selectors.
+
+   Extend this map when a new template is spotted on RHC — the entry keys
+   MUST be lowercase for the O(1) lookup below. */
+const KNOWN_TEMPLATES = {
+  // OpenSea SeaDrop cloneable ERC-721. Powers most OpenSea "primary drops"
+  // on RHC — verified source on Blockscout, well-audited, standard mint
+  // mechanics via the SeaDrop singleton.
+  '0x09a26fc8fcef18192e267d7a6da9dfb4be81dd6a': {
+    name: 'OpenSea SeaDrop',
+    plain: "OpenSea's standard mint contract",
+    trusted: true,
+  },
+};
+
+/* Extra selectors used only by the outline (kept out of ADMIN_SEL so the
+   score signal loop stays unchanged). withdrawAddr in particular is the
+   red-flag pattern where the owner can pull ETH to any recipient — worth
+   surfacing loudly on a custom contract, benign on a SeaDrop clone which
+   never uses this flow. */
+const OUTLINE_SEL = {
+  withdrawAddr:  '51cff8d9', // withdraw(address) — send ETH to any address
+  maxSupply:     'd5abeb01', // maxSupply() view
 };
 
 /* -------- signal catalog (tiered severity — rebalanced 2026-09) -------- */
@@ -1457,20 +1596,52 @@ async function readContractOnChain(addr) {
   }
   out.codeSize = (code.length - 2) / 2;
 
-  // Proxy check
+  // Upgradeable proxy check (EIP-1967 — impl address in a fixed storage slot).
   const implSlot = await rpc('eth_getStorageAt', [addr, EIP1967_IMPL_SLOT, 'latest']).catch(() => null);
   const implAddr = decodeAddress(implSlot);
   out.isProxy = !!(implAddr && implAddr !== ZERO_ADDR);
   out.implAddr = out.isProxy ? implAddr : null;
 
-  // If proxy, scan impl bytecode for admin selectors (that's where they live)
+  // Minimal-proxy (EIP-1167) check — impl is embedded in the bytecode itself.
+  // A clone weighs ~45 bytes and DELEGATECALL every call to a master. Very
+  // common on RHC (OpenSea's SeaDrop factory spins one up per drop). Unlike
+  // EIP-1967 the impl is IMMUTABLE, so we don't mark it as a rug-risk proxy;
+  // instead we surface the master's address so the outline can inspect it.
+  out.isMinimalProxy = false;
+  out.minimalProxyImpl = null;
+  const mp = code.match(MINIMAL_PROXY_RE);
+  if (mp) {
+    out.isMinimalProxy = true;
+    out.minimalProxyImpl = ('0x' + mp[1]).toLowerCase();
+  }
+
+  // Effective address we scan for selectors: an upgradeable-proxy scans the
+  // EIP-1967 impl, a minimal proxy scans the EIP-1167 master, everything else
+  // scans its own bytecode.
+  out.effectiveImpl = out.implAddr || out.minimalProxyImpl || null;
+
+  // If we resolved an implementation (either proxy kind), scan its bytecode
+  // for admin selectors — the shell has none of its own.
   let scanCode = code.toLowerCase();
-  if (out.isProxy) {
-    const implCode = await rpc('eth_getCode', [implAddr, 'latest']).catch(() => null);
+  if (out.effectiveImpl) {
+    const implCode = await rpc('eth_getCode', [out.effectiveImpl, 'latest']).catch(() => null);
     if (implCode && implCode !== '0x') scanCode = implCode.toLowerCase();
   }
   for (const [k, sel] of Object.entries(ADMIN_SEL)) {
     out.hasSelector[k] = scanCode.includes(sel);
+  }
+  // Outline-only selectors — kept separate from ADMIN_SEL so the score
+  // signal loop (shared with mints.html) stays untouched.
+  out.hasSelector.withdrawAddr = scanCode.includes(OUTLINE_SEL.withdrawAddr);
+  out.hasSelector.maxSupply    = scanCode.includes(OUTLINE_SEL.maxSupply);
+
+  // Template match — is the effective impl a known standardised template?
+  // Cheap O(1) lookup against the curated registry above. When we know the
+  // template, the outline switches into "known template" mode and stops
+  // listing generic ERC-721 selectors that would be the same for every clone.
+  out.template = null;
+  if (out.effectiveImpl && KNOWN_TEMPLATES[out.effectiveImpl]) {
+    out.template = { addr: out.effectiveImpl, ...KNOWN_TEMPLATES[out.effectiveImpl] };
   }
 
   // Drainer-selector scan. Any hit is a strong red flag on a mint contract —
@@ -2330,6 +2501,17 @@ async function computeRealReport(addr) {
       is1155: onChain.is1155,
       hasRoyalty2981: onChain.hasRoyalty2981,
       isProxy: onChain.isProxy,
+      // NEW: proxy-shape detail the outline panel narrates. Kept alongside
+      // isProxy so the existing signal loop and contract-capabilities chip
+      // grid stay unchanged.
+      isMinimalProxy:   onChain.isMinimalProxy,
+      minimalProxyImpl: onChain.minimalProxyImpl,
+      effectiveImpl:    onChain.effectiveImpl,
+      template:         onChain.template,
+      // Drainer-selector hits (list of selector keys). The outline lists the
+      // specific selectors when any fired so a reader can look them up. The
+      // score already accounts for these via the walletDrainer signal.
+      drainerHits:      onChain.drainerHits || [],
       ownerRenounced: onChain.ownerRenounced,
       ownerCallable: onChain.ownerCallable,
       owner: onChain.owner,
@@ -2344,6 +2526,10 @@ async function computeRealReport(addr) {
       compilerVersion: explorer.compilerVersion,
       holdersCount: explorer.holdersCount,
       totalSupply: explorer.totalSupply,
+      // Direct on-chain supply as a string. Passed through so the outline
+      // can render a live number even when Blockscout's /tokens payload was
+      // missing (the usual RHC failure mode).
+      totalSupplyOnChain: onChain.totalSupplyOnChain,
       creator: explorer.creator,
       deployer: deployerHist ? {
         address: deployerHist.creator,
@@ -2694,6 +2880,279 @@ function renderContractCapabilities(report) {
   el.hidden = false;
 }
 
+/**
+ * buildOutline(report) — produces a plain-English outline of what the
+ * contract actually does. Mode-aware: a SeaDrop clone reads very different
+ * to a custom unverified contract, and this function chooses the sentences
+ * that make sense for each shape.
+ *
+ * Return shape:
+ *   {
+ *     mode:      'known_template' | 'custom_verified' | 'custom_unverified'
+ *                | 'upgradeable_proxy'
+ *     intro:     [{ text, bold? }]           — opening summary paragraph
+ *     structure: [{ icon, tone, html }]      — facts about the contract shape
+ *     specifics: [{ icon, tone, html }]      — this-instance details
+ *     claims:    [{ verdict, claim, detail }] — dev-claim checklist
+ *   }
+ *
+ * The renderer paints straight from these fields — no template picking on
+ * the render side.
+ */
+function buildOutline(report) {
+  const r = report.raw || {};
+  const sel = r.hasSelector || {};
+  const name = report.name || null;
+  const symbol = report.symbol || null;
+
+  // --- Mode decision ---
+  // Priority: upgradeable proxy > known template > custom (verified vs not)
+  let mode;
+  if (r.isProxy)                            mode = 'upgradeable_proxy';
+  else if (r.template)                      mode = 'known_template';
+  else if (r.verified === true)             mode = 'custom_verified';
+  else                                      mode = 'custom_unverified';
+
+  const intro = [];
+  const structure = [];
+  const specifics = [];
+  const claims = [];
+
+  // --- Intro paragraph, mode-specific ---
+  if (mode === 'upgradeable_proxy') {
+    intro.push({ text: 'this contract is an ' });
+    intro.push({ text: 'upgradeable proxy', bold: true });
+    intro.push({ text: '. the admin can swap the logic at any time. every fact below reflects the ' });
+    intro.push({ text: 'current implementation only', bold: true });
+    intro.push({ text: ' — it can change without warning.' });
+  } else if (mode === 'known_template') {
+    intro.push({ text: 'this is ' });
+    intro.push({ text: r.template.plain || r.template.name, bold: true });
+    intro.push({ text: ' — a standard template used by many drops on RHC. the mint mechanics themselves are trustworthy. the question is whether the humans behind THIS instance stay honest.' });
+  } else if (mode === 'custom_verified') {
+    intro.push({ text: 'this is a ' });
+    intro.push({ text: 'custom contract', bold: true });
+    intro.push({ text: ' — bespoke code, not a standard template. the source IS verified so it can be read on blockscout.' });
+  } else {
+    intro.push({ text: 'this is a ' });
+    intro.push({ text: 'custom, unverified contract', bold: true });
+    intro.push({ text: '. every function it exposes matters, and none of it can be independently audited from public code.' });
+  }
+
+  // --- Structure section ---
+  const tokenType = report.tokenType || (r.is721 ? 'ERC-721' : r.is1155 ? 'ERC-1155' : 'unknown token type');
+  structure.push({ icon: '●', tone: 'neutral', html: `token type: <b>${escapeHtml(tokenType)}</b>` });
+
+  if (mode === 'upgradeable_proxy' && r.effectiveImpl) {
+    structure.push({ icon: '🚨', tone: 'bad', html: `implementation lives at <code>${short(r.effectiveImpl)}</code> and can be swapped by the admin` });
+  } else if (mode === 'known_template') {
+    structure.push({ icon: '✓', tone: 'good', html: `matches ${escapeHtml(r.template.name)} template at <code>${short(r.template.addr)}</code> (verified, well-known)` });
+  } else if (r.isMinimalProxy && r.minimalProxyImpl) {
+    // Custom master via minimal proxy — impl is fixed but not a known template.
+    structure.push({ icon: '⚠', tone: 'warn', html: `minimal-proxy clone of <code>${short(r.minimalProxyImpl)}</code> — not a template we recognise` });
+  }
+
+  // Verification state — only meaningful for contracts we're expecting to
+  // read source for. Skip on known-template clones: the 45-byte shell has
+  // no source of its own by definition, and the master (which does the
+  // actual work) is already flagged as "verified, well-known" one line up.
+  if (mode !== 'known_template') {
+    if (r.verified === true) {
+      structure.push({ icon: '✓', tone: 'good', html: `source code is verified${r.compilerVersion ? ` (solc ${escapeHtml(r.compilerVersion.replace(/^v/, ''))})` : ''}` });
+    } else if (r.verified === false) {
+      structure.push({ icon: '⚠', tone: 'warn', html: 'source code is <b>not verified</b> on blockscout' });
+    }
+  }
+
+  // --- This-instance specifics ---
+  if (name || symbol) {
+    const bits = [];
+    if (name)   bits.push(`<b>${escapeHtml(name)}</b>`);
+    if (symbol) bits.push(`$${escapeHtml(symbol)}`);
+    specifics.push({ icon: '●', tone: 'neutral', html: `named ${bits.join(' · ')}` });
+  }
+
+  // Owner state
+  if (r.ownerCallable && r.owner) {
+    if (r.ownerRenounced) {
+      specifics.push({ icon: '✓', tone: 'good', html: 'ownership <b>renounced</b> — no admin key exists' });
+    } else if (r.ownerIsMultiSig) {
+      const nOf = r.ownerThreshold ? ` (${r.ownerThreshold}-of-N required)` : '';
+      specifics.push({ icon: '✓', tone: 'good', html: `owner is a <b>multi-sig</b>${nOf} — softens the admin key` });
+    } else {
+      specifics.push({ icon: '⚠', tone: 'warn', html: `owner active — single wallet <code>${short(r.owner)}</code> still controls admin` });
+    }
+  } else if (!r.ownerCallable) {
+    specifics.push({ icon: '●', tone: 'neutral', html: 'no <code>owner()</code> function — either no admin key, or non-standard access control' });
+  }
+
+  // Supply
+  const supplyStr = r.totalSupply || r.totalSupplyOnChain || null;
+  if (supplyStr) {
+    let n = null;
+    try { n = Number(BigInt(supplyStr)); } catch (e) {}
+    if (n !== null && !Number.isNaN(n)) {
+      specifics.push({ icon: '●', tone: 'neutral', html: `current supply: <b>${n.toLocaleString()}</b>` });
+    }
+  }
+
+  // Art / metadata hosting
+  const uri = r.tokenURI;
+  if (uri) {
+    if (/^ipfs:\/\//i.test(uri) || /^ar:\/\//i.test(uri) || /^https?:\/\/[^/]+\/ipfs\//i.test(uri)) {
+      specifics.push({ icon: '✓', tone: 'good', html: 'art hosted on <b>ipfs / arweave</b> — decentralised, cannot be silently rehosted' });
+    } else if (/^data:/i.test(uri)) {
+      specifics.push({ icon: '✓', tone: 'good', html: 'art baked in as a <b>data uri</b> — fully on-chain' });
+    } else if (/^https?:\/\//i.test(uri)) {
+      specifics.push({ icon: '⚠', tone: 'warn', html: 'art hosted on a <b>centralised server</b> — the team can swap the images by changing their server' });
+    }
+  }
+
+  // Contract-held ETH (only interesting if there's a withdraw path)
+  const bal = r.contractBalanceEth;
+  const hasWithdrawPath = sel.withdraw || sel.withdrawAddr;
+  if (typeof bal === 'number' && bal >= 0.001 && hasWithdrawPath) {
+    specifics.push({ icon: '⚠', tone: 'warn', html: `contract currently holds ~<b>${bal.toFixed(4)} eth</b> and an admin withdraw path exists` });
+  }
+
+  // Deployer track record (from the /api/deployer-history endpoint)
+  const d = r.deployer;
+  if (d && typeof d.deployedContractCountRecent === 'number') {
+    const others = d.deployedContractCountRecent - 1; // exclude this one
+    if (others >= 1) {
+      const priorRug = r.priorRug;
+      if (priorRug && priorRug.verdict === 'clean' && priorRug.alive > 0) {
+        specifics.push({ icon: '✓', tone: 'good', html: `deployer has ${others} other deploy${others === 1 ? '' : 's'} nearby — <b>${priorRug.alive} still alive</b>` });
+      } else if (priorRug && priorRug.verdict === 'rug_pattern') {
+        specifics.push({ icon: '🚨', tone: 'bad', html: `deployer has ${others} other deploy${others === 1 ? '' : 's'} nearby — <b>${priorRug.dead} went dead</b> (serial pattern)` });
+      } else if (priorRug && priorRug.verdict === 'watch') {
+        specifics.push({ icon: '⚠', tone: 'warn', html: `deployer has ${others} other recent deploy${others === 1 ? '' : 's'} — mixed track record, worth glancing at` });
+      } else {
+        specifics.push({ icon: '●', tone: 'neutral', html: `deployer has ${others} other recent deploy${others === 1 ? '' : 's'}` });
+      }
+    } else if (others === 0 && d.txCount !== null && d.txCount < 20) {
+      specifics.push({ icon: '⚠', tone: 'warn', html: `deployer wallet is fresh — <b>${d.txCount} txs total</b> and no other deploys` });
+    }
+  }
+
+  // --- Claim checks ---
+  // For each common dev promise, decide TRUE / FALSE / UNKNOWN from live state.
+  claims.push(evalClaim_verified(r));
+  claims.push(evalClaim_immutableArt(r, sel));
+  claims.push(evalClaim_renouncedOwnership(r));
+  claims.push(evalClaim_noAdminWithdraw(r, sel));
+  claims.push(evalClaim_noPause(r, sel));
+  claims.push(evalClaim_noDrainer(r));
+
+  return { mode, intro, structure, specifics, claims: claims.filter(Boolean) };
+}
+
+// --- Individual claim evaluators ---
+// Each returns { verdict: 'true'|'false'|'unknown', claim, detail } or null
+// to omit. Kept as small pure functions so they're easy to add to / test.
+
+function evalClaim_verified(r) {
+  // On a known-template clone the shell has no source of its own; what
+  // matters is that the master is a well-known audited template, which
+  // the structure block already surfaces. Skip the claim entirely so we
+  // don't mislead the reader with a "verified: FALSE" line that means
+  // something different for clones than for custom contracts.
+  if (r.template) return null;
+  if (r.verified === true)  return { verdict: 'true',  claim: '"verified & readable"',   detail: 'source code is on blockscout.' };
+  if (r.verified === false) return { verdict: 'false', claim: '"verified & readable"',   detail: 'source code is not on blockscout — nothing to audit.' };
+  return null;
+}
+function evalClaim_immutableArt(r, sel) {
+  // Art is immutable only if there's NO setBaseURI/setTokenURI, OR ownership
+  // has been renounced (so nobody can call them).
+  const hasSetter = !!(sel.setBaseURI || sel.setTokenURI);
+  if (!hasSetter) {
+    return { verdict: 'true', claim: '"immutable art"', detail: 'no <code>setBaseURI</code> / <code>setTokenURI</code> in the bytecode.' };
+  }
+  if (r.ownerRenounced) {
+    return { verdict: 'true', claim: '"immutable art"', detail: 'setters exist, but ownership is renounced — nobody can call them.' };
+  }
+  // No standard owner() to name — someone still gates the setter via
+  // non-standard access control. Honest about the unknown: we know the
+  // setter is protected, we can't say by whom.
+  if (!r.ownerCallable) {
+    return { verdict: 'false', claim: '"immutable art"', detail: '<code>setBaseURI</code> exists but access control is non-standard — grug can\'t say WHO is authorised, only that someone is.' };
+  }
+  return { verdict: 'false', claim: '"immutable art"', detail: 'the owner can still call <code>setBaseURI</code>. art can be swapped after mint.' };
+}
+function evalClaim_renouncedOwnership(r) {
+  if (!r.ownerCallable) return null; // no owner() → nothing to renounce
+  if (r.ownerRenounced) return { verdict: 'true',  claim: '"ownership renounced"', detail: 'owner is the zero address.' };
+  return { verdict: 'false', claim: '"ownership renounced"', detail: r.ownerIsMultiSig ? 'owner is a multi-sig — better than a single wallet, but not renounced.' : `owner is still <code>${short(r.owner)}</code>.` };
+}
+function evalClaim_noAdminWithdraw(r, sel) {
+  const hasWithdraw     = !!sel.withdraw;
+  const hasWithdrawAddr = !!sel.withdrawAddr;
+  if (!hasWithdraw && !hasWithdrawAddr) {
+    return { verdict: 'true', claim: '"no admin ETH withdraw"', detail: 'no <code>withdraw()</code> path in the bytecode.' };
+  }
+  // Same care as immutableArt: if there's no standard owner(), we know a
+  // withdraw path exists but not who is authorised to call it.
+  const whoGate = r.ownerCallable && !r.ownerRenounced ? 'owner' : 'somebody';
+  if (hasWithdrawAddr) {
+    return { verdict: 'false', claim: '"no admin ETH withdraw"', detail: `<code>withdraw(address)</code> exists — ${whoGate} can send eth to any wallet.` };
+  }
+  return { verdict: 'false', claim: '"no admin ETH withdraw"', detail: `<code>withdraw()</code> exists — ${whoGate} can pull eth held by the contract.` };
+}
+function evalClaim_noPause(r, sel) {
+  if (!sel.pause) return { verdict: 'true', claim: '"no pause / transfer freeze"', detail: 'no <code>pause()</code> in the bytecode — transfers can\'t be frozen.' };
+  if (r.isPaused === true) return { verdict: 'false', claim: '"no pause / transfer freeze"', detail: 'contract is <b>currently paused</b> — transfers are frozen right now.' };
+  return { verdict: 'false', claim: '"no pause / transfer freeze"', detail: '<code>pause()</code> exists — owner can freeze transfers at any time.' };
+}
+function evalClaim_noDrainer(r) {
+  const hits = Array.isArray(r.drainerHits) ? r.drainerHits : [];
+  if (hits.length === 0) return { verdict: 'true', claim: '"no wallet-drainer selectors"', detail: 'no known drainer patterns in the bytecode.' };
+  return { verdict: 'false', claim: '"no wallet-drainer selectors"', detail: `bytecode contains: ${hits.map(h => '<code>' + escapeHtml(h) + '</code>').join(', ')}.` };
+}
+
+function renderContractOutline(report) {
+  const el = document.getElementById('contract-outline');
+  const body = document.getElementById('outline-body');
+  if (!el || !body) return;
+
+  // Presets / errored scans don't have the raw data we need.
+  if (report.mode !== 'real' || !report.raw) {
+    el.hidden = true;
+    body.innerHTML = '';
+    return;
+  }
+
+  const outline = buildOutline(report);
+
+  const introHtml = outline.intro.map(seg =>
+    seg.bold ? `<b>${escapeHtml(seg.text)}</b>` : escapeHtml(seg.text)
+  ).join('');
+
+  const linesHtml = (lines) => lines.map(l =>
+    `<div class="outline-line ${l.tone}"><span class="icon">${l.icon}</span><span class="text">${l.html}</span></div>`
+  ).join('');
+
+  const claimsHtml = outline.claims.length ? `
+    <div class="outline-claims">
+      <div class="claims-title">claim vs reality</div>
+      ${outline.claims.map(c => `
+        <div class="outline-claim">
+          <span class="verdict ${c.verdict}">${c.verdict === 'true' ? 'TRUE' : c.verdict === 'false' ? 'FALSE' : '?'}</span>
+          <span class="body">${c.claim}<small>${c.detail}</small></span>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+
+  body.innerHTML = `
+    <div class="outline-intro">${introHtml}</div>
+    ${outline.structure.length ? `<div class="outline-section-title">structure</div>${linesHtml(outline.structure)}` : ''}
+    ${outline.specifics.length ? `<div class="outline-section-title">this instance</div>${linesHtml(outline.specifics)}` : ''}
+    ${claimsHtml}
+  `;
+  el.hidden = false;
+}
+
 function renderContractNote(report) {
   const el = document.getElementById('contract-note');
   if (!el) return;
@@ -2773,6 +3232,7 @@ function renderReport(report) {
   renderDataQuality(report);
   renderContractNote(report);
   renderDeployerProfile(report);
+  renderContractOutline(report);
   renderContractCapabilities(report);
   renderSignals('signals-contract',     report.cats.contract);
   renderSignals('signals-deployer',     report.cats.deployer);
