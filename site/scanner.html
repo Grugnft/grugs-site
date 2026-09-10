@@ -2998,15 +2998,39 @@ async function enrichDeployerProfile(contractAddr) {
   const grid = document.getElementById('deployer-profile-grid');
   const short = a => a ? a.slice(0, 6) + '…' + a.slice(-4) : '—';
 
-  // Factory-deployed override: the sync grid painted stats for the factory
-  // contract itself (37k txs, 0 balance, "ERC721SeaDropCloneFactory" label)
-  // which read like red flags but describe the factory, not the human who
-  // called it. Replace the grid with a factory-aware summary that names
-  // what's actually going on.
-  if (profile.isFactoryDeployed && grid) {
+  // Factory-minted overrides — two paths.
+  //   (a) unmasked: backend walked the creation tx and found the human. Show
+  //       DEPLOYED VIA <factory> alongside HUMAN OWNER <address + stats>.
+  //   (b) hidden:   we know it was a factory but the walk failed. Say so.
+  if (profile.isFactoryDeployed && profile.factoryUnmasked && grid) {
+    const factoryLbl = profile.factoryLabel || short(profile.factoryAddress);
+    const cells = [
+      `<div class="cell"><span class="k">DEPLOYED VIA</span>` +
+      `<span class="v"><a href="${EXPLORER}${escapeHtml(profile.factoryAddress || '')}" target="_blank" rel="noopener">${escapeHtml(factoryLbl)}</a></span></div>`,
+      `<div class="cell"><span class="k">HUMAN OWNER</span>` +
+      `<span class="v"><a href="${EXPLORER}${escapeHtml(profile.deployer || '')}" target="_blank" rel="noopener">${escapeHtml(short(profile.deployer))}</a></span></div>`,
+    ];
+    // Wallet stats for the human, when available.
+    if (typeof profile.walletAgeDays === 'number') {
+      const tone = profile.walletAgeDays < 30 ? 'warn' : 'good';
+      cells.push(`<div class="cell"><span class="k">WALLET AGE</span><span class="v ${tone}">${profile.walletAgeDays}d</span></div>`);
+    }
+    if (typeof profile.txCount === 'number') {
+      const tone = profile.txCount < 20 ? 'bad' : profile.txCount > 500 ? 'good' : '';
+      cells.push(`<div class="cell"><span class="k">TX COUNT</span><span class="v ${tone}">${profile.txCount.toLocaleString()}</span></div>`);
+    }
+    if (typeof profile.coinBalanceEth === 'number') {
+      const tone = profile.coinBalanceEth < 0.0001 ? 'bad' : profile.coinBalanceEth > 0.05 ? 'good' : '';
+      const val = profile.coinBalanceEth < 0.0001 ? profile.coinBalanceEth.toFixed(6) : profile.coinBalanceEth.toFixed(4);
+      cells.push(`<div class="cell"><span class="k">ETH BALANCE</span><span class="v ${tone}">${val} ETH</span></div>`);
+    }
+    grid.innerHTML = cells.join('');
+  }
+  else if (profile.isFactoryDeployed && grid) {
+    // Hidden factory — human couldn't be recovered.
     grid.innerHTML =
       `<div class="cell"><span class="k">DEPLOYED VIA</span>` +
-      `<span class="v"><a href="${EXPLORER}${escapeHtml(profile.deployer)}" target="_blank" rel="noopener">${escapeHtml(profile.labelName || short(profile.deployer))}</a></span></div>` +
+      `<span class="v"><a href="${EXPLORER}${escapeHtml(profile.factoryAddress || profile.deployer)}" target="_blank" rel="noopener">${escapeHtml(profile.factoryLabel || profile.labelName || short(profile.factoryAddress || profile.deployer))}</a></span></div>` +
       `<div class="cell"><span class="k">HUMAN OWNER</span><span class="v" style="color:var(--ash)">not visible from bytecode — hidden behind the factory. read the contract outline above as the main signal.</span></div>`;
   }
   // Partial profile fallback: when history failed but funding/priorRug
