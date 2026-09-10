@@ -1245,7 +1245,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
          mean. See buildOutline() for the sentence-writing logic. -->
     <section id="contract-outline" class="info-panel" hidden>
       <h3 class="panel-title">contract outline</h3>
-      <p class="panel-sub">what this contract actually does — in plain english.</p>
+      <p class="panel-sub">what this contract actually does.</p>
       <div class="outline-body" id="outline-body"></div>
     </section>
 
@@ -1273,30 +1273,6 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
     <h3 class="cat-title">metadata</h3>
     <div id="signals-metadata" class="signals"></div>
   </div>
-
-  <section class="examples" id="examples">
-    <h3>OR SNIFF ONE OF THESE</h3>
-    <p style="color:var(--bone-dim); font-size:17px; margin:0 0 14px;">
-      grug pick three project so tribe can see how radar work. click one.
-    </p>
-    <div class="example-grid">
-      <button class="example green" data-addr="0x00000000000000000000000000000000000c0000" data-name="Stone Tribe" data-preset="green">
-        <div class="example-name">STONE TRIBE</div>
-        <p class="example-desc">verified, renounced, IPFS pinned, spread holders.</p>
-        <span class="example-badge">grug approve</span>
-      </button>
-      <button class="example yellow" data-addr="0x00000000000000000000000000000000000ba110" data-name="Mystery Apes" data-preset="yellow">
-        <div class="example-name">MYSTERY APES</div>
-        <p class="example-desc">looks fine but owner not renounced and metadata still swappable.</p>
-        <span class="example-badge">grug wary</span>
-      </button>
-      <button class="example red" data-addr="0x00000000000000000000000000000000dead4444" data-name="Moonshot Yeti" data-preset="red">
-        <div class="example-name">MOONSHOT YETI</div>
-        <p class="example-desc">unverified proxy, fresh deployer, 80% held by 3 wallets.</p>
-        <span class="example-badge">grug run</span>
-      </button>
-    </div>
-  </section>
 
   <section class="how">
     <h2>how grug sniff</h2>
@@ -2848,9 +2824,17 @@ function renderDeployerProfile(report) {
   const grid = document.getElementById('deployer-profile-grid');
   if (!el || !grid) return;
   const d = report.raw?.deployer;
+  // If the base deployer-history endpoint failed we still fire the async
+  // enrichment — the lens falls back to the other two endpoints and often
+  // finds the deployer that way, so a flaky Blockscout doesn't hide the
+  // whole panel. When it succeeds, the enrichment unhides the section.
   if (!d || !d.address) {
-    el.hidden = true;
     grid.innerHTML = '';
+    // Hide the sync grid but keep the section hidden for now — the
+    // enrichment call decides whether to unhide based on whether the
+    // fallback path found a creator.
+    el.hidden = true;
+    enrichDeployerProfile(report.addr);
     return;
   }
   const cells = [];
@@ -2966,6 +2950,7 @@ const REPUTATION_TONE = {
   'first-time':       { tone: 'neutral', label: 'NEW WALLET' },
   'mixed':            { tone: 'warn',    label: 'MIXED' },
   'burned-holders':   { tone: 'bad',     label: 'RUGGED BEFORE' },
+  'factory-deployed': { tone: 'neutral', label: 'FACTORY-MINTED' },
   'unknown':          { tone: 'neutral', label: 'UNKNOWN' },
 };
 
@@ -2997,10 +2982,42 @@ async function enrichDeployerProfile(contractAddr) {
   }
 
   if (!profile || profile.error === 'endpoint_failed' || profile.error === 'no_creator_found') {
-    // Nothing extra to say — the existing grid panel already handles the
-    // "no deployer info" case. Hide the enriched half entirely.
+    // Genuinely no deployer info from any endpoint — hide the enriched
+    // half. The outer section stays hidden too (renderDeployerProfile
+    // already hid it on the no-address path).
     wrap.hidden = true;
     return;
+  }
+
+  // We have SOMETHING to show — make sure the outer section is visible.
+  // On a normal scan renderDeployerProfile already un-hid it; on a partial
+  // (history-failed) scan it's still hidden and we need to unhide here.
+  const outerSection = document.getElementById('deployer-profile');
+  if (outerSection) outerSection.hidden = false;
+
+  const grid = document.getElementById('deployer-profile-grid');
+  const short = a => a ? a.slice(0, 6) + '…' + a.slice(-4) : '—';
+
+  // Factory-deployed override: the sync grid painted stats for the factory
+  // contract itself (37k txs, 0 balance, "ERC721SeaDropCloneFactory" label)
+  // which read like red flags but describe the factory, not the human who
+  // called it. Replace the grid with a factory-aware summary that names
+  // what's actually going on.
+  if (profile.isFactoryDeployed && grid) {
+    grid.innerHTML =
+      `<div class="cell"><span class="k">DEPLOYED VIA</span>` +
+      `<span class="v"><a href="${EXPLORER}${escapeHtml(profile.deployer)}" target="_blank" rel="noopener">${escapeHtml(profile.labelName || short(profile.deployer))}</a></span></div>` +
+      `<div class="cell"><span class="k">HUMAN OWNER</span><span class="v" style="color:var(--ash)">not visible from bytecode — hidden behind the factory. read the contract outline above as the main signal.</span></div>`;
+  }
+  // Partial profile fallback: when history failed but funding/priorRug
+  // provided the deployer address, paint a minimal WALLET-only grid so the
+  // panel doesn't read as if we know nothing about the wallet. The rich
+  // fields (age, tx count, balance) genuinely are unknown in that case.
+  else if (profile.partial && grid && !grid.innerHTML.trim()) {
+    grid.innerHTML =
+      `<div class="cell"><span class="k">WALLET</span>` +
+      `<span class="v"><a href="${EXPLORER}${escapeHtml(profile.deployer)}" target="_blank" rel="noopener">${escapeHtml(short(profile.deployer))}</a></span></div>` +
+      `<div class="cell"><span class="k">NOTE</span><span class="v" style="color:var(--ash)">wallet metadata unavailable — Blockscout throttled the lookup.</span></div>`;
   }
 
   loadingEl.hidden = true;
