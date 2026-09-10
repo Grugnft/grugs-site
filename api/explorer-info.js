@@ -188,7 +188,7 @@ export default async function handler(req, res) {
 
     // creator / creation
     creator: addrInfo.value?.creator_address_hash || sc.value?.creator_address_hash || null,
-    creationTx: addrInfo.value?.creation_tx_hash || sc.value?.creation_tx_hash || null,
+    creationTx: addrInfo.value?.creation_transaction_hash || sc.value?.creation_transaction_hash || addrInfo.value?.creation_tx_hash || sc.value?.creation_tx_hash || null,
 
     // activity counters
     contractTransferCount: counters.value ? parseInt(counters.value.token_transfers_count || '0', 10) : null,
