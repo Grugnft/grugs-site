@@ -525,6 +525,136 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
 .panel-grid .cell .v.warn { color: var(--warn); }
 .panel-grid .cell .v.bad  { color: var(--danger); }
 .panel-grid .cell .v a { color: var(--torch); text-decoration: underline; }
+
+/* Deployer enriched half — reputation banner, red flags, prior deploys.
+   Rendered underneath the grid once the deployer lens has scored the
+   wallet's prior contracts. */
+.deployer-enriched {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--wall-2);
+}
+.deployer-enriched-loading {
+  color: var(--ash);
+  font-size: 13px;
+  font-style: italic;
+  padding: 6px 0;
+}
+.deployer-reputation {
+  padding: 10px 12px;
+  border-left: 4px solid var(--ash);
+  background: var(--stone);
+  font-size: 15px;
+  color: var(--bone);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+.deployer-reputation .rep-label {
+  display: inline-block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  padding: 3px 7px;
+  margin-right: 8px;
+  vertical-align: middle;
+  color: var(--stone);
+  background: var(--ash);
+}
+.deployer-reputation.good  { border-left-color: var(--moss); }
+.deployer-reputation.good  .rep-label { background: var(--moss-hot); }
+.deployer-reputation.warn  { border-left-color: var(--warn); }
+.deployer-reputation.warn  .rep-label { background: var(--warn); }
+.deployer-reputation.bad   { border-left-color: var(--danger); }
+.deployer-reputation.bad   .rep-label { background: var(--danger); color: var(--bone); }
+.deployer-reputation.neutral { border-left-color: var(--ash); }
+.deployer-reputation.neutral .rep-label { background: var(--ash); color: var(--bone); }
+
+.deployer-flags {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+.deployer-flags li {
+  padding: 6px 0 6px 22px;
+  color: var(--danger);
+  font-size: 14px;
+  line-height: 1.4;
+  position: relative;
+}
+.deployer-flags li::before {
+  content: '!';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  text-align: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  background: var(--danger);
+  color: var(--bone);
+}
+
+.deployer-priors-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--ash);
+  margin: 6px 0 8px;
+}
+.deployer-priors-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.prior-row {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--stone);
+  border-left: 3px solid var(--wall-2);
+  font-size: 13px;
+}
+.prior-row.tone-green  { border-left-color: var(--moss); }
+.prior-row.tone-yellow { border-left-color: var(--warn); }
+.prior-row.tone-red    { border-left-color: var(--danger); }
+.prior-row.tone-grey   { border-left-color: var(--ash); }
+.prior-row .prior-chip {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 4px 6px;
+  text-align: center;
+  color: var(--stone);
+  background: var(--ash);
+}
+.prior-row.tone-green  .prior-chip { background: var(--moss-hot); }
+.prior-row.tone-yellow .prior-chip { background: var(--warn); }
+.prior-row.tone-red    .prior-chip { background: var(--danger); color: var(--bone); }
+.prior-row.tone-grey   .prior-chip { background: var(--ash); color: var(--bone); }
+.prior-row .prior-addr {
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  color: var(--bone);
+  word-break: break-all;
+}
+.prior-row .prior-addr a { color: var(--torch); text-decoration: none; }
+.prior-row .prior-addr a:hover { text-decoration: underline; }
+.prior-row .prior-verdict {
+  color: var(--bone-dim);
+  font-size: 12px;
+  text-align: right;
+}
+.deployer-priors-note {
+  color: var(--ash);
+  font-size: 12px;
+  font-style: italic;
+  margin-top: 8px;
+}
+
 /* Capabilities grid — one chip per detected function */
 .cap-grid {
   display: flex;
@@ -955,7 +1085,6 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
     <a class="tab" href="index.html">home</a>
     <a class="tab active" href="scanner.html">rug radar</a>
     <a class="tab" href="mints.html">mints</a>
-    <a class="tab" href="watchlist.html">watchlist<span style="display:inline-block;margin-left:6px;padding:1px 5px;font-family:'Press Start 2P',monospace;font-size:7px;letter-spacing:1px;background:var(--ember);color:var(--bone);vertical-align:middle;">NEW</span></a>
   </nav>
   <div class="nav-right">
     <a class="nav-x" href="https://twitter.com/GrugNFT" target="_blank" rel="noopener noreferrer" title="@GrugNFT on Twitter" aria-label="Twitter">
@@ -1090,6 +1219,23 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
     <section id="deployer-profile" class="info-panel" hidden>
       <h3 class="panel-title">deployer profile</h3>
       <div class="panel-grid" id="deployer-profile-grid"></div>
+      <!-- Enriched half: rolls the deployer's prior contracts through the
+           shared rug-radar engine so every past deploy shows up with its own
+           score, plus a plain-english reputation label and any loud red
+           flags. Painted asynchronously after the fast grid above — the
+           inner elements are hidden until the lens returns. -->
+      <div id="deployer-enriched" class="deployer-enriched" hidden>
+        <div id="deployer-reputation" class="deployer-reputation" hidden></div>
+        <div id="deployer-flags" class="deployer-flags" hidden></div>
+        <div id="deployer-priors" class="deployer-priors" hidden>
+          <div class="deployer-priors-title">prior deploys</div>
+          <div id="deployer-priors-list" class="deployer-priors-list"></div>
+          <div id="deployer-priors-note" class="deployer-priors-note" hidden></div>
+        </div>
+        <div id="deployer-enriched-loading" class="deployer-enriched-loading">
+          grug scoring prior contracts by this wallet…
+        </div>
+      </div>
     </section>
 
     <!-- Contract outline block — plain-English narrative of what this
@@ -2803,6 +2949,107 @@ function renderDeployerProfile(report) {
     `<div class="cell"><span class="k">${escapeHtml(c.k)}</span><span class="v ${c.tone || ''}">${c.v}</span></div>`
   ).join('');
   el.hidden = false;
+
+  // Kick the async enrichment — it hits the deployer-lens (which scores
+  // every prior contract by this wallet through the shared engine). The
+  // panel above renders immediately; the reputation/flags/priors slide in
+  // when the lens resolves. Fire-and-forget: any error just leaves the
+  // enrichment block hidden.
+  enrichDeployerProfile(report.addr);
+}
+
+// Reputation label → tone (banner colour + chip colour). Kept next to the
+// deployer-lens tone mapping deliberately so a new reputation label added
+// there needs a matching entry here.
+const REPUTATION_TONE = {
+  'clean':            { tone: 'good',    label: 'CLEAN' },
+  'first-time':       { tone: 'neutral', label: 'NEW WALLET' },
+  'mixed':            { tone: 'warn',    label: 'MIXED' },
+  'burned-holders':   { tone: 'bad',     label: 'RUGGED BEFORE' },
+  'unknown':          { tone: 'neutral', label: 'UNKNOWN' },
+};
+
+async function enrichDeployerProfile(contractAddr) {
+  const wrap        = document.getElementById('deployer-enriched');
+  const loadingEl   = document.getElementById('deployer-enriched-loading');
+  const repEl       = document.getElementById('deployer-reputation');
+  const flagsEl     = document.getElementById('deployer-flags');
+  const priorsEl    = document.getElementById('deployer-priors');
+  const priorsListEl= document.getElementById('deployer-priors-list');
+  const priorsNoteEl= document.getElementById('deployer-priors-note');
+  if (!wrap || !loadingEl || !repEl || !flagsEl || !priorsEl) return;
+
+  // Reset — a second scan should not leak stale content from the first.
+  wrap.hidden = false;
+  loadingEl.hidden = false;
+  repEl.hidden = true; repEl.className = 'deployer-reputation'; repEl.innerHTML = '';
+  flagsEl.hidden = true; flagsEl.innerHTML = '';
+  priorsEl.hidden = true; priorsListEl.innerHTML = '';
+  priorsNoteEl.hidden = true; priorsNoteEl.textContent = '';
+
+  let profile = null;
+  try {
+    const mod = await import('/scripts/deployer-lens.mjs');
+    profile = await mod.getDeployerProfile(contractAddr);
+  } catch (e) {
+    loadingEl.textContent = 'grug could not check prior deploys right now.';
+    return;
+  }
+
+  if (!profile || profile.error === 'endpoint_failed' || profile.error === 'no_creator_found') {
+    // Nothing extra to say — the existing grid panel already handles the
+    // "no deployer info" case. Hide the enriched half entirely.
+    wrap.hidden = true;
+    return;
+  }
+
+  loadingEl.hidden = true;
+
+  // Reputation banner
+  const tone = REPUTATION_TONE[profile.reputation] || REPUTATION_TONE.unknown;
+  repEl.className = 'deployer-reputation ' + tone.tone;
+  repEl.innerHTML = `<span class="rep-label">${escapeHtml(tone.label)}</span>${escapeHtml(profile.reputationLine || '')}`;
+  repEl.hidden = false;
+
+  // Red flags — only render when there's at least one; empty flags list on
+  // a clean wallet would just add visual noise.
+  if (profile.redFlags && profile.redFlags.length) {
+    flagsEl.innerHTML = profile.redFlags.map(f => `<li>${escapeHtml(f)}</li>`).join('');
+    flagsEl.hidden = false;
+  }
+
+  // Prior deploys — one row per past contract by this wallet, sorted worst
+  // score first so the interesting rows land at the top.
+  const priors = (profile.priorDeploys || []).slice().sort((a, b) => {
+    const sa = typeof a.score === 'number' ? a.score : -1;
+    const sb = typeof b.score === 'number' ? b.score : -1;
+    return sb - sa;
+  });
+  if (priors.length) {
+    priorsListEl.innerHTML = priors.map(p => {
+      const short6 = a => a ? a.slice(0, 6) + '…' + a.slice(-4) : '—';
+      const tone = p.tone || 'grey';
+      const chipText = typeof p.score === 'number'
+        ? String(p.score).padStart(2, '0')
+        : '—';
+      const verdict = p.verdict || (p.error ? 'grug could not score' : 'unscored');
+      const deployedAgo = p.deployedAt ? relTime(p.deployedAt) : '';
+      const rightMeta = [verdict, deployedAgo].filter(Boolean).join(' · ');
+      return `
+        <div class="prior-row tone-${escapeHtml(tone)}">
+          <span class="prior-chip">${escapeHtml(chipText)}</span>
+          <span class="prior-addr"><a href="${EXPLORER}${escapeHtml(p.addr)}" target="_blank" rel="noopener">${escapeHtml(short6(p.addr))}</a></span>
+          <span class="prior-verdict">${escapeHtml(rightMeta)}</span>
+        </div>`;
+    }).join('');
+    priorsEl.hidden = false;
+
+    const stats = profile.priorDeployStats;
+    if (stats && stats.total > priors.length) {
+      priorsNoteEl.textContent = `showing ${priors.length} of ${stats.total} known deploys by this wallet.`;
+      priorsNoteEl.hidden = false;
+    }
+  }
 }
 
 /* Which admin functions this bytecode exposes, as a row of chips.
