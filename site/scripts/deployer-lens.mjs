@@ -33,7 +33,7 @@
 
 import { fullScore } from '/scripts/grug-score-engine.mjs';
 
-const CACHE_KEY_PREFIX = 'grug_deployer_v2_';
+const CACHE_KEY_PREFIX = 'grug_deployer_v3_';
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
 // How many prior contracts we score in parallel. Each fullScore() spawns
@@ -151,23 +151,35 @@ function computeReputation({ scoredCount, cleanCount, ruggedCount, deadCount, al
   };
 }
 
-// Turn the deployer + funding + wallet-age signals into a set of loud-and-
-// concrete red-flag strings the outline can render as its own list. These
-// intentionally overlap with what the scoring engine already reports; the
-// point of the deployer panel is to say the loud parts out loud.
+// Turn the deployer + funding + reputation signals into a set of loud red-
+// flag strings the outline renders. Deliberately narrow:
+//   - a fresh wallet ALONE is not a red flag (opsec deploys are common)
+//   - a low tx count ALONE is not a red flag (same reason)
+//   - we only fire when the pattern is genuinely rug-shaped: fresh+empty+
+//     disposable funding, empty deployer, disposable-identity funding on
+//     its own, or a proven prior rug.
 function collectRedFlags({ walletAgeDays, walletAgeIsExact, txCount, coinBalanceEth, funding, reputation }) {
   const flags = [];
-  if (walletAgeDays !== null && walletAgeIsExact && walletAgeDays <= 7) {
-    flags.push(`wallet is ${walletAgeDays} day${walletAgeDays === 1 ? '' : 's'} old.`);
+  const isFresh = walletAgeDays !== null && walletAgeIsExact && walletAgeDays <= 7;
+  const isNearEmpty = typeof coinBalanceEth === 'number' && coinBalanceEth < 0.001;
+  const freshFunding = !!(funding && funding.verdict === 'fresh_chain');
+
+  // Empty deployer wallet is a real rug indicator on its own — deploy,
+  // funnel funds out, walk. Only surface when we're confident (the value
+  // truly is near-zero, not just missing).
+  if (isNearEmpty) {
+    flags.push('deployer wallet is near-empty (deploy-and-vanish pattern).');
   }
-  if (typeof txCount === 'number' && txCount < 20) {
-    flags.push(`wallet has only ${txCount} lifetime transactions.`);
-  }
-  if (typeof coinBalanceEth === 'number' && coinBalanceEth < 0.001) {
-    flags.push('deployer wallet is near-empty.');
-  }
-  if (funding && funding.verdict === 'fresh_chain') {
+  // Fresh-chain funding is a real disposable-identity signal on its own.
+  if (freshFunding) {
     flags.push('deployer was funded by a fresh wallet (disposable-identity pattern).');
+  }
+  // Fresh wallet only becomes a flag when it's ALSO paired with either a
+  // suspicious funding source or a near-empty balance — the combination is
+  // what makes it look like a throwaway. Fresh-alone stays quiet because
+  // opsec deploys look identical.
+  if (isFresh && (isNearEmpty || freshFunding)) {
+    flags.push(`wallet is ${walletAgeDays} day${walletAgeDays === 1 ? '' : 's'} old — combined with the signal above, this looks like a throwaway identity.`);
   }
   if (reputation === 'burned-holders') {
     flags.push('this deployer has shipped a rug before.');
