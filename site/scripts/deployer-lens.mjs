@@ -33,7 +33,7 @@
 
 import { fullScore } from '/scripts/grug-score-engine.mjs';
 
-const CACHE_KEY_PREFIX = 'grug_deployer_v1_';
+const CACHE_KEY_PREFIX = 'grug_deployer_v2_';
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
 // How many prior contracts we score in parallel. Each fullScore() spawns
@@ -199,26 +199,54 @@ export async function getDeployerProfile(contractAddr) {
   const historyCreator = history?.creator || null;
   const fundingCreator = funding?.deployer || null;
   const priorRugCreator = priorRug?.deployer || null;
-  const creator = historyCreator || fundingCreator || priorRugCreator;
+  const rawCreator = historyCreator || fundingCreator || priorRugCreator;
 
-  if (!creator) {
+  if (!rawCreator) {
     return { contract: contractAddr, deployer: null, error: 'no_creator_found' };
   }
   const partial = !historyCreator;   // history missing → limited wallet metadata
 
-  // Prior deploys: history is the richest source (timestamps + block numbers)
-  // but if it failed we can still pull the addresses from prior-rug-check.
-  // Merge both so a normal scan gets the full history payload and a partial
-  // scan still gets the sibling contract list.
-  const historyByAddr = new Map(
-    (history?.deployedContracts || []).map(d => [(d.address || '').toLowerCase(), d])
+  // Factory-unmask: the backend now walks the creation tx to find the human
+  // who called the factory. When it hands us a humanCreator, treat that as
+  // the effective deployer for every wallet-shape signal (age, tx count,
+  // balance, prior deploys). The factory address/label is kept separately
+  // so the UI can still name what the drop was minted through.
+  const humanCreator = history?.humanCreator || null;
+  const factoryFromBackend = !!history?.factoryDetected;
+  const effective = humanCreator || {
+    address: rawCreator,
+    txCount: history?.txCount ?? null,
+    tokenTransferCount: history?.tokenTransferCount ?? null,
+    deployedContractCountRecent: history?.deployedContractCountRecent ?? null,
+    deployedContracts: history?.deployedContracts || [],
+    hasMorePages: !!history?.hasMorePages,
+    coinBalanceEth: history?.coinBalanceEth ?? null,
+    labelName: history?.labelName || null,
+    firstTxTimestampSeen: history?.firstTxTimestampSeen || null,
+  };
+  const deployer = effective.address;
+  // When the human is known, this factory address surfaces separately.
+  const factoryAddress = humanCreator ? rawCreator : null;
+  const factoryLabel   = humanCreator ? (history?.labelName || null) : null;
+
+  // Prior deploys: prefer the effective deployer's own list (this is the
+  // human's prior drops when unmasked, or the direct deployer's list on the
+  // normal path). Fall back through prior-rug-check for coverage when the
+  // history endpoint gave us less than the full picture.
+  const effectiveByAddr = new Map(
+    (effective.deployedContracts || []).map(d => [(d.address || '').toLowerCase(), d])
   );
   const priorRugByAddr = new Map(
     (priorRug?.others || []).map(d => [(d.address || '').toLowerCase(), d])
   );
   const priorAddrsSet = new Set();
-  for (const a of historyByAddr.keys()) if (a && a !== addr) priorAddrsSet.add(a);
-  for (const a of priorRugByAddr.keys()) if (a && a !== addr) priorAddrsSet.add(a);
+  for (const a of effectiveByAddr.keys()) if (a && a !== addr) priorAddrsSet.add(a);
+  // Only merge in prior-rug-check siblings when we're NOT in factory-unmask
+  // mode. priorRug is contract-addressed, so its `others` list belongs to
+  // the factory (thousands of unrelated clones), not the human.
+  if (!humanCreator) {
+    for (const a of priorRugByAddr.keys()) if (a && a !== addr) priorAddrsSet.add(a);
+  }
   const priorAddrs = [...priorAddrsSet];
 
   // Score up to SCORE_CAP prior contracts in parallel (capped concurrency).
@@ -242,12 +270,10 @@ export async function getDeployerProfile(contractAddr) {
   });
 
   // Merge scored + un-scored into a single priorDeploys list. Timestamps
-  // come from history when available (richer signal), falling back to null
-  // when we're on the partial-scan path where only prior-rug-check knew
-  // about the siblings.
+  // come from the effective deployer's own history payload when available.
   const scoredByAddr = new Map(scoredResults.map(r => [r.addr, r]));
   const priorDeploys = priorAddrs.map(a => {
-    const h = historyByAddr.get(a) || {};
+    const h = effectiveByAddr.get(a) || {};
     const s = scoredByAddr.get(a) || { scored: false };
     return {
       addr: a,
@@ -269,12 +295,19 @@ export async function getDeployerProfile(contractAddr) {
   const deadCount = priorRug?.dead ?? 0;
   const aliveCount = priorRug?.alive ?? 0;
 
-  const isFactoryDeployed = looksLikeFactory({
+  // Factory shape: backend already told us OR client-side heuristic still
+  // catches it if the backend didn't. When humanCreator is set, we HAVE
+  // unmasked the human and reputation runs on the human's track record.
+  // When it's null but factory was still detected, the human is beyond
+  // reach and we render a "factory-minted, human not visible" verdict.
+  const clientFactoryGuess = looksLikeFactory({
     labelName: history?.labelName,
     txCount: history?.txCount,
     deployedContractCountRecent: history?.deployedContractCountRecent,
     hasMorePages: history?.hasMorePages,
   });
+  const isFactoryDeployed = factoryFromBackend || clientFactoryGuess;
+  const factoryUnmasked = !!humanCreator;
 
   let { reputation, line: reputationLine } = computeReputation({
     scoredCount: scoredPrior.length,
@@ -285,18 +318,19 @@ export async function getDeployerProfile(contractAddr) {
     totalPrior: priorAddrs.length,
   });
 
-  // Factory-deployed override: whatever the sibling math said is meaningless
-  // when the "creator" is a factory contract. Say so directly instead of
-  // reporting "first-time deployer" for what is often a serial deployer's
-  // fifth SeaDrop clone.
-  if (isFactoryDeployed) {
+  // Overrides for factory-minted contracts.
+  if (isFactoryDeployed && !factoryUnmasked) {
+    // No human recovered — the message stays as before.
     reputation = 'factory-deployed';
     const via = history?.labelName || 'a factory contract';
     reputationLine = `minted via ${via}. grug can't see the human wallet from bytecode alone — read the contract outline above as the main signal.`;
   }
+  // When the human IS unmasked, reputation stays whatever their prior track
+  // record earned (clean/mixed/burned-holders/first-time). The UI names the
+  // factory separately in the grid so the reader sees "0xabc → SeaDrop".
 
-  const walletFirstSeenAt = history?.firstTxTimestampSeen || null;
-  const walletAgeIsExact = history ? !history.hasMorePages : false;
+  const walletFirstSeenAt = effective.firstTxTimestampSeen || null;
+  const walletAgeIsExact = effective.hasMorePages === false;
   const walletAgeDays = daysBetween(walletFirstSeenAt);
 
   const fundingSummary = funding ? {
@@ -307,32 +341,35 @@ export async function getDeployerProfile(contractAddr) {
     note: funding.note || null,
   } : null;
 
-  // Factory-deployed contracts skip the wallet-shape red flags — a factory
-  // always has "0 balance" (funds are pulled at mint time) and looks nothing
-  // like a fresh rugger's throwaway wallet even though the raw numbers can.
-  const redFlags = isFactoryDeployed ? [] : collectRedFlags({
-    walletAgeDays,
-    walletAgeIsExact,
-    txCount: history?.txCount,
-    coinBalanceEth: history?.coinBalanceEth,
-    funding: fundingSummary,
-    reputation,
-  });
+  // Wallet-shape red flags only when we have a real human wallet to speak
+  // for — either a direct deployer, or a factory-minted drop we unmasked
+  // back to its human. A factory we couldn't unmask has no wallet worth
+  // flagging (the factory's own stats mislead).
+  const redFlagsSource = (isFactoryDeployed && !factoryUnmasked)
+    ? null
+    : { walletAgeDays, walletAgeIsExact, txCount: effective.txCount, coinBalanceEth: effective.coinBalanceEth, funding: fundingSummary, reputation };
+  const redFlags = redFlagsSource ? collectRedFlags(redFlagsSource) : [];
 
   const profile = {
     contract: addr,
-    deployer: creator,
+    // deployer = the wallet everything below describes. On a factory-unmasked
+    // scan this is the HUMAN; on a normal scan it's the direct deployer;
+    // on a hidden factory it's the factory address itself.
+    deployer,
     partial,
     isFactoryDeployed,
+    factoryUnmasked,
+    factoryAddress,
+    factoryLabel,
     deployTimestamp: history?.deployTimestamp || null,
     deployBlock: history?.deployBlock ?? null,
     walletAgeDays,
     walletFirstSeenAt,
     walletAgeIsExact,
-    txCount: history?.txCount ?? null,
-    tokenTransferCount: history?.tokenTransferCount ?? null,
-    coinBalanceEth: history?.coinBalanceEth ?? null,
-    labelName: history?.labelName || null,
+    txCount: effective.txCount ?? null,
+    tokenTransferCount: effective.tokenTransferCount ?? null,
+    coinBalanceEth: effective.coinBalanceEth ?? null,
+    labelName: effective.labelName || null,
     funding: fundingSummary,
     priorDeploys,
     priorDeployStats: {
