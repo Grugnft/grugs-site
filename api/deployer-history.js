@@ -111,7 +111,10 @@ async function findCreator(contract) {
     j(`${BS}/addresses/${contract}`),
   ]);
   const creator = a?.creator_address_hash || sc?.creator_address_hash || null;
-  const creationTxHash = a?.creation_tx_hash || sc?.creation_tx_hash || null;
+  // Blockscout v2 renamed this field mid-flight — accept both spellings.
+  const creationTxHash =
+    a?.creation_transaction_hash || sc?.creation_transaction_hash ||
+    a?.creation_tx_hash || sc?.creation_tx_hash || null;
   if (!creator) return null;
   return { creator, creationTxHash };
 }
@@ -186,10 +189,31 @@ async function readCreationTx(txHash) {
   if (!txHash) return null;
   const t = await j(`${BS}/transactions/${txHash}`);
   if (!t) return null;
+  // Blockscout v2 tx shape: `from` is an object { hash, name, is_contract }.
+  // We want the plain hash — that's the msg.sender on the tx, which for a
+  // factory-deployed contract is the HUMAN who called the factory (not the
+  // factory itself, which shows up as `creator_address_hash` on the target).
+  const fromHash = t.from?.hash || (typeof t.from === 'string' ? t.from : null);
   return {
     deployBlock: t.block_number,
     deployTimestamp: t.timestamp,
+    fromAddress: fromHash,
   };
+}
+
+// Heuristic: does this deployer look like a factory contract? Matches:
+//   - Blockscout-labelled factories ("ERC721SeaDropCloneFactory", "Thirdweb …")
+//   - Chatty addresses whose deployer-history page shows zero own deploys
+//     AND all their history is visible (no more pages) — a real deployer
+//     with 500+ txs would have deployed at least one other contract we can
+//     see. This catches unlabelled factories without misclassifying whales.
+function looksLikeFactory(d) {
+  if (!d) return false;
+  if (d.labelName && /factory/i.test(d.labelName)) return true;
+  const noSiblings = d.deployedContractCountRecent === 0;
+  const chatty = typeof d.txCount === 'number' && d.txCount >= 500;
+  if (chatty && noSiblings && !d.hasMorePages) return true;
+  return false;
 }
 
 export default async function handler(req, res) {
@@ -231,6 +255,35 @@ export default async function handler(req, res) {
   const balanceWei = deployer.coinBalanceWei ? BigInt(deployer.coinBalanceWei) : 0n;
   const coinBalanceEth = Number(balanceWei) / 1e18;
 
+  // Factory-unmask: when the "creator" recorded on the contract is really a
+  // factory (OpenSea SeaDrop, Thirdweb, etc.), the human wallet that called
+  // the factory is on the creation tx as `from`. Fetch THAT wallet's data
+  // too so the client can render the real human's track record instead of
+  // treating the factory as the deployer. Only fires when the factory
+  // heuristic matches — a normal human deployer eats zero extra work.
+  const factoryDetected = looksLikeFactory(deployer);
+  let humanCreator = null;
+  if (factoryDetected
+      && creationTx?.fromAddress
+      && creationTx.fromAddress.toLowerCase() !== found.creator.toLowerCase()) {
+    const humanAddr = creationTx.fromAddress;
+    const humanData = await readDeployer(humanAddr);
+    const humanBalanceWei = humanData.coinBalanceWei ? BigInt(humanData.coinBalanceWei) : 0n;
+    humanCreator = {
+      address: humanAddr,
+      txCount: humanData.txCount ?? null,
+      tokenTransferCount: humanData.tokenTransferCount ?? null,
+      deployedContractCountRecent: humanData.deployedContractCountRecent ?? null,
+      deployedContracts: (humanData.deployedContracts || [])
+        .filter(d => d.address && d.address.toLowerCase() !== addr.toLowerCase()),
+      hasMorePages: !!humanData.hasMorePages,
+      coinBalanceWei: humanData.coinBalanceWei ?? null,
+      coinBalanceEth: Number(humanBalanceWei) / 1e18,
+      labelName: humanData.labelName,
+      firstTxTimestampSeen: humanData.firstTxTimestampSeen,
+    };
+  }
+
   res.statusCode = 200;
   res.end(JSON.stringify({
     contract: addr,
@@ -252,5 +305,11 @@ export default async function handler(req, res) {
     coinBalanceEth,
     labelName: deployer.labelName,
     firstTxTimestampSeen: deployer.firstTxTimestampSeen,
+    // Factory-unmask fields. `factoryDetected` says the msg.sender on this
+    // contract is a factory; `humanCreator` (when present) is the real
+    // person who called it — full deploy history included so the client can
+    // score the human's past drops the same way it does for direct deployers.
+    factoryDetected,
+    humanCreator,
   }));
 }
