@@ -20,12 +20,11 @@
 // ============================================================================
 const CONFIG = {
   // Flip to true on mint day to turn the gate on. Everything else can stay.
-  GATE_ENABLED: false,
+  GATE_ENABLED: true,
 
-  // Set once the Grugs contract is deployed. A zero address means "not deployed
-  // yet" — the gate will show a "coming soon" screen when GATE_ENABLED is true
-  // but the contract isn't set, instead of a broken balanceOf call.
-  GRUGS_CONTRACT: '0x0000000000000000000000000000000000000000',
+  // Grugs ERC-721 on Robinhood Chain, deployed 2026-09-06. Matches the
+  // GRUGS_CONFIG.address block in index.html.
+  GRUGS_CONTRACT: '0x71b125F8cD4ebb8180ffA072fCbd5409Ee392517',
 
   // Minimum Grugs the wallet must hold to unlock.
   REQUIRED_BALANCE: 5,
@@ -35,9 +34,14 @@ const CONFIG = {
   // enough that a user who sold their Grugs loses access within a day.
   SESSION_HOURS: 24,
 
-  // Robinhood Chain RPC — same one the scanner uses.
+  // Robinhood Chain RPC — same one the scanner uses (bare origin, no /rpc
+  // suffix; the RHC RPC accepts both but the scanner code standardises on
+  // this form).
   RPC_URL: 'https://rpc.mainnet.chain.robinhood.com',
   CHAIN_ID: 4663,
+
+  // Where "BUY GRUGS" sends under-holders.
+  OPENSEA_URL: 'https://opensea.io/collection/grugs',
 };
 
 // ERC-721 balanceOf(address) selector.
@@ -250,7 +254,7 @@ function renderOverlay(state) {
       <p class="gate-sub">${sub}</p>
       <div class="gate-status ${statusErr ? 'err' : ''}">${statusHtml}</div>
       <button class="gate-btn" id="gate-action" ${btnAction === 'none' ? 'disabled' : ''}>${btnLabel}</button>
-      <a class="gate-secondary" href="/mints.html">← back to mint radar</a>
+      <a class="gate-secondary" href="/">← back to home</a>
     </div>
   `;
 
@@ -304,9 +308,7 @@ async function handleAction(action) {
     return;
   }
   if (action === 'secondary') {
-    // Once secondary markets exist, point this at the actual OpenSea/other
-    // marketplace URL. Placeholder for now.
-    window.open('/mints.html', '_blank');
+    window.open(CONFIG.OPENSEA_URL, '_blank');
     return;
   }
   if (action === 'twitter') {
