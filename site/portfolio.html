@@ -749,5 +749,9 @@ if (preload && /^0x[0-9a-fA-F]{40}$/.test(preload)) {
 }
 </script>
 
+<!-- Grugs gate — must hold REQUIRED_BALANCE grugs to view the portfolio.
+     Overlay is a no-op when GATE_ENABLED=false or a valid session exists. -->
+<script type="module" src="/scripts/gate.mjs"></script>
+
 </body>
 </html>
