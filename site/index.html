@@ -106,7 +106,9 @@ header.nav {
   font-size: 20px;
   letter-spacing: 1px;
   text-transform: lowercase;
+  text-decoration: none;
 }
+a.tab { text-decoration: none; }
 .tab:hover { color: var(--bone); border-color: var(--wall-2); }
 .tab.active {
   color: var(--stone);
@@ -1636,6 +1638,12 @@ section.chamber { margin-top: 72px; }
   animation: live-pulse 1.4s ease-in-out infinite;
   box-shadow: 0 0 6px #8ac560;
 }
+.boss-bar-label .live.sold-out { color: var(--ember-hot); }
+.boss-bar-label .live.sold-out::before {
+  background: var(--ember-hot);
+  box-shadow: 0 0 6px var(--ember-hot);
+  animation: none;
+}
 @keyframes live-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%      { opacity: 0.4; transform: scale(0.7); }
@@ -1911,6 +1919,14 @@ section.chamber { margin-top: 72px; }
 }
 .logs-coming-banner::before { left: -3px; }
 .logs-coming-banner::after  { right: -3px; }
+/* Sold-out variant — same shape as the on-hold banner but in ember red. */
+.logs-coming-banner.soldout-banner { border-color: var(--ember-hot); box-shadow: 0 0 24px rgba(242,106,71,0.28), inset 0 0 40px rgba(0,0,0,0.35); }
+.logs-coming-banner.soldout-banner::before,
+.logs-coming-banner.soldout-banner::after {
+  background: repeating-linear-gradient(to bottom, var(--ember-hot) 0 6px, var(--stone) 6px 12px);
+}
+.logs-coming-banner.soldout-banner .lcb-title { color: var(--ember-hot); text-shadow: 2px 2px 0 var(--ember-deep); }
+.logs-coming-banner.soldout-banner .lcb-eye { filter: drop-shadow(0 0 12px rgba(242,106,71,0.7)); }
 .lcb-eye {
   font-size: 44px;
   line-height: 1;
@@ -2207,7 +2223,7 @@ section.chamber { margin-top: 72px; }
     <button class="tab" data-tab="mint">get grug</button>
     <button class="tab" data-tab="logs">logs</button>
     <button class="tab" data-tab="smash">smash machine</button>
-    <a class="tab" href="scanner.html">rug radar</a>
+    <a class="tab" href="scanner.html">grug tools</a>
   </nav>
   <div class="nav-right">
     <a class="nav-x" href="https://opensea.io/collection/grugs" target="_blank" rel="noopener noreferrer" title="Grugs on OpenSea" aria-label="Grugs on OpenSea">
@@ -2505,11 +2521,11 @@ section.chamber { margin-top: 72px; }
     <div class="hero-scene hero-scene-mint" id="mint-scene" aria-hidden="true">
       <div class="boss-bar">
         <div class="boss-bar-label">
-          <span class="label">tribe <span class="live">LIVE</span></span>
-          <span class="values"><span id="mint-bar-count">0</span> / 10,000</span>
+          <span class="label">tribe <span class="live sold-out">MINTED OUT</span></span>
+          <span class="values"><span id="mint-bar-count">10,000</span> / 10,000</span>
         </div>
         <div class="boss-bar-track">
-          <div class="boss-bar-fill" id="mint-bar-fill" style="width: 0%"></div>
+          <div class="boss-bar-fill" id="mint-bar-fill" style="width: 100%"></div>
         </div>
       </div>
       <div class="cave-wall-detail"></div>
@@ -2541,8 +2557,8 @@ section.chamber { margin-top: 72px; }
 
       <div class="hero-overlay">
         <h1 class="hero-title">GRUG</h1>
-        <p class="tagline">free first grug. easy for grug.</p>
-        <p class="sub-tag"><span id="mint-count-inline">0</span> of 10,000 grug in cave.</p>
+        <p class="tagline">10,000 grug carved. tribe complete.</p>
+        <p class="sub-tag">mint closed · <a href="https://opensea.io/collection/grugs" target="_blank" rel="noopener" style="color:var(--torch);text-decoration:underline;">grab one on opensea</a></p>
       </div>
     </div>
 
@@ -2666,8 +2682,8 @@ section.chamber { margin-top: 72px; }
     <div class="logs-coming-banner">
       <span class="lcb-eye">👁️</span>
       <div class="lcb-body">
-        <div class="lcb-title">LOGS COMING SOON</div>
-        <div class="lcb-sub">grug fetch mechanic turn on after mint. tribe below is preview. no log real yet.</div>
+        <div class="lcb-title">LOGS ON HOLD</div>
+        <div class="lcb-sub">grug put log mechanic on ice for now. we come back to fire later. tribe below is preview only.</div>
       </div>
     </div>
 
