@@ -3657,8 +3657,8 @@ document.querySelectorAll('.example').forEach(btn => {
   if (host) host.innerHTML = renderGrugSprite(attackerTraits);
 </script>
 
-<!-- Rug Radar gate. Currently disabled (GATE_ENABLED=false in gate.mjs); flip
-     the flag in that file on mint day to require 5 Grugs to use the radar. -->
+<!-- Rug Radar gate. Enabled (GATE_ENABLED=true in gate.mjs) — wallet must
+     hold REQUIRED_BALANCE grugs to unlock the radar. Session cached 24h. -->
 <script type="module" src="/scripts/gate.mjs"></script>
 
 </body>
