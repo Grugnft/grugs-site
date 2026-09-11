@@ -356,9 +356,6 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
     <label>search
       <input type="text" id="search-input" placeholder="collection name or contract…">
     </label>
-    <label><input type="checkbox" id="only-with-floor" /> only w/ floor</label>
-    <label><input type="checkbox" id="show-nsfw" /> show nsfw</label>
-    <label><input type="checkbox" id="show-user-hidden" /> show your hidden</label>
     <span id="filter-hint" style="margin-left:auto; color:var(--ash); font-size:13px;"></span>
   </div>
 
@@ -372,17 +369,11 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
 // wants the full rug audit for a specific collection, RR button opens the
 // scanner in a new tab.
 
-const HIDDEN_KEY = 'grug_portfolio_hidden_v2';
-
 const state = {
   wallet: null,
   collections: [],        // straight from server
   floors: new Map(),      // slug -> { floorEth, currency } | 'loading' | null
   ethUsd: null,           // ETH/USD spot for cross-currency floor sort
-  userHidden: new Set(loadUserHidden()),
-  showNsfw: false,
-  showUserHidden: false,
-  onlyWithFloor: false,
   search: '',
   sort: 'owned-desc',
   loadAbort: null,
@@ -399,15 +390,6 @@ const state = {
     if (r && typeof r.usd === 'number') { state.ethUsd = r.usd; renderAll(); }
   } catch {}
 })();
-
-function loadUserHidden() {
-  try { return JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]'); }
-  catch { return []; }
-}
-function persistUserHidden() {
-  try { localStorage.setItem(HIDDEN_KEY, JSON.stringify([...state.userHidden])); }
-  catch {}
-}
 
 const $ = id => document.getElementById(id);
 const escapeHtml = s => (s ?? '').toString().replace(/[&<>"']/g, c =>
@@ -427,18 +409,10 @@ function floorFor(c) {
 }
 
 function passesFilters(c) {
-  if (state.userHidden.has(c.contract) && !state.showUserHidden) return false;
   const q = state.search.trim().toLowerCase();
-  if (q) {
-    const hay = ((c.name || '') + ' ' + (c.slug || '') + ' ' + c.contract).toLowerCase();
-    if (!hay.includes(q)) return false;
-  }
-  if (!state.showNsfw && c.tokens.every(t => t.isNsfw)) return false;
-  if (state.onlyWithFloor) {
-    const f = floorFor(c);
-    if (!f || typeof f.floorEth !== 'number' || f.floorEth <= 0) return false;
-  }
-  return true;
+  if (!q) return true;
+  const hay = ((c.name || '') + ' ' + (c.slug || '') + ' ' + c.contract).toLowerCase();
+  return hay.includes(q);
 }
 
 function sortCollections(arr) {
@@ -497,17 +471,13 @@ function floorCellHtml(c) {
 }
 
 function renderRow(c) {
-  const isUserHidden = state.userHidden.has(c.contract);
-  const visibleTokens = c.tokens.filter(t => state.showNsfw || !t.isNsfw);
+  const visibleTokens = c.tokens;
   const iconUrl = c.iconUrl || visibleTokens[0]?.imageUrl || '';
 
   const thumb = iconUrl
     ? `<img class="thumb" src="${escapeHtml(iconUrl)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'thumb thumb-fallback',textContent:'?'}))">`
     : `<div class="thumb thumb-fallback">?</div>`;
 
-  const hideBtn = isUserHidden
-    ? `<button data-action="unhide" data-addr="${escapeHtml(c.contract)}">UNHIDE</button>`
-    : `<button data-action="hide" data-addr="${escapeHtml(c.contract)}">HIDE</button>`;
   const osBtn = c.openseaCollectionUrl
     ? `<button data-action="opensea" data-url="${escapeHtml(c.openseaCollectionUrl)}">OS</button>`
     : '';
@@ -524,7 +494,6 @@ function renderRow(c) {
         <div class="row-actions">
           <button data-action="scanner" data-addr="${escapeHtml(c.contract)}">RR</button>
           ${osBtn}
-          ${hideBtn}
           <button data-action="toggle" data-addr="${escapeHtml(c.contract)}">▾</button>
         </div>
       </div>
@@ -601,14 +570,6 @@ document.addEventListener('click', e => {
     const drawer = row.querySelector('.tokens-drawer');
     drawer.hidden = !drawer.hidden;
     btn.textContent = drawer.hidden ? '▾' : '▴';
-  } else if (act === 'hide') {
-    state.userHidden.add(addr);
-    persistUserHidden();
-    renderAll();
-  } else if (act === 'unhide') {
-    state.userHidden.delete(addr);
-    persistUserHidden();
-    renderAll();
   } else if (act === 'scanner') {
     window.open('/scanner.html?addr=' + addr, '_blank', 'noopener');
   } else if (act === 'opensea') {
@@ -703,19 +664,6 @@ $('sort-select').addEventListener('change', e => {
   state.sort = e.target.value;
   renderAll();
 });
-$('only-with-floor').addEventListener('change', e => {
-  state.onlyWithFloor = e.target.checked;
-  renderAll();
-});
-$('show-nsfw').addEventListener('change', e => {
-  state.showNsfw = e.target.checked;
-  renderAll();
-});
-$('show-user-hidden').addEventListener('change', e => {
-  state.showUserHidden = e.target.checked;
-  renderAll();
-});
-
 // Deep-link: ?wallet=0x…
 const url = new URL(location.href);
 const preload = url.searchParams.get('wallet');
