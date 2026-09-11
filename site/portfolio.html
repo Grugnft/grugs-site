@@ -229,6 +229,36 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
 }
 .row-head .row-actions button:hover { color: var(--bone); border-color: var(--bone); }
 
+.row-head .row-actions button.rug-check-btn.checking {
+  color: var(--bone-dim); border-color: var(--wall-2); cursor: wait;
+  animation: rug-pulse 1s ease-in-out infinite alternate;
+}
+@keyframes rug-pulse { from { opacity: 0.55; } to { opacity: 1; } }
+
+.row-head .row-actions button.rug-check-btn.score-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 8px;
+  border-width: 1px;
+}
+.row-head .row-actions button.rug-check-btn.score-chip b {
+  font-size: 12px; letter-spacing: 0;
+}
+.row-head .row-actions button.rug-check-btn.score-chip span {
+  font-size: 8px; letter-spacing: 1px; opacity: 0.85;
+}
+.row-head .row-actions button.rug-check-btn.tone-green {
+  color: var(--moss-hot); border-color: var(--moss); background: rgba(122, 155, 92, 0.08);
+}
+.row-head .row-actions button.rug-check-btn.tone-yellow {
+  color: var(--torch-hot); border-color: var(--torch); background: rgba(232, 161, 71, 0.08);
+}
+.row-head .row-actions button.rug-check-btn.tone-red {
+  color: var(--ember-hot); border-color: var(--ember); background: rgba(209, 75, 47, 0.08);
+}
+.row-head .row-actions button.rug-check-btn.score-note {
+  color: var(--ash); border-color: var(--wall-2); font-size: 8px;
+}
+
 .tokens-drawer {
   margin-top: 12px;
   padding-top: 12px;
@@ -326,7 +356,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
     <p class="tagline">GRUG SEE YOUR STASH</p>
     <h1>PORTFOLIO</h1>
     <p class="sub">paste your wallet. grug lists every RHC nft — the same view opensea gives you.</p>
-    <p class="via">powered by opensea · spam already filtered · click rr for full rug scan</p>
+    <p class="via">powered by opensea · spam already filtered · tap CHECK RUG for the grug score</p>
   </section>
 
   <div class="wallet-box">
@@ -365,9 +395,10 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
 
 <script type="module">
 // Portfolio v2 — OpenSea-backed. One /api/portfolio call, one paint, done.
-// No Blockscout, no vibe scoring, no lazy sidecar fetches. If the user
-// wants the full rug audit for a specific collection, RR button opens the
-// scanner in a new tab.
+// No Blockscout, no vibe scoring, no lazy sidecar fetches. The CHECK RUG
+// button runs the shared grug-score engine inline against the collection's
+// contract — same number the /scanner page would show, no navigation.
+import { fullScore } from '/scripts/grug-score-engine.mjs';
 
 const state = {
   wallet: null,
@@ -492,7 +523,7 @@ function renderRow(c) {
         <div class="metric"><b>${c.ownedCount}</b>owned</div>
         <div class="metric floor">${floorCellHtml(c)}</div>
         <div class="row-actions">
-          <button data-action="scanner" data-addr="${escapeHtml(c.contract)}">RR</button>
+          <button class="rug-check-btn" data-action="check-rug" data-addr="${escapeHtml(c.contract)}">CHECK RUG</button>
           ${osBtn}
           <button data-action="toggle" data-addr="${escapeHtml(c.contract)}">▾</button>
         </div>
@@ -570,11 +601,56 @@ document.addEventListener('click', e => {
     const drawer = row.querySelector('.tokens-drawer');
     drawer.hidden = !drawer.hidden;
     btn.textContent = drawer.hidden ? '▾' : '▴';
-  } else if (act === 'scanner') {
-    window.open('/scanner.html?addr=' + addr, '_blank', 'noopener');
+  } else if (act === 'check-rug') {
+    checkRug(btn, addr);
   } else if (act === 'opensea') {
     window.open(btn.dataset.url, '_blank', 'noopener');
   }
+});
+
+// Run the shared grug engine against a collection contract and swap the
+// button for a coloured score chip. Cached per-address by the engine
+// itself, so a second click on the same row is instant.
+const rugCache = new Map();
+async function checkRug(btn, addr) {
+  if (!addr || btn.dataset.busy === '1') return;
+  btn.dataset.busy = '1';
+  btn.disabled = true;
+  btn.textContent = 'grug thinking…';
+  btn.className = 'rug-check-btn checking';
+  try {
+    let res = rugCache.get(addr);
+    if (!res) {
+      res = await fullScore(addr);
+      rugCache.set(addr, res);
+    }
+    if (res && res.error) {
+      btn.className = 'rug-check-btn score-note';
+      btn.textContent = 'no code';
+      btn.title = 'contract has no bytecode (EOA or self-destructed)';
+      return;
+    }
+    const score = typeof res?.score === 'number' ? res.score : null;
+    const tone = res?.tone || (score == null ? 'note' : score < 25 ? 'green' : score < 60 ? 'yellow' : 'red');
+    const verdict = res?.verdict || '';
+    btn.className = 'rug-check-btn score-chip tone-' + tone;
+    btn.innerHTML = `<b>${score ?? '?'}</b><span>${escapeHtml(verdict)}</span>`;
+    btn.title = 'click for full radar';
+    btn.dataset.action = 'open-scanner';
+  } catch (err) {
+    btn.className = 'rug-check-btn score-note';
+    btn.textContent = 'try again';
+    btn.title = String(err?.message || err);
+    btn.disabled = false;
+    delete btn.dataset.busy;
+  }
+}
+
+// Also allow click-through on the resolved chip to open the full scanner.
+document.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-action="open-scanner"]');
+  if (!btn) return;
+  window.open('/scanner.html?addr=' + btn.dataset.addr, '_blank', 'noopener');
 });
 
 async function loadPortfolio(wallet) {
