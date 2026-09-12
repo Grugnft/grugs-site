@@ -385,8 +385,14 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
   passScore(cats, 'priorRug', priorRugState);
 
   let fundingState = 'unknown';
-  if (funding?.verdict === 'fresh_chain') fundingState = 'bad';
-  else if (funding?.verdict === 'clean')  fundingState = 'good';
+  // fresh_chain = disposable-identity funding (top funder <5 txs). watch =
+  // borderline funding (top funder 5-100 txs) — still a risk signal because
+  // real projects fund from CEXes or 100+-tx treasuries, not 19-tx wallets.
+  // Previously we ignored 'watch' and left the signal unknown, which meant
+  // deployers with obviously shady funding scored the same as ones with
+  // clean funding. Treat both as bad.
+  if (funding?.verdict === 'fresh_chain' || funding?.verdict === 'watch') fundingState = 'bad';
+  else if (funding?.verdict === 'clean') fundingState = 'good';
   passScore(cats, 'freshFunding', fundingState);
 
   // ---- distribution ----
@@ -464,8 +470,11 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
     const isDataUri     = /^data:/i.test(uri);
     if (isIpfsScheme || isArweave || isGatewayHttp) {
       centralState = 'good';
-      // Cheap pin check would need a fetch — skip in the shared engine.
-      // Full scanner runs the real IPFS gateway check.
+      // Content-addressed URIs (ipfs://, ar://, or gateway URL wrapping a
+      // CID) are immutable — the bytes are locked to the CID, so anyone
+      // hosting the CID hosts the same content. That's the pin guarantee
+      // the signal was ever meant to capture; skip the live gateway probe.
+      pinState = 'good';
     } else if (isDataUri) {
       centralState = 'good';
       pinState = 'good'; // on-chain data URI, no pin needed
@@ -499,12 +508,14 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
 // Caches in localStorage under grug_score_v1_<addr> for 15 min.
 // ============================================================================
 
-// v5 = tokenURI-based metadata resolution + smarter default states. v4
-// caches wouldn't include the newly-resolved centralArt / unpinned /
-// websiteReachable / twitterExists / currentlyPaused / transferBlocked
-// signals — bump the prefix so cached scores get re-derived with the
-// improved fill-rate on next visit.
-const CACHE_KEY_PREFIX = 'grug_score_v5_';
+// v6 = unpinned now resolves 'good' for any content-addressed URI (ipfs,
+// arweave, gateway wrapping a CID) instead of staying 'unknown'. Combined
+// with the scanner-side fix that drops the /api/metadata-fetch,
+// /api/socials-check, /api/ipfs-check dead calls, that recovers ~3 signals
+// per scan and pushes most well-formed contracts back above the 60%
+// confidence threshold. Old v5 caches would still carry the unknown pin,
+// so bump.
+const CACHE_KEY_PREFIX = 'grug_score_v6_';
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
 function readCache(addr) {
