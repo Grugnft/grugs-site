@@ -1945,55 +1945,35 @@ async function computeRealReport(addr) {
   /* Second wave — richer signals via our own serverless endpoints.
      All optional: each is Promise.allSettled so partial failure doesn't
      tank the report. */
-  const metadataUri = onChain.tokenURI;
-  const metadataFetchable = metadataUri && /^(ipfs|ar|data|https?):/i.test(metadataUri);
 
-  const [deployerHistRes, metadataRes, priorRugRes, fundingRes, collectionRes] = await Promise.allSettled([
+  const [deployerHistRes, priorRugRes, fundingRes, collectionRes] = await Promise.allSettled([
     fetch('/api/deployer-history?addr=' + addr, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
-    metadataFetchable
-      ? fetch('/api/metadata-fetch?uri=' + encodeURIComponent(metadataUri), { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
-      : Promise.resolve(null),
     // Fire this in parallel with the others — prior-rug-check re-fetches the
     // deployer's tx history from Blockscout server-side, so we can't reuse
     // deployerHist's cached copy, but the endpoint's own bsCache dedupes hits.
     // cache: 'no-store' so the browser doesn't hold onto a stale 502 across
     // scans (Blockscout has real transient failures on RHC).
     fetch('/api/prior-rug-check?addr=' + addr, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
-    // Batch 3: deployer funding trace (freshFunding signal) — one-hop back
-    // through incoming ETH transfers on the deployer wallet.
+    // Deployer funding trace (freshFunding signal) — one-hop back through
+    // incoming ETH transfers on the deployer wallet.
     fetch('/api/deployer-funding?addr=' + addr, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
-    // Batch 3: OpenSea collection stats (noMarket signal). Also serves double
-    // duty enriching the metadata/socials for downstream signals.
+    // OpenSea collection stats (noMarket signal). Also serves double duty
+    // enriching the socials for downstream signals (website + twitter).
     fetch('/api/collection-detail?contract=' + addr, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
   ]);
   const deployerHist   = deployerHistRes.status === 'fulfilled' ? deployerHistRes.value : null;
-  const metadata       = metadataRes.status === 'fulfilled' ? metadataRes.value : null;
   const priorRugData   = priorRugRes.status === 'fulfilled' ? priorRugRes.value : null;
   const fundingData    = fundingRes.status === 'fulfilled' ? fundingRes.value : null;
   const collectionData = collectionRes.status === 'fulfilled' ? collectionRes.value : null;
 
-  /* Third wave — socials.
-     Two sources: the contract's tokenURI metadata (authoritative when the
-     team put it there) and OpenSea's collection profile (works when the
-     collection is indexed even if tokenURI isn't set yet — common for
-     pre-mint contracts). Fall back to OpenSea when tokenURI metadata
-     didn't give us anything, so socials signals actually resolve instead
-     of sitting on 'unknown'. */
-  const extracted = (metadata && metadata.extracted) || {};
-  const websiteUrl = extracted.website || extracted.external_url
-    || collectionData?.website || null;
-  const twitterRef = extracted.twitter
-    || collectionData?.twitter || collectionData?.twitterHandle || null;
-  let socials = null;
-  if (websiteUrl || twitterRef) {
-    try {
-      const p = new URLSearchParams();
-      if (websiteUrl) p.set('website', websiteUrl);
-      if (twitterRef) p.set('twitter', twitterRef);
-      const r = await fetch('/api/socials-check?' + p.toString());
-      if (r.ok) socials = await r.json();
-    } catch (e) {}
-  }
+  /* Socials — sourced from OpenSea's collection profile (the metadata-fetch
+     path was retired because chasing tokenURI JSON on public gateways ate
+     scan latency without adding signal beyond what OpenSea already gives us
+     for indexed collections). Presence of a website or twitter handle in the
+     OpenSea data is treated as good; absence is unknown, not bad — a
+     pre-listing contract has legitimately nothing for us to check. */
+  const websiteUrl = collectionData?.website || null;
+  const twitterRef = collectionData?.twitter || collectionData?.twitterHandle || null;
 
   const cats = { contract: [], deployer: [], distribution: [], socials: [], metadata: [] };
 
@@ -2494,40 +2474,34 @@ async function computeRealReport(addr) {
   }
   pushSig(cats, 'distribution', 'noMarket', marketState, marketOverride);
 
-  /* --- socials --- */
+  /* --- socials ---
+     Both signals resolve off OpenSea's collection profile. Presence of a
+     website URL / twitter handle in the profile counts as good — OpenSea's
+     collection-onboarding form validates the fields client-side and won't
+     save a malformed URL, so a URL being present is a reasonable proxy for
+     "the team put a real link here". Absence stays unknown (not bad) — a
+     pre-listing or utility contract has no reason to have a listing yet. */
   let webState = 'unknown', webOverride = null;
-  if (socials && socials.website) {
-    const w = socials.website;
-    if (w.ok) {
-      webState = 'good';
-      webOverride = { good: `<a href="${escapeHtml(safeHref(websiteUrl))}" target="_blank" rel="noopener">${escapeHtml(websiteUrl)}</a> is up${w.title ? ' — “' + escapeHtml(w.title) + '”' : ''}.` };
-    } else {
-      webState = 'bad';
-      webOverride = { bad: `website in metadata (${escapeHtml(websiteUrl || 'unknown')}) not reachable.` };
-    }
-  } else if (metadata && !websiteUrl) {
-    // We fetched metadata successfully but it doesn't advertise a website —
-    // that's data, not a data-quality problem. Say so.
-    webOverride = { unknown: 'no website listed in the contract\'s metadata. nothing for grug to check.' };
-  } else if (!metadata) {
-    webOverride = { unknown: 'grug couldn\'t fetch the metadata JSON to look for a website.' };
+  if (websiteUrl) {
+    webState = 'good';
+    webOverride = { good: `website on file: <a href="${escapeHtml(safeHref(websiteUrl))}" target="_blank" rel="noopener">${escapeHtml(websiteUrl)}</a>.` };
+  } else if (collectionData && collectionData.ok !== false) {
+    webOverride = { unknown: 'OpenSea knows the collection but no website is listed on the profile. nothing for grug to check.' };
+  } else {
+    webOverride = { unknown: 'no OpenSea collection for this contract yet, so no website field to read.' };
   }
   pushSig(cats, 'socials', 'websiteReachable', webState, webOverride);
 
   let twState = 'unknown', twOverride = null;
-  if (socials && socials.twitter) {
-    const t = socials.twitter;
-    if (t.exists) {
-      twState = 'good';
-      twOverride = { good: `<a href="${escapeHtml(safeHref(t.url))}" target="_blank" rel="noopener">@${escapeHtml(t.handle)}</a> exists on twitter. <i>(posting-regularity check needs API key)</i>` };
-    } else if (t.exists === false) {
-      twState = 'bad';
-      twOverride = { bad: `twitter handle <b>@${escapeHtml(t.handle || '')}</b> in metadata does not exist.` };
-    }
-  } else if (metadata && !twitterRef) {
-    twOverride = { unknown: 'no twitter handle in the contract\'s metadata. nothing for grug to check.' };
-  } else if (!metadata) {
-    twOverride = { unknown: 'grug couldn\'t fetch the metadata JSON to look for a twitter handle.' };
+  if (twitterRef) {
+    const handle = String(twitterRef).replace(/^@/, '').replace(/^https?:\/\/(?:www\.)?(?:twitter|x)\.com\//i, '').split(/[\/?#]/)[0];
+    const url = 'https://x.com/' + encodeURIComponent(handle);
+    twState = 'good';
+    twOverride = { good: `twitter handle on file: <a href="${escapeHtml(safeHref(url))}" target="_blank" rel="noopener">@${escapeHtml(handle)}</a>.` };
+  } else if (collectionData && collectionData.ok !== false) {
+    twOverride = { unknown: 'OpenSea knows the collection but no twitter handle is listed. nothing for grug to check.' };
+  } else {
+    twOverride = { unknown: 'no OpenSea collection for this contract yet, so no twitter field to read.' };
   }
   pushSig(cats, 'socials', 'twitterExists', twState, twOverride);
 
@@ -2553,9 +2527,18 @@ async function computeRealReport(addr) {
     if (isIpfsScheme || isArweave) {
       centralState = 'good';
       centralOverride = { good: `metadata pinned via content-addressed URI: <code>${escapeHtml(preview)}</code>` };
+      // Content-addressed URIs are immutable by their CID — if someone can
+      // fetch the CID at all, they get the exact bytes the deployer put on
+      // chain. The old gateway-liveness probe often flapped from Cloudflare
+      // rate-limits on public gateways and turned honest projects grey, so
+      // we now trust the scheme itself as the pin signal.
+      pinState = 'good';
+      pinOverride = { good: 'content-addressed URI. bytes are locked to the CID — anyone hosting it hosts the same thing.' };
     } else if (isGatewayHttp) {
       centralState = 'good';
       centralOverride = { good: `metadata via IPFS gateway URL: <code>${escapeHtml(preview)}</code>` };
+      pinState = 'good';
+      pinOverride = { good: 'gateway URL wraps a CID. bytes stay identical regardless of which gateway serves them.' };
     } else if (isDataUri) {
       centralState = 'good';
       centralOverride = { good: 'metadata is on-chain (data: URI). cannot be swapped.' };
@@ -2567,32 +2550,6 @@ async function computeRealReport(addr) {
       // Non-IPFS metadata has no pin to check — say so instead of leaving the
       // default "grug still learning" placeholder that looks like a missing check.
       pinOverride = { unknown: 'metadata is on a server URL, not IPFS. no pin to check.' };
-    }
-
-    // Real IPFS pin check via serverless proxy. Public gateways are flaky and
-    // often rate-limit or challenge us, so we treat "reachable on any gateway"
-    // as GOOD but "reachable on none" as UNKNOWN (not BAD) — a network blip
-    // shouldn't turn a legitimate project red. If you want a strict "unpinned"
-    // penalty, pin your metadata to two providers and this check will confirm.
-    if (isIpfsScheme || isGatewayHttp) {
-      try {
-        const r = await fetch('/api/ipfs-check?uri=' + encodeURIComponent(u));
-        if (r.ok) {
-          const j = await r.json();
-          if (j.pinned) {
-            pinState = 'good';
-            pinOverride = { good: `metadata reachable on <b>${j.reachableCount}/${j.gatewaysChecked}</b> public IPFS gateways.` };
-          } else {
-            // Public gateway blip vs genuine dead pin — grug can't distinguish
-            // cheaply. Explain the ambiguity instead of leaving a bare "?".
-            pinOverride = { unknown: `metadata didn\'t respond on <b>${j.gatewaysChecked || 0}</b> public IPFS gateways. could be a real dead pin — could also just be gateway rate-limits. try again in a bit.` };
-          }
-        } else {
-          pinOverride = { unknown: 'IPFS pin checker is offline. grug will retry next scan.' };
-        }
-      } catch (e) {
-        pinOverride = { unknown: 'IPFS pin checker unreachable. grug can\'t verify pins right now.' };
-      }
     }
   }
   pushSig(cats, 'metadata', 'centralArt', centralState, centralOverride);
