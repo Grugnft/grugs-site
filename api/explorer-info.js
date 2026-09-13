@@ -176,7 +176,11 @@ export default async function handler(req, res) {
     tokenSymbol: tk.value?.symbol ?? null,
     tokenType: tk.value?.type ?? null,
     totalSupply: tk.value?.total_supply ?? null,
-    holdersCount: tk.value?.holders ? parseInt(tk.value.holders, 10) : null,
+    // Blockscout v2 renamed this mid-version. `/tokens/<addr>` now returns
+    // `holders_count` (integer or numeric string); the older `holders` field
+    // shows up on some deployments still. Try the new name first.
+    holdersCount: (tk.value?.holders_count != null ? parseInt(tk.value.holders_count, 10) :
+                   tk.value?.holders != null ? parseInt(tk.value.holders, 10) : null),
 
     // top holders (up to 10)
     topHolders: Array.isArray(holders.value?.items)
