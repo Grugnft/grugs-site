@@ -132,6 +132,15 @@ const UTILITY_RE = /\b(weth|wrap|wrapped|position|vault|gauge|adapter|reward|wra
 // as 'unknown' otherwise.
 const KNOWN_LP_LABELS = /\b(pair|pool|lp|liquidity|router)\b/i;
 
+// Known RHC-native infrastructure addresses. Robinhood Chain runs Uniswap V4:
+// every pool's reserves live inside a single PoolManager singleton, so on
+// V4-only chains every tradeable token has this contract as its top holder.
+// Treat these addresses as LP infrastructure — exclude them from concentration
+// math AND count their presence as confirmed on-chain liquidity.
+const KNOWN_INFRA_ADDRS = new Set([
+  '0x8366a39cc670b4001a1121b8f6a443a643e40951', // Uniswap V4 PoolManager (RHC)
+]);
+
 // ============================================================================
 // Tier model (same values as grug-score-engine so the verdict bands line up).
 // ============================================================================
@@ -144,7 +153,7 @@ export const TIERS = {
 
 export const SIGNAL_TIER = {
   // contract
-  unverified:        'COSMETIC',
+  unverified:        'SERIOUS',
   proxy:             'DEALBREAKER',
   ownerActive:       'COSMETIC',
   mintable:          'SERIOUS',
@@ -333,6 +342,20 @@ async function readOnChain(addr) {
 async function findLpPair(tokenAddr, topHolders) {
   if (!Array.isArray(topHolders) || topHolders.length === 0) return null;
   const target = tokenAddr.toLowerCase();
+
+  // First pass: V4-style. On Uniswap V4 chains (RHC), the PoolManager
+  // singleton holds every pool's reserves — no per-pair contract exists.
+  // If it shows up in top holders holding real balance, that is confirmed
+  // liquidity even though we can't return a pair address.
+  for (const h of topHolders.slice(0, 10)) {
+    const holder = (h.address || '').toLowerCase();
+    if (KNOWN_INFRA_ADDRS.has(holder)) {
+      return { pair: null, otherToken: null, isV4: true, poolManager: holder };
+    }
+  }
+
+  // Second pass: V2-style. Iterate top holders; probe getReserves() +
+  // token0/token1. Works for any V2 fork without a router registry.
   for (const h of topHolders.slice(0, 10)) {
     const holder = (h.address || '').toLowerCase();
     if (!holder || /^0x0+$/.test(holder)) continue;
@@ -640,8 +663,16 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
     try {
       const total = BigInt(supplyStr);
       if (total > 0n) {
-        // Filter LP-labelled holders out of concentration math (see comment above).
-        const nonLp = explorer.topHolders.filter(h => !(h.label && KNOWN_LP_LABELS.test(h.label)));
+        // Filter LP-labelled and known-infrastructure holders out of
+        // concentration math. The V4 PoolManager holding 40% of supply is
+        // liquidity, not concentration.
+        const nonLp = explorer.topHolders.filter(h => {
+          const label = h.label || '';
+          const addr = (h.address || '').toLowerCase();
+          if (KNOWN_LP_LABELS.test(label)) return false;
+          if (KNOWN_INFRA_ADDRS.has(addr)) return false;
+          return true;
+        });
         const topSum = nonLp.reduce((acc, h) => acc + BigInt(h.value || '0'), 0n);
         const pctTop10 = Number((topSum * 10000n) / total) / 100;
         topHeavyState = pctTop10 > 60 ? 'bad' : 'good';
@@ -709,7 +740,7 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
   // absence of evidence, not evidence of absence. Utility tokens skip
   // entirely (they trade via the bridge, not an AMM pair).
   let lpDetState = 'unknown';
-  if (!isUtility && lp && lp.pair) lpDetState = 'good';
+  if (!isUtility && lp && (lp.pair || lp.isV4)) lpDetState = 'good';
   passScore(cats, 'lpDetected', lpDetState);
 
   // lpBurned — LP tokens held at burn addresses > 50% of pair supply.
@@ -768,7 +799,7 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
 // holders), LP-lock status (lpBurned / lpUnlocked), and current buy/sell
 // tax readout via known Uniswap-tax-template getters. Bumped so v2 caches
 // (which had lpDetected pinned to 'unknown') re-derive with the live data.
-const CACHE_KEY_PREFIX = 'coin_score_v3_';
+const CACHE_KEY_PREFIX = 'coin_score_v4_';
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
 function readCache(addr) {
