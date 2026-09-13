@@ -799,7 +799,7 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
 // holders), LP-lock status (lpBurned / lpUnlocked), and current buy/sell
 // tax readout via known Uniswap-tax-template getters. Bumped so v2 caches
 // (which had lpDetected pinned to 'unknown') re-derive with the live data.
-const CACHE_KEY_PREFIX = 'coin_score_v4_';
+const CACHE_KEY_PREFIX = 'coin_score_v5_';
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
 function readCache(addr) {
@@ -822,12 +822,27 @@ export async function fullCoinScore(addr) {
   const cached = readCache(addr);
   if (cached) return { ...cached, cached: true };
 
+  // Retry once on failure. Vercel functions can cold-start slowly against
+  // Blockscout for high-tx addresses (first call may 504 at the 10s function
+  // timeout), then answer instantly on the warm-cache retry. Without this,
+  // 3-4 backend signals drop to unknown on a cold coin and the whole scan
+  // cascades to "grug not sure" for a legit token.
+  const withRetry = async (url) => {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const r = await fetch(url);
+        if (r.ok) return await r.json();
+      } catch (e) {}
+      if (attempt === 0) await new Promise(r => setTimeout(r, 250));
+    }
+    return null;
+  };
   const [onChain, explorer, deployerHist, priorRug, funding] = await Promise.all([
     readOnChain(addr),
-    fetch('/api/explorer-info?addr=' + addr).then(r => r.ok ? r.json() : null).catch(() => null),
-    fetch('/api/deployer-history?addr=' + addr).then(r => r.ok ? r.json() : null).catch(() => null),
-    fetch('/api/prior-rug-check?addr=' + addr).then(r => r.ok ? r.json() : null).catch(() => null),
-    fetch('/api/deployer-funding?addr=' + addr).then(r => r.ok ? r.json() : null).catch(() => null),
+    withRetry('/api/explorer-info?addr=' + addr),
+    withRetry('/api/deployer-history?addr=' + addr),
+    withRetry('/api/prior-rug-check?addr=' + addr),
+    withRetry('/api/deployer-funding?addr=' + addr),
   ]);
 
   if (onChain.notAContract) return { error: 'not_a_contract' };
