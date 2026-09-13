@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Coin Radar — Grugs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="grug smell rug from mile away. paste Robinhood coin. grug tell you if project safe.">
+<meta name="theme-color" content="#1A140F">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Grugs">
+<meta property="og:title" content="Coin Radar — grug smell rug">
+<meta property="og:description" content="paste ERC-20 contract on Robinhood Chain. get a rug score out of 100.">
+<meta property="og:url" content="https://grugnft.xyz/coin-radar">
+<meta property="og:image" content="https://grugnft.xyz/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@GrugNFT">
+<meta name="twitter:title" content="Coin Radar — grug smell rug">
+<meta name="twitter:description" content="paste ERC-20 contract on Robinhood Chain. get a rug score out of 100.">
+<meta name="twitter:image" content="https://grugnft.xyz/og.png">
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%231a140f'/><rect x='4' y='3' width='8' height='9' fill='%237b5a3e'/><rect x='3' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='12' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='4' y='5' width='2' height='1' fill='%23000'/><rect x='10' y='5' width='2' height='1' fill='%23000'/><rect x='5' y='6' width='1' height='1' fill='%23fff'/><rect x='10' y='6' width='1' height='1' fill='%23fff'/><rect x='6' y='9' width='4' height='1' fill='%23000'/><rect x='4' y='2' width='8' height='2' fill='%23000'/></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --stone: #1A140F;
+  --stone-2: #241A12;
+  --wall: #2B1F17;
+  --wall-2: #3A2A1E;
+  --torch: #E8A147;
+  --torch-hot: #FFC864;
+  --torch-peak: #FFF4C0;
+  --ember: #D14B2F;
+  --ember-hot: #F26A47;
+  --ember-deep: #7C2718;
+  --bone: #EDE1CE;
+  --bone-dim: #B8AA95;
+  --ash: #6B584A;
+  --moss: #7A9B5C;
+  --moss-hot: #8ac560;
+  --danger: #ff5a4a;
+  --warn: #ffb040;
+}
+
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(122,155,92,0.10) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 90%, rgba(209,75,47,0.05) 0%, transparent 40%),
+    var(--stone);
+  color: var(--bone);
+  font-family: 'VT323', ui-monospace, monospace;
+  font-size: 22px;
+  line-height: 1.35;
+  padding-bottom: 60px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Nav — same shape as scanner.html */
+header.nav {
+  position: sticky; top: 0; z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 14px 32px;
+  gap: 16px;
+  background: linear-gradient(180deg, var(--stone-2) 0%, rgba(26,20,15,0.85) 100%);
+  border-bottom: 2px solid var(--wall-2);
+  backdrop-filter: blur(6px);
+}
+.wordmark {
+  justify-self: start;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: var(--torch);
+  text-decoration: none;
+  letter-spacing: 2px;
+}
+.tabs { display: flex; gap: 10px; }
+.tab {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: var(--bone-dim);
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  letter-spacing: 1px;
+  transition: color .2s, border-color .2s;
+}
+.tab:hover { color: var(--bone); border-color: var(--wall-2); }
+.tab.active { color: var(--torch-hot); border-color: var(--torch); background: rgba(232,161,71,0.08); }
+.nav-right { justify-self: end; display: inline-flex; align-items: center; gap: 10px; }
+.chain-pill {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  padding: 6px 10px;
+  color: var(--moss-hot);
+  border: 1px solid var(--moss);
+  border-radius: 2px;
+  letter-spacing: 1px;
+}
+.chain-pill::before { content: '■ '; }
+.nav-x {
+  color: var(--bone-dim); text-decoration: none;
+  border: 1px solid var(--wall-2); padding: 6px 10px; border-radius: 2px;
+  transition: color .2s, border-color .2s, transform .2s;
+}
+.nav-x:hover { color: var(--torch); border-color: var(--torch); transform: translateY(-1px); }
+
+/* Hero */
+.hero {
+  max-width: 900px;
+  margin: 40px auto 24px;
+  padding: 0 24px;
+  text-align: center;
+}
+.hero h1 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 42px;
+  color: var(--torch);
+  margin: 0 0 14px;
+  letter-spacing: 3px;
+  text-shadow: 3px 3px 0 var(--ember-deep);
+}
+.hero .sub {
+  color: var(--moss-hot);
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+.hero .hint {
+  color: var(--bone-dim);
+  font-size: 18px;
+}
+.hero .hint b { color: var(--torch-hot); }
+
+.warn-strip {
+  max-width: 900px;
+  margin: 0 auto 22px;
+  padding: 12px 18px;
+  border: 1px solid var(--warn);
+  border-radius: 3px;
+  background: rgba(255,176,64,0.08);
+  color: var(--bone);
+  font-size: 18px;
+}
+.warn-strip b { color: var(--warn); }
+
+/* Input row */
+.scan-panel {
+  max-width: 900px;
+  margin: 0 auto 32px;
+  padding: 22px 24px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-radius: 4px;
+}
+.scan-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--torch-hot);
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+.scan-row {
+  display: flex; gap: 12px; align-items: stretch;
+}
+.scan-row input {
+  flex: 1;
+  background: var(--stone);
+  border: 1px solid var(--wall-2);
+  color: var(--bone);
+  padding: 12px 14px;
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  border-radius: 3px;
+  min-width: 0;
+}
+.scan-row input:focus { outline: none; border-color: var(--torch); }
+.scan-row button {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  padding: 0 28px;
+  color: var(--stone);
+  background: var(--moss-hot);
+  border: 2px solid var(--moss-hot);
+  border-radius: 3px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: background .2s, transform .1s;
+}
+.scan-row button:hover { background: var(--torch-hot); border-color: var(--torch-hot); }
+.scan-row button:active { transform: translateY(1px); }
+.scan-panel .footnote { color: var(--ash); font-size: 16px; margin-top: 12px; }
+
+.err {
+  max-width: 900px; margin: -14px auto 20px;
+  padding: 12px 18px;
+  border: 1px solid var(--danger);
+  border-radius: 3px;
+  background: rgba(255,90,74,0.08);
+  color: var(--danger);
+  font-size: 18px;
+  display: none;
+}
+.err.on { display: block; }
+
+.loading {
+  max-width: 900px; margin: 0 auto 22px;
+  padding: 22px 24px;
+  border: 1px dashed var(--torch);
+  border-radius: 3px;
+  color: var(--torch-hot);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-align: center;
+  display: none;
+}
+.loading.on { display: block; }
+.loading .sub { display: block; margin-top: 10px; color: var(--bone-dim); font-family: 'VT323', monospace; font-size: 20px; letter-spacing: 0; }
+
+/* Result panel */
+.result {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: none;
+}
+.result.on { display: block; }
+
+.result-head {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 28px;
+  align-items: center;
+  padding: 24px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+.gauge {
+  position: relative;
+  width: 160px; height: 160px;
+}
+.gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.gauge-num {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px;
+}
+.gauge-num .n {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 32px;
+  color: var(--bone);
+}
+.gauge-num .cap {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--ash);
+  letter-spacing: 1px;
+}
+.score-confidence {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--ash);
+  text-align: center;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.score-confidence .conf-sub { color: var(--ash); font-size: 7px; }
+.score-confidence b { font-weight: normal; }
+.score-confidence.good b { color: var(--moss-hot); }
+.score-confidence.ok   b { color: var(--warn); }
+.score-confidence.low  b { color: var(--danger); }
+
+.verdict {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 30px;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.verdict.green  { color: var(--moss-hot); }
+.verdict.yellow { color: var(--warn); }
+.verdict.red    { color: var(--danger); }
+.verdict.grey   { color: var(--bone-dim); }
+.grug-quote {
+  color: var(--bone-dim);
+  font-size: 20px;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+.project-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  color: var(--torch-hot);
+  margin-bottom: 6px;
+  letter-spacing: 2px;
+}
+.project-meta { color: var(--bone-dim); font-size: 17px; }
+.project-meta a { color: var(--torch); text-decoration: none; }
+.project-meta a:hover { text-decoration: underline; }
+
+.gauge-fill { fill: none; stroke-width: 10; stroke-linecap: round; }
+.gauge-fill.green  { stroke: var(--moss-hot); }
+.gauge-fill.yellow { stroke: var(--warn); }
+.gauge-fill.red    { stroke: var(--danger); }
+.gauge-fill.grey   { stroke: var(--bone-dim); }
+.gauge-track { fill: none; stroke: var(--wall-2); stroke-width: 10; }
+
+.data-quality {
+  display: flex; gap: 12px; margin-top: 10px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+.dq { padding: 4px 8px; border: 1px solid var(--wall-2); border-radius: 2px; }
+.dq.bad  { color: var(--danger); border-color: var(--danger); }
+.dq.good { color: var(--moss-hot); border-color: var(--moss); }
+.dq.unk  { color: var(--ash); }
+
+/* Categories */
+.cat {
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-radius: 4px;
+  padding: 22px 24px;
+  margin-bottom: 16px;
+}
+.cat-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--torch-hot);
+  letter-spacing: 2px;
+  margin: 0 0 16px;
+}
+.signal {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--wall-2);
+  align-items: flex-start;
+}
+.signal:last-child { border-bottom: none; }
+.signal-icon {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 22px;
+  color: var(--bone-dim);
+  text-align: center;
+}
+.signal.danger .signal-icon { color: var(--danger); }
+.signal.warn .signal-icon { color: var(--warn); }
+.signal.info .signal-icon { color: var(--ash); }
+.signal.danger { border-left: 3px solid var(--danger); padding-left: 10px; margin-left: -13px; }
+.signal.warn   { border-left: 3px solid var(--warn);   padding-left: 10px; margin-left: -13px; }
+.signal.cosmetic { border-left: 3px solid var(--bone-dim); padding-left: 10px; margin-left: -13px; }
+.signal.info   { border-left: 3px solid var(--ash);   padding-left: 10px; margin-left: -13px; }
+.signal-name { margin: 0 0 4px; color: var(--bone); font-size: 20px; }
+.signal-name code { color: var(--torch); font-family: 'VT323', monospace; }
+.signal-desc { margin: 0; color: var(--bone-dim); font-size: 18px; }
+.signal-desc code { color: var(--torch); font-family: 'VT323', monospace; padding: 0 4px; }
+.signal-desc b { color: var(--bone); font-weight: normal; }
+.signal-points {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--danger);
+  white-space: nowrap;
+}
+.signal-points.good { color: var(--moss-hot); }
+.signal-points.unknown { color: var(--ash); font-size: 10px; }
+.tier-tag {
+  display: inline-block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 3px 6px;
+  margin-right: 6px;
+  border-radius: 2px;
+  letter-spacing: 1px;
+  vertical-align: middle;
+}
+.tier-DEALBREAKER { background: var(--ember-deep); color: var(--bone); }
+.tier-SERIOUS     { background: rgba(255,90,74,0.15); color: var(--danger); border: 1px solid var(--danger); }
+.tier-WARNING     { background: rgba(255,176,64,0.15); color: var(--warn); border: 1px solid var(--warn); }
+.tier-COSMETIC    { background: transparent; color: var(--ash); border: 1px solid var(--wall-2); }
+
+.est-tag {
+  display: inline-block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 3px 6px;
+  margin-left: 8px;
+  color: var(--ash);
+  border: 1px solid var(--wall-2);
+  border-radius: 2px;
+  letter-spacing: 1px;
+  vertical-align: middle;
+}
+
+.v2-note {
+  margin-top: 16px;
+  padding: 10px 14px;
+  border: 1px dashed var(--wall-2);
+  border-radius: 3px;
+  color: var(--ash);
+  font-size: 17px;
+}
+
+@media (max-width: 900px) {
+  .hero h1 { font-size: 30px; }
+  .result-head { grid-template-columns: 1fr; text-align: center; }
+  .gauge { margin: 0 auto; }
+  .verdict { font-size: 22px; }
+}
+@media (max-width: 640px) {
+  .wordmark, .tabs, .nav-right { justify-self: center; }
+  header.nav { grid-template-columns: 1fr; }
+  .scan-row { flex-direction: column; }
+  .scan-row button { padding: 12px; }
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <a class="wordmark" href="index.html">GRUGS</a>
+  <nav class="tabs" role="tablist">
+    <a class="tab" href="index.html">home</a>
+    <a class="tab" href="scanner.html">rug radar</a>
+    <a class="tab active" href="coin-radar.html">coin radar</a>
+    <a class="tab" href="mints.html">mints</a>
+    <a class="tab" href="portfolio.html">portfolio</a>
+  </nav>
+  <div class="nav-right">
+    <a class="nav-x" href="https://twitter.com/GrugNFT" target="_blank" rel="noopener noreferrer" title="@GrugNFT on Twitter" aria-label="Twitter">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:block"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    </a>
+    <span class="chain-pill">RHC</span>
+  </div>
+</header>
+
+<section class="hero">
+  <h1>COIN RADAR</h1>
+  <p class="sub">grug smell rug in coins too</p>
+  <p class="hint">paste ERC-20 contract on Robinhood chain. grug tell you if project safe.</p>
+</section>
+
+<div class="warn-strip">
+  ⚠ <b>grug word:</b> radar not oracle. grug make mistake sometimes. always <a href="https://x.com/GrugNFT" style="color:var(--torch)">do your own research</a> before you buy.
+</div>
+
+<section class="scan-panel">
+  <div class="scan-label">CONTRACT ADDRESS</div>
+  <div class="scan-row">
+    <input id="addr" type="text" placeholder="0x…" autocomplete="off" spellcheck="false">
+    <button id="scan-btn">GRUG SNIFF</button>
+  </div>
+  <p class="footnote">grug scan <b style="color:var(--torch)">ERC-20</b> on Robinhood Chain only for now. <b>free scan</b> for tribe.</p>
+</section>
+
+<div class="err" id="scan-error"></div>
+
+<div class="loading" id="loading">
+  GRUG SNIFFING…
+  <span class="sub" id="loading-sub">grug lick contract…</span>
+</div>
+
+<section class="result" id="result">
+  <div class="result-head">
+    <div class="gauge">
+      <svg viewBox="0 0 120 120">
+        <circle class="gauge-track" cx="60" cy="60" r="50"/>
+        <circle id="gauge-fill" class="gauge-fill" cx="60" cy="60" r="50"/>
+      </svg>
+      <div class="gauge-num">
+        <span class="n" id="score-num">?</span>
+        <span class="cap">/100 RISK</span>
+      </div>
+    </div>
+    <div>
+      <div class="verdict" id="verdict">grug thinking…</div>
+      <p class="grug-quote" id="grug-quote">grug still sniffing.</p>
+      <div class="project-name" id="project-name">Unknown</div>
+      <div class="project-meta" id="project-meta">
+        <span id="project-meta-bits"></span>
+        <span style="color:var(--ash)"> · contract: </span><a id="explorer-link" href="#" target="_blank" rel="noopener"><span id="addr-echo">0x…</span></a>
+      </div>
+      <div class="data-quality" id="data-quality" hidden></div>
+    </div>
+  </div>
+
+  <div class="cat">
+    <h3 class="cat-title">contract</h3>
+    <div id="signals-contract"></div>
+  </div>
+  <div class="cat">
+    <h3 class="cat-title">deployer</h3>
+    <div id="signals-deployer"></div>
+  </div>
+  <div class="cat">
+    <h3 class="cat-title">distribution</h3>
+    <div id="signals-distribution"></div>
+  </div>
+  <div class="cat">
+    <h3 class="cat-title">market</h3>
+    <div id="signals-market"></div>
+    <div class="v2-note">note: LP-lock and honeypot simulation land in coin-radar v2 (needs a Robinhood-Chain DEX registry). the rest of the signals give a solid read on the contract and deployer today.</div>
+  </div>
+</section>
+
+<script type="module">
+import { fullCoinScore, SIGNAL_TIER } from '/scripts/coin-score-engine.mjs';
+
+const EXPLORER = 'https://robinhoodchain.blockscout.com/address/';
+
+// Signal metadata — text shown per row, keyed by signal id from the engine.
+// Every id from SIGNAL_TIER must have an entry here, or the row falls back
+// to a generic label. Keep the bad/good strings short — the row template
+// interpolates them verbatim.
+const META = {
+  // contract
+  unverified:        { cat: 'contract', name: 'contract source verified',
+                       bad: 'source not verified. grug can\'t read what this contract does.',
+                       good: 'source verified on Blockscout. anyone can audit.' },
+  proxy:             { cat: 'contract', name: 'upgradeable proxy',
+                       bad: 'contract is behind an upgradeable proxy. team can swap in new code any time.',
+                       good: 'no upgrade proxy. code is what you see.' },
+  ownerActive:       { cat: 'contract', name: 'owner still active',
+                       bad: 'owner key still active. team can call admin functions.',
+                       good: 'owner renounced or multi-sig. admin path locked down.' },
+  mintable:          { cat: 'contract', name: 'owner can mint supply',
+                       bad: 'owner-callable mint(). owner can print unlimited new supply and dump.',
+                       good: 'no owner-mint under active key. supply is fixed.' },
+  pausable:          { cat: 'contract', name: 'pause switch present',
+                       bad: 'contract has pause(). owner can freeze every transfer.',
+                       good: 'no pause selector. contract cannot be frozen.' },
+  currentlyPaused:   { cat: 'contract', name: 'currently paused',
+                       bad: 'contract is paused right now. transfers reverting.',
+                       good: 'contract not paused. transfers flowing.' },
+  blacklistable:     { cat: 'contract', name: 'wallet blacklist power',
+                       bad: 'owner can blacklist / freeze individual wallets.',
+                       good: 'no blacklist controls exposed.' },
+  feeChangeable:     { cat: 'contract', name: 'buy/sell tax mutable',
+                       bad: 'owner can change buy/sell tax. tax can be flipped to 99%.',
+                       good: 'no tax-mutation selectors. tax cannot be changed.' },
+  walletDrainer:     { cat: 'contract', name: 'drainer selectors',
+                       bad: 'bytecode has drainer/sweep selectors. approvals here can be swept.',
+                       good: 'no drainer-adjacent selectors found.' },
+  freshDeploy:       { cat: 'contract', name: 'fresh deploy → hot launch',
+                       bad: 'contract deployed and minted in the same hour. no testing window.',
+                       good: 'contract had a real gap between deploy and first activity.' },
+  tradingGate:       { cat: 'contract', name: 'trading gate switch',
+                       bad: 'owner can toggle trading on/off with an enableTrading()-style function.',
+                       good: 'no trading-gate switch controlled by owner.' },
+  maxLimitControl:   { cat: 'contract', name: 'max-wallet / max-tx caps',
+                       bad: 'owner can move max-wallet or max-tx caps. classic soft-rug lever — drop caps to zero and only insiders can trade.',
+                       good: 'no owner-controlled trading limits.' },
+  honeypotSim:       { cat: 'market', name: 'honeypot transfer simulation',
+                       bad: 'simulated transfer reverted with a lock reason. probable honeypot — you can\'t sell what you buy.',
+                       good: 'simulated transfer succeeded (or reverted only on the standard permission check). transfers work.' },
+  // deployer
+  freshWallet:       { cat: 'deployer', name: 'fresh deployer wallet',
+                       bad: 'deployer wallet has almost no history.',
+                       good: 'deployer wallet has established history.' },
+  emptyBalance:      { cat: 'deployer', name: 'empty deployer wallet',
+                       bad: 'deployer wallet is near-empty. deploy-and-vanish pattern.',
+                       good: 'deployer wallet holds funds. skin in the game.' },
+  firstDeploy:       { cat: 'deployer', name: 'first-ever deploy',
+                       bad: 'this is the deployer\'s only contract we can see. no reputation.',
+                       good: 'deployer has shipped other contracts. some reputation.' },
+  mixerFunded:       { cat: 'deployer', name: 'funded from mixer',
+                       bad: 'funding path goes through a known mixer.',
+                       good: 'no mixer contact in funding chain.' },
+  priorRug:          { cat: 'deployer', name: 'past rug on same wallet',
+                       bad: 'deployer has other tokens that never traded. serial-deploy pattern.',
+                       good: 'deployer\'s other tokens have real activity.' },
+  freshFunding:      { cat: 'deployer', name: 'funded from fresh wallet',
+                       bad: 'deployer funded from a low-history wallet. disposable identity.',
+                       good: 'deployer funded from an established wallet or exchange.' },
+  // distribution
+  topHeavyErc20:     { cat: 'distribution', name: 'top 10 hold > 60% (ex LP)',
+                       bad: 'top 10 wallets (excluding LP) hold more than 60% of supply. one dump kills price.',
+                       good: 'top 10 wallets hold a reasonable share of supply.' },
+  singleHolderDominant: { cat: 'distribution', name: 'top wallet > 30% (ex LP)',
+                       bad: 'a single wallet (not LP) holds more than 30% of supply.',
+                       good: 'no single non-LP wallet holds > 30% of supply.' },
+  deployerHoldsBig:  { cat: 'distribution', name: 'deployer in top holders (>10%)',
+                       bad: 'deployer wallet is a top holder with more than 10% of supply. one press of "sell all" nukes the price.',
+                       good: 'deployer wallet is not among the top holders.' },
+  noHolders:         { cat: 'distribution', name: 'holder count',
+                       bad: 'fewer than 5 holders. nobody wants it, or nobody has heard.',
+                       good: 'holder count looks alive.' },
+  deadContract:      { cat: 'distribution', name: 'contract has activity',
+                       bad: 'zero transfers on-chain. nothing moving.',
+                       good: 'contract has real transfer activity.' },
+  // market
+  lpDetected:        { cat: 'market', name: 'LP pair detected',
+                       bad: 'no DEX pair among the top holders. no liquidity to trade against — coin is either brand-new, dead, or the LP is somewhere grug can\'t find.',
+                       good: 'DEX pair detected among the top holders. real liquidity exists.' },
+  lpBurned:          { cat: 'market', name: 'LP tokens burned',
+                       bad: 'LP tokens are not burned to a dead address.',
+                       good: 'majority of LP tokens sit at a burn address. liquidity is permanently locked — cannot be pulled.' },
+  lpUnlocked:        { cat: 'market', name: 'deployer holds LP tokens',
+                       bad: 'deployer address holds more than 5% of the LP tokens, and liquidity is not burned. team can pull their share of the pool at any moment.',
+                       good: 'deployer does not hold a meaningful share of LP tokens.' },
+  currentBuyTax:     { cat: 'market', name: 'current buy tax',
+                       bad: 'buy tax exceeds 10%. every purchase gets skimmed hard.',
+                       good: 'buy tax is 10% or lower.' },
+  currentSellTax:    { cat: 'market', name: 'current sell tax',
+                       bad: 'sell tax exceeds 10%. every sale gets skimmed hard — classic soft-rug pattern.',
+                       good: 'sell tax is 10% or lower.' },
+};
+
+// Add walletDrainer / etc into the market/contract bucket for rendering
+// order — everything not in META falls into its declared cat via SIGNAL_TIER
+// lookup and a generic label.
+
+const LOADING_MESSAGES = [
+  'grug lick contract…',
+  'grug read bytecode…',
+  'grug count holders…',
+  'grug check deployer…',
+  'grug trace funding…',
+  'grug think about tax…',
+  'grug sniff for mint switch…',
+];
+
+function isValidAddress(s) {
+  return /^0x[0-9a-fA-F]{40}$/.test((s || '').trim());
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function short(a) { if (!a) return ''; return a.slice(0, 6) + '…' + a.slice(-4); }
+
+function iconFor(state) { return state === 'bad' ? '×' : state === 'good' ? '✓' : '?'; }
+function pointsFor(sig, weight) {
+  if (sig.state === 'bad')  return { text: '+' + weight, cls: '' };
+  if (sig.state === 'good') return { text: 'OK', cls: 'good' };
+  return { text: 'unknown', cls: 'unknown' };
+}
+function rowClass(sig, tier) {
+  if (sig.state === 'bad') {
+    if (tier === 'DEALBREAKER' || tier === 'SERIOUS') return 'danger';
+    if (tier === 'WARNING') return 'warn';
+    return 'cosmetic';
+  }
+  if (sig.state === 'unknown') return 'info';
+  return '';
+}
+
+const QUOTES = {
+  grey:   'grug\'s chain went quiet on too many checks. try again in a minute.',
+  green:  'grug think this coin okay. grug still watch though.',
+  yellow: 'coin smell funny. maybe rug. maybe just messy. tribe read the flags.',
+  red:    'grug not like this coin. many warning. grug go back in cave.',
+};
+const UTILITY_QUOTE = 'wrapper / bridge asset. rug heuristics don\'t really apply — grug scored the ones that do.';
+
+function renderSignals(containerId, items) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  for (const sig of items) {
+    const meta = META[sig.id] || { name: sig.id, bad: '', good: '' };
+    const tier = SIGNAL_TIER[sig.id] || 'COSMETIC';
+    const row = document.createElement('div');
+    row.className = 'signal ' + rowClass(sig, tier);
+    const p = pointsFor(sig, sig.weight);
+    const desc = sig.state === 'bad'  ? meta.bad
+               : sig.state === 'good' ? meta.good
+               : (sig.unknownText || 'grug still learning to sniff this one. not counted in score.');
+    const tierBadge = `<span class="tier-tag tier-${tier}" title="tier: ${tier.toLowerCase()} · weight ${sig.weight}">${tier}</span>`;
+    row.innerHTML = `
+      <div class="signal-icon">${iconFor(sig.state)}</div>
+      <div>
+        <p class="signal-name">${tierBadge}${escapeHtml(meta.name)}${sig.state === 'unknown' ? '<span class="est-tag">ESTIMATE</span>' : ''}</p>
+        <p class="signal-desc">${desc}</p>
+      </div>
+      <div class="signal-points ${p.cls}">${p.text}</div>
+    `;
+    el.appendChild(row);
+  }
+}
+
+function bucketize(breakdown) {
+  const cats = { contract: [], deployer: [], distribution: [], market: [] };
+  for (const sig of breakdown) {
+    const meta = META[sig.id];
+    const cat = meta?.cat || 'contract';
+    cats[cat].push(sig);
+  }
+  return cats;
+}
+
+function renderReport(result, addr) {
+  document.getElementById('addr-echo').textContent = short(addr);
+  document.getElementById('explorer-link').href = EXPLORER + addr;
+
+  const projName = result.raw?.name || result.raw?.explorer?.tokenName || result.raw?.explorer?.explorerName || 'Unknown Coin';
+  document.getElementById('project-name').textContent = projName;
+  const sym = result.raw?.symbol || result.raw?.explorer?.tokenSymbol || '';
+  const bits = [];
+  bits.push('ERC-20');
+  if (sym) bits.push('$' + sym);
+  if (result.isUtility) bits.push('UTILITY');
+  document.getElementById('project-meta-bits').textContent = bits.join(' · ');
+
+  const tone = result.tone || 'grey';
+  const verdictText = result.verdict || 'grug not sure';
+  const quote = result.isUtility && tone === 'green' ? UTILITY_QUOTE : (QUOTES[tone] || QUOTES.grey);
+  const verdictEl = document.getElementById('verdict');
+  verdictEl.className = 'verdict ' + tone;
+  verdictEl.textContent = verdictText;
+  document.getElementById('grug-quote').textContent = quote;
+  document.getElementById('score-num').textContent = result.score;
+
+  const gauge = document.getElementById('gauge-fill');
+  const CIRC = 2 * Math.PI * 50;
+  gauge.setAttribute('stroke-dasharray', CIRC.toFixed(2));
+  gauge.setAttribute('stroke-dashoffset', CIRC.toFixed(2));
+  gauge.setAttribute('class', 'gauge-fill ' + tone);
+  requestAnimationFrame(() => {
+    gauge.setAttribute('stroke-dashoffset', (CIRC * (1 - result.score / 100)).toFixed(2));
+  });
+
+  // Confidence chip
+  const confTone = result.confidence >= 80 ? 'good' : result.confidence >= 60 ? 'ok' : 'low';
+  let confEl = document.getElementById('score-confidence');
+  if (!confEl) {
+    confEl = document.createElement('div');
+    confEl.id = 'score-confidence';
+    document.querySelector('.gauge-num')?.appendChild(confEl);
+  }
+  confEl.className = 'score-confidence ' + confTone;
+  confEl.innerHTML = `CONF <b>${result.confidence}%</b><br><span class="conf-sub">${result.resolved}/${result.totalSignals} checks</span>`;
+
+  // Data quality
+  const good = result.breakdown.filter(s => s.state === 'good').length;
+  const bad  = result.breakdown.filter(s => s.state === 'bad').length;
+  const unk  = result.breakdown.filter(s => s.state === 'unknown').length;
+  const dq = document.getElementById('data-quality');
+  dq.innerHTML = `<span class="dq bad">${bad} FLAGGED</span><span class="dq good">${good} OK</span><span class="dq unk">${unk} ESTIMATE</span>`;
+  dq.hidden = false;
+
+  const cats = bucketize(result.breakdown);
+  renderSignals('signals-contract',     cats.contract);
+  renderSignals('signals-deployer',     cats.deployer);
+  renderSignals('signals-distribution', cats.distribution);
+  renderSignals('signals-market',       cats.market);
+
+  const res = document.getElementById('result');
+  res.classList.add('on');
+  res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showError(msg) {
+  const err = document.getElementById('scan-error');
+  err.textContent = msg;
+  err.classList.add('on');
+}
+function clearError() {
+  document.getElementById('scan-error').classList.remove('on');
+}
+
+let loadingTimer = null;
+function startLoading() {
+  clearError();
+  document.getElementById('result').classList.remove('on');
+  document.getElementById('loading').classList.add('on');
+  const sub = document.getElementById('loading-sub');
+  let i = 0;
+  sub.textContent = LOADING_MESSAGES[0];
+  loadingTimer = setInterval(() => {
+    i = (i + 1) % LOADING_MESSAGES.length;
+    sub.textContent = LOADING_MESSAGES[i];
+  }, 700);
+}
+function stopLoading() {
+  clearInterval(loadingTimer);
+  document.getElementById('loading').classList.remove('on');
+}
+
+async function runScan(addr) {
+  const clean = (addr || '').trim();
+  if (!isValidAddress(clean)) {
+    showError('grug not understand. paste real 0x address (40 hex chars after 0x).');
+    return;
+  }
+  document.getElementById('addr').value = clean;
+  startLoading();
+  try {
+    const result = await fullCoinScore(clean);
+    stopLoading();
+    if (result && result.error === 'not_a_contract') {
+      showError('grug find no code at this address. it is a wallet or empty, not a contract.');
+      return;
+    }
+    renderReport(result, clean);
+  } catch (e) {
+    stopLoading();
+    showError('grug hit a rock: ' + escapeHtml(e.message || 'chain call failed') + '. try again in a moment.');
+  }
+}
+
+document.getElementById('scan-btn').addEventListener('click', () => {
+  runScan(document.getElementById('addr').value);
+});
+document.getElementById('addr').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') runScan(document.getElementById('addr').value);
+});
+
+// Deep-link support: /coin-radar.html?addr=0x…
+const initial = new URLSearchParams(location.search).get('addr');
+if (initial) {
+  document.getElementById('addr').value = initial;
+  runScan(initial);
+}
+</script>
+
+<script type="module" src="/scripts/gate.mjs"></script>
+
+</body>
+</html>
