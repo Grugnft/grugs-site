@@ -2,21 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Portfolio — Grugs</title>
+<title>Mints — Grugs</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="every NFT you own on Robinhood Chain, straight from OpenSea's wallet view.">
+<meta name="description" content="upcoming NFT mints on Robinhood Chain. grug rate each one out of 100 so you know if project safe.">
 <meta name="theme-color" content="#1A140F">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Grugs">
-<meta property="og:title" content="Portfolio — grug track everything you own">
-<meta property="og:description" content="paste your wallet. see every RHC NFT you own, exactly as OpenSea sees it.">
-<meta property="og:url" content="https://grugnft.xyz/portfolio">
+<meta property="og:title" content="Mints — grug rate every drop">
+<meta property="og:description" content="upcoming NFT mints on Robinhood Chain, each pre-scored by grug.">
+<meta property="og:url" content="https://grugnft.xyz/mints">
 <meta property="og:image" content="https://grugnft.xyz/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@GrugNFT">
-<meta name="twitter:title" content="Portfolio — grug track everything you own">
-<meta name="twitter:description" content="paste your wallet. see every RHC NFT you own, exactly as OpenSea sees it.">
+<meta name="twitter:title" content="Mints — grug rate every drop">
+<meta name="twitter:description" content="upcoming NFT mints on Robinhood Chain, each pre-scored by grug.">
 <meta name="twitter:image" content="https://grugnft.xyz/og.png">
 
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%231a140f'/><rect x='4' y='3' width='8' height='9' fill='%237b5a3e'/><rect x='3' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='12' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='4' y='5' width='2' height='1' fill='%23000'/><rect x='10' y='5' width='2' height='1' fill='%23000'/><rect x='5' y='6' width='1' height='1' fill='%23fff'/><rect x='10' y='6' width='1' height='1' fill='%23fff'/><rect x='6' y='9' width='4' height='1' fill='%23000'/><rect x='4' y='2' width='8' height='2' fill='%23000'/></svg>">
@@ -43,6 +43,7 @@
   --danger: #ff5a4a;
   --warn: #ffb040;
 }
+
 html, body { min-height: 100%; }
 body {
   margin: 0;
@@ -57,277 +58,468 @@ body {
   padding-bottom: 60px;
   -webkit-font-smoothing: antialiased;
 }
+
+/* NAV (matches other pages) */
 header.nav {
   position: sticky; top: 0; z-index: 20;
-  display: grid; grid-template-columns: 1fr auto 1fr;
-  align-items: center; padding: 14px 32px; gap: 16px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 14px 32px;
+  gap: 16px;
   background: linear-gradient(to bottom, rgba(26,20,15,0.98), rgba(26,20,15,0.90));
   border-bottom: 3px double var(--wall-2);
   backdrop-filter: blur(6px);
 }
 .wordmark {
-  font-family: 'Press Start 2P', monospace; font-size: 20px;
-  color: var(--torch); letter-spacing: 2px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: var(--torch);
+  letter-spacing: 2px;
   text-shadow: 0 0 14px rgba(232,161,71,0.35);
-  cursor: pointer; user-select: none; justify-self: start; text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  justify-self: start;
+  text-decoration: none;
 }
 .tabs { display: flex; gap: 4px; justify-self: center; }
 .tab {
-  padding: 8px 16px; color: var(--bone-dim); cursor: pointer;
-  border: 2px solid transparent; background: transparent;
-  font-family: 'VT323', monospace; font-size: 20px; letter-spacing: 1px;
-  text-transform: lowercase; text-decoration: none;
+  padding: 8px 16px;
+  color: var(--bone-dim);
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: transparent;
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  letter-spacing: 1px;
+  text-transform: lowercase;
+  text-decoration: none;
 }
 .tab:hover { color: var(--bone); border-color: var(--wall-2); }
-.tab.active { color: var(--stone); background: var(--torch); border-color: var(--torch); }
+.tab.active {
+  color: var(--stone);
+  background: var(--torch);
+  border-color: var(--torch);
+}
 .nav-right { justify-self: end; display: inline-flex; align-items: center; gap: 10px; }
 .chain-badge {
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 10px; border: 2px solid var(--wall-2);
+  padding: 6px 10px;
+  border: 2px solid var(--wall-2);
   color: var(--bone-dim);
-  font-family: 'Press Start 2P', monospace; font-size: 10px; letter-spacing: 1px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px; letter-spacing: 1px;
 }
 .chain-badge::before {
   content: ""; width: 8px; height: 8px;
-  background: var(--moss); box-shadow: 0 0 6px var(--moss);
+  background: var(--moss);
+  box-shadow: 0 0 6px var(--moss);
 }
 .nav-x {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; color: var(--bone-dim);
-  border: 2px solid var(--wall-2); text-decoration: none;
+  width: 30px; height: 30px;
+  color: var(--bone-dim);
+  border: 2px solid var(--wall-2);
+  text-decoration: none;
   transition: color 120ms, border-color 120ms, transform 120ms;
 }
 .nav-x:hover { color: var(--torch); border-color: var(--torch); transform: translateY(-1px); }
 
 main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
 
-.page-hero { text-align: center; padding: 12px 0 28px; border-bottom: 3px double var(--wall-2); margin-bottom: 24px; }
+.page-hero {
+  text-align: center;
+  padding: 12px 0 28px;
+  border-bottom: 3px double var(--wall-2);
+  margin-bottom: 24px;
+}
 .page-hero h1 {
-  font-family: 'Press Start 2P', monospace; font-size: clamp(28px, 5vw, 44px);
-  letter-spacing: 4px; color: var(--bone); margin: 6px 0 10px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(28px, 5vw, 44px);
+  letter-spacing: 4px;
+  color: var(--bone);
+  margin: 6px 0 10px;
   text-shadow: 3px 3px 0 var(--ember-deep), 6px 6px 0 rgba(0,0,0,0.5);
 }
-.page-hero .tagline { color: var(--torch); font-size: clamp(20px, 2vw, 26px); letter-spacing: 2px; margin: 0 0 4px; }
-.page-hero .sub { color: var(--bone-dim); font-size: 18px; margin: 0; }
-.page-hero .via { color: var(--ash); font-size: 14px; margin: 6px 0 0; letter-spacing: 1px; }
-
-.wallet-box {
-  border: 2px solid var(--wall-2);
-  background: var(--stone-2);
-  padding: 18px 20px;
-  margin-bottom: 22px;
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 12px;
-  align-items: center;
-}
-.wallet-box .k {
-  grid-column: 1 / -1;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px; letter-spacing: 1.5px;
-  color: var(--ash);
+.page-hero .tagline {
+  color: var(--torch);
+  font-size: clamp(20px, 2vw, 26px);
+  letter-spacing: 2px;
   margin: 0 0 4px;
 }
-#wallet-input {
-  padding: 12px 14px;
-  background: var(--stone);
+.page-hero .sub {
+  color: var(--bone-dim);
+  font-size: 18px;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.disclaimer-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  margin: 0 0 32px;
+  background: var(--stone-2);
   border: 2px solid var(--wall-2);
+  border-left: 5px solid var(--warn);
   color: var(--bone);
-  font-family: 'VT323', monospace;
-  font-size: 20px;
+  font-size: 18px;
+  line-height: 1.45;
+  letter-spacing: 0.3px;
 }
-#wallet-input:focus { outline: none; border-color: var(--torch); }
-.btn {
-  padding: 12px 20px;
+.disclaimer-bar .dis-icon {
+  color: var(--warn);
   font-family: 'Press Start 2P', monospace;
-  font-size: 10px; letter-spacing: 1.5px;
-  color: var(--stone); background: var(--torch);
-  border: none; cursor: pointer;
-  transition: filter 120ms;
+  font-size: 18px;
+  line-height: 1.3;
 }
-.btn:hover { filter: brightness(1.12); }
-.btn.ghost { background: transparent; border: 2px solid var(--wall-2); color: var(--bone-dim); }
-.btn.ghost:hover { color: var(--bone); border-color: var(--bone); background: rgba(0,0,0,0.15); }
+.disclaimer-bar .dis-text b { color: var(--torch); }
 
-.stats-bar {
-  display: flex; gap: 24px; align-items: baseline;
-  margin: 0 0 14px;
-  padding: 0 4px;
+.section-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  color: var(--torch);
+  letter-spacing: 3px;
+  margin: 32px 0 20px;
+  text-transform: lowercase;
 }
-.stats-bar .stat { color: var(--bone-dim); font-size: 17px; }
-.stats-bar .stat b { color: var(--bone); font-size: 20px; }
+.section-title::before { content: "▸ "; color: var(--ember); }
+.section-sub {
+  color: var(--bone-dim);
+  font-size: 18px;
+  margin: -12px 0 20px;
+  letter-spacing: 0.5px;
+}
 
-.filter-bar {
-  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-  margin: 0 0 18px; padding: 10px 12px;
-  background: var(--stone-2); border: 1px dashed var(--wall-2);
-  color: var(--bone-dim); font-size: 15px;
+.sources-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 20px;
+  font-size: 15px;
 }
-.filter-bar label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
-.filter-bar input[type="checkbox"] { accent-color: var(--torch); }
-.filter-bar input[type="text"] {
-  background: var(--stone); border: 1px solid var(--wall-2);
-  color: var(--bone); font-family: 'VT323', monospace; font-size: 15px;
-  padding: 4px 8px; width: 200px;
+.filter-row {
+  margin: -8px 0 16px;
+  padding: 10px 14px;
+  background: var(--stone-2);
+  border: 1px solid var(--wall-2);
+  border-left: 4px solid var(--ash);
 }
-.filter-bar input[type="text"]:focus { outline: none; border-color: var(--torch); }
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--bone-dim);
+  font-size: 17px;
+  cursor: pointer;
+  user-select: none;
+}
+.filter-toggle input {
+  width: 16px; height: 16px;
+  accent-color: var(--torch);
+  cursor: pointer;
+}
+.filter-hint {
+  color: var(--ash);
+  font-size: 15px;
+  margin-left: 4px;
+}
+.mint-card.filtered-out { display: none; }
+.src-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--stone-2);
+  border: 1px solid var(--wall-2);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--bone-dim);
+}
+.src-chip.curated::before { content:""; width:7px; height:7px; background:var(--torch); }
+.src-chip.opensea::before { content:""; width:7px; height:7px; background:var(--moss-hot); }
+.src-chip.nft::before     { content:""; width:7px; height:7px; background:var(--ember); }
+.src-chip.pending::before { content:""; width:7px; height:7px; background:var(--ash); }
+.src-chip a { color: var(--torch); text-decoration: underline; }
+.src-chip a:hover { color: var(--torch-hot); }
 
-.collections { display: flex; flex-direction: column; gap: 10px; }
-.collection-row {
+.mint-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+.mint-card {
+  padding: 22px 22px 18px;
+  background: var(--stone-2);
   border: 2px solid var(--wall-2);
   border-left: 6px solid var(--ash);
-  background: var(--stone-2);
-  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 260px;
+  transition: transform 0.15s, border-color 0.15s;
+  position: relative;
 }
-.collection-row.hidden-by-user { display: none; }
-.row-head {
-  display: grid;
-  grid-template-columns: 56px 1fr auto auto auto;
-  gap: 16px;
-  align-items: center;
-}
-.row-head .thumb {
-  width: 56px; height: 56px;
-  background: var(--stone);
-  border: 1px solid var(--wall-2);
-  image-rendering: pixelated;
-  object-fit: cover;
-}
-.row-head .thumb-fallback {
-  display: flex; align-items: center; justify-content: center;
-  color: var(--ash);
+.mint-card.featured { border-left-color: var(--torch); background: linear-gradient(to bottom, rgba(232,161,71,0.04), var(--stone-2) 30%); }
+.mint-card.green   { border-left-color: var(--moss-hot); }
+.mint-card.yellow  { border-left-color: var(--warn); }
+.mint-card.red     { border-left-color: var(--danger); }
+.mint-card:hover { transform: translateY(-2px); }
+.featured-badge {
+  position: absolute;
+  top: -8px; right: 12px;
+  padding: 2px 8px;
+  background: var(--torch);
+  color: var(--stone);
   font-family: 'Press Start 2P', monospace;
-  font-size: 14px;
+  font-size: 9px;
+  letter-spacing: 1px;
 }
-.row-head .name-wrap { min-width: 0; }
-.row-head .name {
-  font-family: 'VT323', monospace;
-  font-size: 26px;
+
+/* "NEW" tag on the top-N recently-indexed on-chain cards. Sits opposite the
+   featured badge so the two never overlap. Blockscout's /tokens is sorted
+   newest-first at deploy time, so position IS the freshness signal — no
+   extra API call needed. When enrichment succeeds later, the mc-deployed
+   text can replace/augment the badge. */
+.new-badge {
+  position: absolute;
+  top: -8px; left: 12px;
+  padding: 2px 8px;
+  background: var(--moss-hot);
+  color: var(--stone);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+.mc-deployed {
+  display: inline-block;
+  margin-left: 6px;
+  color: var(--bone-dim);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.mc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.mc-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
   color: var(--bone);
+  letter-spacing: 1px;
+  margin: 0 0 4px;
   word-break: break-word;
+  line-height: 1.25;
 }
-.row-head .name .slug {
-  color: var(--ash); font-size: 14px; margin-left: 6px; letter-spacing: 0.5px;
-}
-.row-head .metric {
-  text-align: right;
-  font-size: 14px;
-  color: var(--bone-dim);
-  min-width: 80px;
-}
-.row-head .metric b { display: block; color: var(--bone); font-size: 18px; }
-.row-head .row-actions { display: inline-flex; gap: 6px; }
-.row-head .row-actions button {
-  padding: 6px 8px;
-  background: transparent;
-  border: 1px solid var(--wall-2);
-  color: var(--bone-dim);
-  cursor: pointer;
+.mc-symbol {
   font-family: 'Press Start 2P', monospace;
-  font-size: 9px; letter-spacing: 1px;
-  transition: color 120ms, border-color 120ms;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--bone-dim);
 }
-.row-head .row-actions button:hover { color: var(--bone); border-color: var(--bone); }
+.mc-score {
+  flex: 0 0 auto;
+  min-width: 50px;
+  max-width: 68px;              /* stop long verdicts like "grug approve" from squeezing the name at 260px card widths */
+  padding: 6px 8px;
+  background: var(--stone);
+  border: 2px solid var(--wall-2);
+  text-align: center;
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1.1;
+}
+.mc-score .n {
+  font-size: 18px;
+  color: var(--bone-dim);
+  display: block;
+}
+.mc-score .l {
+  font-size: 7px;
+  color: var(--bone-dim);
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  display: block;
+  word-break: break-word;       /* allow "grug approve" to wrap onto two lines rather than push the score cell wider */
+}
+.mc-score.pending { border-color: var(--ash); }
+.mc-score.pending .n { color: var(--ash); font-size: 12px; padding: 4px 0; }
+.mc-score.green  { border-color: var(--moss-hot); }
+.mc-score.green .n  { color: var(--moss-hot); }
+.mc-score.yellow { border-color: var(--warn); }
+.mc-score.yellow .n { color: var(--warn); }
+.mc-score.red    { border-color: var(--danger); }
+.mc-score.red .n    { color: var(--danger); }
+/* Grey tone — engine returned confidence < 60%. The score isn't wrong; we
+   just didn't check enough of the contract to promise anything. */
+.mc-score.grey   { border-color: var(--bone-dim); }
+.mc-score.grey .n { color: var(--bone-dim); }
 
-.row-head .row-actions button.rug-check-btn.checking {
-  color: var(--bone-dim); border-color: var(--wall-2); cursor: wait;
-  animation: rug-pulse 1s ease-in-out infinite alternate;
+.mc-tagline {
+  color: var(--bone);
+  font-size: 18px;
+  line-height: 1.4;
+  margin: 0;
 }
-@keyframes rug-pulse { from { opacity: 0.55; } to { opacity: 1; } }
-
-.row-head .row-actions button.rug-check-btn.score-chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 8px;
-  border-width: 1px;
-}
-.row-head .row-actions button.rug-check-btn.score-chip b {
-  font-size: 12px; letter-spacing: 0;
-}
-.row-head .row-actions button.rug-check-btn.score-chip span {
-  font-size: 8px; letter-spacing: 1px; opacity: 0.85;
-}
-.row-head .row-actions button.rug-check-btn.tone-green {
-  color: var(--moss-hot); border-color: var(--moss); background: rgba(122, 155, 92, 0.08);
-}
-.row-head .row-actions button.rug-check-btn.tone-yellow {
-  color: var(--torch-hot); border-color: var(--torch); background: rgba(232, 161, 71, 0.08);
-}
-.row-head .row-actions button.rug-check-btn.tone-red {
-  color: var(--ember-hot); border-color: var(--ember); background: rgba(209, 75, 47, 0.08);
-}
-.row-head .row-actions button.rug-check-btn.score-note {
-  color: var(--ash); border-color: var(--wall-2); font-size: 8px;
-}
-
-.tokens-drawer {
-  margin-top: 12px;
-  padding-top: 12px;
+.mc-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  padding: 10px 0;
   border-top: 1px dashed var(--wall-2);
+  border-bottom: 1px dashed var(--wall-2);
+  font-size: 16px;
+  color: var(--bone-dim);
+}
+.mc-meta .k {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--ash);
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 2px;
+}
+.mc-meta .v { color: var(--bone); font-size: 17px; }
+
+.mc-cta {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 6px;
+  flex-wrap: wrap;
+}
+.mc-btn {
+  flex: 1 1 auto;
+  padding: 10px 14px;
+  background: var(--moss);
+  color: var(--stone);
+  border: none;
+  border-bottom: 4px solid #4a6a3a;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: filter 0.15s, transform 0.06s;
+}
+.mc-btn:hover { filter: brightness(1.1); }
+.mc-btn:active { transform: translateY(2px); border-bottom-width: 2px; }
+.mc-btn.secondary {
+  background: transparent;
+  color: var(--torch);
+  border: 2px solid var(--torch);
+  border-bottom: 4px solid #8A5A20;
+  flex: 0 0 auto;
+  padding: 8px 12px;
+}
+.mc-btn.secondary:hover { background: var(--torch); color: var(--stone); }
+.mc-btn.disabled { opacity: 0.5; pointer-events: none; }
+
+.mc-links {
   display: flex;
   gap: 10px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--wall-2) transparent;
+  align-items: center;
+  font-size: 16px;
+  color: var(--bone-dim);
 }
-.tokens-drawer::-webkit-scrollbar { height: 8px; }
-.tokens-drawer::-webkit-scrollbar-track { background: transparent; }
-.tokens-drawer::-webkit-scrollbar-thumb { background: var(--wall-2); }
-.token-card {
-  flex: 0 0 auto;
-  width: 96px;
+.mc-links a {
+  color: var(--bone-dim);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: 1px solid var(--wall-2);
+}
+.mc-links a:hover { color: var(--torch); border-color: var(--torch); }
+.mc-timing {
+  display: inline-block;
+  padding: 3px 8px;
+  background: var(--wall);
+  color: var(--bone);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+.mc-timing.live { background: var(--moss); color: var(--stone); }
+.mc-timing.past { color: var(--bone-dim); }
+.mc-timing[data-countdown] { background: var(--wall); color: var(--torch); }
+
+.mc-head-text { min-width: 0; flex: 1; }
+.mc-avatar {
+  width: 44px; height: 44px;
+  flex: 0 0 44px;
+  border: 2px solid var(--wall-2);
+  background: var(--stone);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.mc-avatar-img {
+  width: 100%; height: 100%; object-fit: cover;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.mc-avatar-fallback {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 18px;
+  color: var(--torch);
+  background: linear-gradient(135deg, var(--wall) 0%, var(--stone-2) 100%);
+}
+.mc-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.src-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
   background: var(--stone);
   border: 1px solid var(--wall-2);
-  padding: 6px;
-  text-decoration: none;
-  color: var(--bone);
-}
-.token-card img {
-  display: block;
-  width: 84px; height: 84px;
-  background: var(--stone-2);
-  image-rendering: pixelated;
-  object-fit: cover;
-}
-.token-card .tid {
-  display: block;
-  margin-top: 4px;
+  color: var(--bone-dim);
   font-family: 'Press Start 2P', monospace;
-  font-size: 8px; letter-spacing: 1px;
-  color: var(--bone-dim);
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+.src-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.src-badge--opensea    { color: var(--moss-hot); border-color: #2a4020; }
+.src-badge--opensea::before    { background: var(--moss-hot); }
+.src-badge--nft        { color: var(--ember);   border-color: #7a2a10; }
+.src-badge--nft::before        { background: var(--ember); }
+
+.empty {
   text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.status-note {
-  padding: 16px 20px; text-align: center;
+  padding: 40px 20px;
   color: var(--bone-dim);
-  border: 1px dashed var(--wall-2);
-  font-size: 17px;
+  font-size: 18px;
 }
-.status-note.error { color: var(--danger); border-color: var(--danger); }
-
-.spinner {
-  display: inline-block;
-  width: 12px; height: 12px;
-  border: 2px solid var(--ash);
-  border-top-color: var(--torch);
-  animation: sp 700ms linear infinite;
-  vertical-align: middle;
-  margin-right: 6px;
-}
-@keyframes sp { to { transform: rotate(360deg); } }
 
 @media (max-width: 700px) {
-  .wallet-box { grid-template-columns: 1fr; }
-  .row-head { grid-template-columns: 48px 1fr auto; gap: 10px; }
-  .row-head .thumb { width: 48px; height: 48px; }
-  .row-head .name { font-size: 20px; }
-  .row-head .metric { min-width: 0; font-size: 12px; }
-  .row-head .metric b { font-size: 14px; }
-  .row-head .metric.floor { display: none; }
-  .row-head .row-actions { grid-column: 1 / -1; justify-content: flex-end; margin-top: 6px; }
+  .wordmark, .tabs, .nav-right { justify-self: center; }
+  header.nav { grid-template-columns: 1fr; }
+  .tabs { flex-wrap: wrap; justify-content: center; }
+  main { padding: 24px 16px 40px; }
 }
 </style>
 </head>
@@ -338,8 +530,9 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
   <nav class="tabs" role="tablist">
     <a class="tab" href="index.html">home</a>
     <a class="tab" href="scanner.html">rug radar</a>
-    <a class="tab" href="mints.html">mints</a>
-    <a class="tab active" href="portfolio.html">portfolio</a>
+    <a class="tab" href="coin-radar.html">coin radar</a>
+    <a class="tab active" href="mints.html">mints</a>
+    <a class="tab" href="portfolio.html">portfolio</a>
   </nav>
   <div class="nav-right">
     <a class="nav-x" href="https://twitter.com/GrugNFT" target="_blank" rel="noopener noreferrer" title="@GrugNFT on Twitter">
@@ -353,404 +546,474 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
 
 <main>
   <section class="page-hero">
-    <p class="tagline">GRUG SEE YOUR STASH</p>
-    <h1>PORTFOLIO</h1>
-    <p class="sub">paste your wallet. grug lists every RHC nft — the same view opensea gives you.</p>
-    <p class="via">powered by opensea · spam already filtered · tap CHECK RUG for the grug score</p>
+    <h1>UPCOMING MINTS</h1>
+    <p class="tagline">grug rate every drop</p>
+    <p class="sub">every mint on Robinhood chain, pre-scored by rug radar.</p>
   </section>
 
-  <div class="wallet-box">
-    <span class="k">YOUR WALLET</span>
-    <input id="wallet-input" type="text" placeholder="0x… or connect below" autocomplete="off" spellcheck="false" />
-    <button class="btn" id="load-btn">LOAD</button>
-    <button class="btn ghost" id="connect-btn">CONNECT WALLET</button>
-  </div>
+  <aside class="disclaimer-bar" role="note">
+    <span class="dis-icon" aria-hidden="true">⚠</span>
+    <span class="dis-text">
+      <b>grug word:</b> radar not oracle. grug make mistake sometimes. always <b>do your own research</b> before you buy.
+    </span>
+  </aside>
 
-  <div id="stats-bar" class="stats-bar" hidden>
-    <span class="stat"><b id="stat-tokens">0</b> tokens owned</span>
-    <span class="stat"><b id="stat-collections">0</b> collections</span>
-    <span class="stat" id="stat-hidden-count" hidden><b id="stat-hidden-num">0</b> hidden</span>
-  </div>
+  <div id="sources-info" class="sources-info"></div>
 
-  <div id="filter-bar" class="filter-bar" hidden>
-    <label>sort
-      <select id="sort-select">
-        <option value="owned-desc">most owned</option>
-        <option value="owned-asc">least owned</option>
-        <option value="az">a → z</option>
-        <option value="za">z → a</option>
-        <option value="floor-desc">floor high → low</option>
-        <option value="floor-asc">floor low → high</option>
-      </select>
-    </label>
-    <label>search
-      <input type="text" id="search-input" placeholder="collection name or contract…">
-    </label>
-    <span id="filter-hint" style="margin-left:auto; color:var(--ash); font-size:13px;"></span>
-  </div>
+  <!-- The primary feed: scheduled drops from NFT Trencher, OpenSea SeaDrop,
+       and tribe-curated additions. Live countdown, pre-scored — the
+       "never fucking trade" board for Robinhood Chain. -->
+  <section class="mint-section" id="upcoming-section" hidden>
+    <h2 class="section-title">upcoming mints on RHC</h2>
+    <p class="section-sub">every scheduled drop on Robinhood Chain, pre-scored by rug radar. live countdown on each card.</p>
+    <div class="filter-row" id="new-filter-row" hidden>
+      <label class="filter-toggle">
+        <input type="checkbox" id="only-new">
+        <span>show only new since your last visit <span class="filter-hint" id="new-count-hint"></span></span>
+      </label>
+    </div>
+    <div id="upcoming" class="mint-grid"></div>
+  </section>
 
-  <div id="status" class="status-note" hidden></div>
-  <div id="collections" class="collections"></div>
 </main>
 
 <script type="module">
-// Portfolio v2 — OpenSea-backed. One /api/portfolio call, one paint, done.
-// No Blockscout, no vibe scoring, no lazy sidecar fetches. The CHECK RUG
-// button runs the shared grug-score engine inline against the collection's
-// contract — same number the /scanner page would show, no navigation.
+// Shared full-scan engine. The mint-card badge and the rug-radar page pipe
+// through this same module — same weights, same signal logic, same result.
+// localStorage caches the per-contract score for 15 min so repeat loads
+// are instant. Any signal or weight change goes in grug-score-engine.mjs.
 import { fullScore } from '/scripts/grug-score-engine.mjs';
+const quickScan = fullScore;   // legacy name used by scanCard below
 
-const state = {
-  wallet: null,
-  collections: [],        // straight from server
-  floors: new Map(),      // slug -> { floorEth, currency } | 'loading' | null
-  ethUsd: null,           // ETH/USD spot for cross-currency floor sort
-  search: '',
-  sort: 'owned-desc',
-  loadAbort: null,
-  floorAbort: null,
-};
+function tone(score) {
+  if (score < 25) return 'green';
+  if (score < 60) return 'yellow';
+  return 'red';
+}
+function verdict(score) {
+  if (score < 25) return 'grug approve';
+  if (score < 60) return 'grug wary';
+  return 'grug run';
+}
 
-// Fire-and-forget: pull ETH/USD once per page load. Used by the floor
-// sort so USDG-priced floors (~$1 each) sort correctly against ETH ones
-// (~$2200 each) instead of drowning in raw-number ordering. Sort re-runs
-// the moment the price lands.
-(async () => {
+function formatDate(iso) {
   try {
-    const r = await fetch('/api/eth-price').then(r => r.ok ? r.json() : null);
-    if (r && typeof r.usd === 'number') { state.ethUsd = r.usd; renderAll(); }
-  } catch {}
-})();
-
-const $ = id => document.getElementById(id);
-const escapeHtml = s => (s ?? '').toString().replace(/[&<>"']/g, c =>
-  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const shortAddr = a => a ? a.slice(0, 6) + '…' + a.slice(-4) : '—';
-
-function setStatus(text, isError) {
-  const s = $('status');
-  s.textContent = text;
-  s.className = 'status-note' + (isError ? ' error' : '');
-  s.hidden = !text;
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch (e) { return iso; }
 }
-
-function floorFor(c) {
-  const f = c.slug ? state.floors.get(c.slug) : null;
-  return (f && typeof f === 'object') ? f : null;
-}
-
-function passesFilters(c) {
-  const q = state.search.trim().toLowerCase();
-  if (!q) return true;
-  const hay = ((c.name || '') + ' ' + (c.slug || '') + ' ' + c.contract).toLowerCase();
-  return hay.includes(q);
-}
-
-function sortCollections(arr) {
-  const sorted = [...arr];
-  const nameOf = c => (c.name || c.slug || c.contract).toLowerCase();
-  // Cross-currency floor sort: convert everything to USD so 100 USDG
-  // correctly outranks 0.001 ETH. USDG (and any other stable-labelled
-  // currency) is treated as $1. ETH is priced via /api/eth-price which
-  // is cached 30 min server-side. If the ETH price hasn't landed yet
-  // we fall back to a conservative $2000 — sort ordering is stable
-  // enough at that scale for the paint before the real price arrives.
-  const ethUsd = state.ethUsd || 2000;
-  const floorUsdOf = c => {
-    const f = floorFor(c);
-    if (!f || typeof f.floorEth !== 'number' || f.floorEth <= 0) return null;
-    const cur = (f.currency || 'ETH').toUpperCase();
-    if (cur === 'ETH' || cur === 'WETH') return f.floorEth * ethUsd;
-    if (cur === 'USDG' || cur === 'USDC' || cur === 'USDT' || cur === 'DAI') return f.floorEth;
-    // Unknown currency — sink so an unpriceable row can't outrank real
-    // priced ones. Currency labels in the UI stay accurate either way.
-    return null;
-  };
-  switch (state.sort) {
-    case 'owned-asc':  sorted.sort((a, b) => a.ownedCount - b.ownedCount); break;
-    case 'az':         sorted.sort((a, b) => nameOf(a).localeCompare(nameOf(b))); break;
-    case 'za':         sorted.sort((a, b) => nameOf(b).localeCompare(nameOf(a))); break;
-    case 'floor-desc':
-    case 'floor-asc': {
-      // Rows without a known floor sink to the bottom so the top of the list
-      // is always something the user can act on. Within known floors, sort
-      // by USD-normalized value; within unknown, keep owned-count desc as a
-      // fallback.
-      const dir = state.sort === 'floor-desc' ? -1 : 1;
-      sorted.sort((a, b) => {
-        const fa = floorUsdOf(a), fb = floorUsdOf(b);
-        if (fa == null && fb == null) return b.ownedCount - a.ownedCount;
-        if (fa == null) return 1;
-        if (fb == null) return -1;
-        return (fa - fb) * dir;
-      });
-      break;
-    }
-    case 'owned-desc':
-    default:           sorted.sort((a, b) => b.ownedCount - a.ownedCount); break;
+function timingLabel(iso) {
+  const t = new Date(iso).getTime();
+  const now = Date.now();
+  const diff = t - now;
+  if (diff > 0) {
+    const days = Math.floor(diff / 86_400_000);
+    const hours = Math.floor((diff % 86_400_000) / 3_600_000);
+    if (days > 0) return { text: `in ${days}d ${hours}h`, cls: '' };
+    return { text: `in ${hours}h`, cls: 'live' };
   }
-  return sorted;
+  return { text: 'minted', cls: 'past' };
 }
 
-function floorCellHtml(c) {
-  const status = c.slug ? state.floors.get(c.slug) : null;
-  if (status === 'loading' || status === undefined) return `<b><span class="spinner"></span></b>floor`;
-  if (status && typeof status === 'object' && typeof status.floorEth === 'number' && status.floorEth > 0) {
-    return `<b>${status.floorEth.toFixed(4)}</b>${escapeHtml(status.currency || 'ETH')} floor`;
+function el(html) {
+  const t = document.createElement('template');
+  t.innerHTML = html.trim();
+  return t.content.firstChild;
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderCard(mint) {
+  const mintTs = mint.mintStart ? new Date(mint.mintStart).getTime() : null;
+  const isFuture = mintTs && mintTs > Date.now();
+  const isPast   = mintTs && mintTs <= Date.now();
+
+  const scoreHtml = mint.contract
+    ? `<span class="n">…</span><span class="l">SCORE</span>`
+    : `<span class="n">SCAN<br>PENDING</span><span class="l">NO CONTRACT YET</span>`;
+  const scoreCls  = mint.contract ? '' : 'pending';
+
+  const sniffHref = mint.contract ? `scanner.html?addr=${mint.contract}` : 'scanner.html';
+  const sniffDisabled = mint.contract ? '' : 'disabled';
+
+  const supplyLine = mint.supply ? mint.supply.toLocaleString() : '—';
+  const priceLine  = mint.priceLabel || '—';
+  // No mintStart usually means the drop is on the board but the creator
+  // hasn't committed a start time yet — "SCHEDULE TBD" is clearer than "TBA"
+  // and doesn't get confused with "TBA price".
+  const mintLine   = mint.mintStart ? formatDate(mint.mintStart) : 'SCHEDULE TBD';
+
+  // Timing cell: live countdown for future, static "minted" for past,
+  // "awaiting schedule" for drops that are on the board with no start time.
+  let timingHtml;
+  if (isFuture) {
+    timingHtml = `<span class="mc-timing" data-countdown="${mintTs}">…</span>`;
+  } else if (isPast) {
+    timingHtml = `<span class="mc-timing past">minted</span>`;
+  } else {
+    timingHtml = `<span class="mc-timing">awaiting schedule</span>`;
   }
-  return `<b>—</b>floor`;
-}
 
-function renderRow(c) {
-  const visibleTokens = c.tokens;
-  const iconUrl = c.iconUrl || visibleTokens[0]?.imageUrl || '';
+  const links = [];
+  if (mint.twitter) links.push(`<a href="${esc(mint.twitter)}" target="_blank" rel="noopener noreferrer">twitter ↗</a>`);
+  if (mint.website) links.push(`<a href="${esc(mint.website)}" target="_blank" rel="noopener noreferrer">site ↗</a>`);
+  if (mint.discord) links.push(`<a href="${esc(mint.discord)}" target="_blank" rel="noopener noreferrer">discord ↗</a>`);
 
-  const thumb = iconUrl
-    ? `<img class="thumb" src="${escapeHtml(iconUrl)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'thumb thumb-fallback',textContent:'?'}))">`
-    : `<div class="thumb thumb-fallback">?</div>`;
-
-  const osBtn = c.openseaCollectionUrl
-    ? `<button data-action="opensea" data-url="${escapeHtml(c.openseaCollectionUrl)}">OS</button>`
+  const featuredBadge = mint.badge === 'featured'
+    ? '<span class="featured-badge">FEATURED</span>' : '';
+  const featuredCls = mint.badge === 'featured' ? 'featured' : '';
+  // NFT-feed cards get no source badge — the vast majority of cards come from
+  // that feed, so tagging each one added noise without informational value.
+  // OpenSea cards keep their badge because they're rare enough to be worth
+  // flagging as "extra-verified via OpenSea listings."
+  const sourceBadge = mint.source === 'opensea'
+    ? '<span class="src-badge src-badge--opensea">via OpenSea</span>'
     : '';
 
-  return `
-    <div class="collection-row" data-addr="${escapeHtml(c.contract)}">
-      <div class="row-head">
-        ${thumb}
-        <div class="name-wrap">
-          <div class="name">${escapeHtml(c.name || shortAddr(c.contract))}${c.slug ? `<span class="slug">${escapeHtml(c.slug)}</span>` : ''}</div>
+  return el(`
+    <article class="mint-card ${featuredCls}" data-addr="${esc(mint.contract || '')}" data-slug="${esc(mint.openseaSlug || '')}">
+      ${featuredBadge}
+      <div class="mc-head">
+        <div class="mc-avatar">
+          ${mint.image
+            ? `<img class="mc-avatar-img" src="${esc(mint.image)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+               <div class="mc-avatar-fallback" style="display:none">${esc((mint.name||'?').charAt(0).toUpperCase())}</div>`
+            : `<div class="mc-avatar-fallback">${esc((mint.name||'?').charAt(0).toUpperCase())}</div>`
+          }
         </div>
-        <div class="metric"><b>${c.ownedCount}</b>owned</div>
-        <div class="metric floor">${floorCellHtml(c)}</div>
-        <div class="row-actions">
-          <button class="rug-check-btn" data-action="check-rug" data-addr="${escapeHtml(c.contract)}">CHECK RUG</button>
-          ${osBtn}
-          <button data-action="toggle" data-addr="${escapeHtml(c.contract)}">▾</button>
+        <div class="mc-head-text">
+          <h3 class="mc-name">${esc(mint.name)}</h3>
+          <div class="mc-sub">
+            <span class="mc-symbol">$${esc(mint.symbol || '—')} · ${esc(mint.chain)}</span>
+            ${sourceBadge}
+          </div>
+        </div>
+        <div class="mc-score ${scoreCls}">
+          ${scoreHtml}
         </div>
       </div>
-      <div class="tokens-drawer" hidden>
-        ${visibleTokens.length
-          ? visibleTokens.map(t => `
-              <a class="token-card" href="${escapeHtml(t.openseaUrl || '#')}" target="_blank" rel="noopener" title="${escapeHtml(t.name || ('#' + t.id))}">
-                ${t.imageUrl ? `<img src="${escapeHtml(t.imageUrl)}" alt="" loading="lazy" onerror="this.style.display='none'">` : `<div class="thumb-fallback" style="width:84px;height:84px;">?</div>`}
-                <span class="tid">#${escapeHtml(t.id)}</span>
-              </a>`).join('')
-          : `<div style="color:var(--ash); font-size:14px; padding:12px;">no visible tokens (nsfw hidden)</div>`
-        }
+      <p class="mc-tagline">${esc(mint.tagline || '')}</p>
+      <div class="mc-meta">
+        <div><span class="k">MINT</span><span class="v">${esc(mintLine)}</span></div>
+        <div><span class="k">${isFuture ? 'COUNTDOWN' : 'TIMING'}</span>${timingHtml}</div>
+        <div><span class="k">PRICE</span><span class="v">${esc(priceLine)}</span></div>
+        <div><span class="k">SUPPLY</span><span class="v">${esc(supplyLine)}</span></div>
       </div>
-    </div>`;
+      ${links.length ? `<div class="mc-links">${links.join('')}</div>` : ''}
+      <div class="mc-cta">
+        <a class="mc-btn ${sniffDisabled}" href="${sniffHref}">
+          ${mint.contract ? 'FULL RUG BREAKDOWN' : 'AWAITING DEPLOY'}
+        </a>
+      </div>
+    </article>
+  `);
 }
 
-let renderPending = false;
-function scheduleRender() {
-  if (renderPending) return;
-  renderPending = true;
-  setTimeout(() => { renderPending = false; renderAll(); }, 0);
-}
-
-function renderAll() {
-  const filtered = sortCollections(state.collections.filter(passesFilters));
-  $('collections').innerHTML = filtered.map(renderRow).join('');
-  $('stat-tokens').textContent = state.collections.reduce((n, c) => n + c.ownedCount, 0);
-  $('stat-collections').textContent = state.collections.length;
-  const hidden = state.collections.length - filtered.length;
-  if (hidden > 0) {
-    $('stat-hidden-count').hidden = false;
-    $('stat-hidden-num').textContent = hidden;
-  } else {
-    $('stat-hidden-count').hidden = true;
+async function scanCard(card) {
+  const addr = card.dataset.addr;
+  if (!addr) return;
+  const scoreEl = card.querySelector('.mc-score');
+  try {
+    // fullScore returns { score, tone, verdict, cached, isUtility }.
+    // Trust the engine's tone/verdict — that's the point of consolidating.
+    const res = await quickScan(addr);
+    if (res.error) {
+      scoreEl.className = 'mc-score pending';
+      scoreEl.innerHTML = `<span class="n">NO CODE</span><span class="l">EOA / EMPTY</span>`;
+      return;
+    }
+    scoreEl.className = 'mc-score ' + res.tone;
+    scoreEl.innerHTML = `<span class="n">${res.score}</span><span class="l">${res.verdict}</span>`;
+    card.classList.add(res.tone);
+  } catch (e) {
+    scoreEl.className = 'mc-score pending';
+    scoreEl.innerHTML = `<span class="n">?</span><span class="l">CHAIN ERROR</span>`;
   }
 }
 
-// Lazy-fetch OpenSea floor for every collection with a slug. Concurrency 4
-// keeps us polite; every request hits our OWN /api/floor endpoint (server
-// caches 15 min per slug), so refreshing a wallet twice in a row is a
-// no-op after the first pass. Aborts cleanly when the user reloads a
-// different wallet.
-async function loadAllFloors(signal) {
-  const CONCURRENCY = 4;
-  const queue = state.collections
-    .filter(c => c.slug && !state.floors.has(c.slug))
-    .map(c => c.slug);
-  for (const s of queue) state.floors.set(s, 'loading');
-  scheduleRender();
-  const workers = Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
-    while (queue.length) {
-      if (signal.aborted) return;
-      const slug = queue.shift();
-      try {
-        const r = await fetch('/api/floor?slug=' + encodeURIComponent(slug), { signal }).then(r => r.ok ? r.json() : null);
-        state.floors.set(slug, r || null);
-      } catch (e) {
-        if (e.name === 'AbortError') return;
-        state.floors.set(slug, null);
+function partition(mints) {
+  const now = Date.now();
+  const upcoming = [];
+  for (const m of mints) {
+    // Keep everything that hasn't already minted. Drops with no mintStart yet
+    // stay too — they're on the board with a TBD schedule. API-reported
+    // status wins over the timestamp check: a stage that says state="live"
+    // is still relevant even if `start` was in the past by a few minutes.
+    if (!m.mintStart || m.status === 'live' || m.status === 'upcoming') {
+      upcoming.push(m);
+      continue;
+    }
+    if (new Date(m.mintStart).getTime() > now) upcoming.push(m);
+  }
+  upcoming.sort((a, b) => {
+    // Scheduled mints first (soonest at top), then schedule-TBD drops.
+    const at = a.mintStart ? new Date(a.mintStart).getTime() : Infinity;
+    const bt = b.mintStart ? new Date(b.mintStart).getTime() : Infinity;
+    return at - bt;
+  });
+  return upcoming;
+}
+
+/* Merge curated + auto-fetched sources, dedupe by contract address (or slug). */
+function dedupe(mints) {
+  const seen = new Set();
+  const out = [];
+  for (const m of mints) {
+    const key = (m.contract || '').toLowerCase() || m.openseaSlug || m.name;
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(m);
+  }
+  return out;
+}
+
+/* Live countdown timers — one tick per second, cheap. */
+function startCountdowns() {
+  const tick = () => {
+    const now = Date.now();
+    document.querySelectorAll('[data-countdown]').forEach(el => {
+      const t = Number(el.dataset.countdown);
+      if (!t) return;
+      const diff = t - now;
+      if (diff <= 0) {
+        el.textContent = 'LIVE NOW';
+        el.classList.remove('past');
+        el.classList.add('live');
+        el.removeAttribute('data-countdown');
+        return;
       }
-      scheduleRender();
+      const d = Math.floor(diff / 86_400_000);
+      const h = Math.floor((diff % 86_400_000) / 3_600_000);
+      const m = Math.floor((diff % 3_600_000) / 60_000);
+      const s = Math.floor((diff % 60_000) / 1000);
+      el.textContent = d > 0
+        ? `${d}d ${h}h ${m}m`
+        : h > 0
+          ? `${h}h ${m}m ${String(s).padStart(2,'0')}s`
+          : `${m}m ${String(s).padStart(2,'0')}s`;
+    });
+  };
+  tick();
+  setInterval(tick, 1000);
+}
+
+/* Simple concurrency pool — prevents hammering Blockscout with N parallel scans
+   when the on-chain section has 30+ cards. Runs up to `parallel` promises at a
+   time, in the order given. */
+async function pool(items, parallel, work) {
+  let i = 0;
+  const workers = new Array(parallel).fill(0).map(async () => {
+    while (i < items.length) {
+      const idx = i++;
+      try { await work(items[idx]); } catch (e) { /* keep going */ }
     }
   });
   await Promise.all(workers);
 }
 
-document.addEventListener('click', e => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-  const act = btn.dataset.action;
-  const addr = btn.dataset.addr;
-  if (act === 'toggle') {
-    const row = btn.closest('.collection-row');
-    const drawer = row.querySelector('.tokens-drawer');
-    drawer.hidden = !drawer.hidden;
-    btn.textContent = drawer.hidden ? '▾' : '▴';
-  } else if (act === 'check-rug') {
-    checkRug(btn, addr);
-  } else if (act === 'opensea') {
-    window.open(btn.dataset.url, '_blank', 'noopener');
+(async () => {
+  const upcomingEl = document.getElementById('upcoming');
+  const sourcesEl  = document.getElementById('sources-info');
+
+  // "New since your last visit" state. Persists the `built` timestamp of
+  // the last successful NFT-feed load so we can highlight drops that
+  // appeared or changed since then. First-ever visit → no baseline, no
+  // highlights (just save `built` for next time).
+  const LAST_BUILT_KEY = 'grug_nft_last_built';
+  const lastBuilt = (() => {
+    try { return localStorage.getItem(LAST_BUILT_KEY) || ''; }
+    catch (e) { return ''; }
+  })();
+
+  const noStore = { cache: 'no-store' };
+  const [curatedRes, openseaRes, nftRes, changesRes] = await Promise.allSettled([
+    fetch('mints.json').then(r => r.ok ? r.json() : { mints: [] }),
+    fetch('/api/opensea-drops', noStore).then(r => r.ok ? r.json() : { configured: false, mints: [] }),
+    fetch('/api/nft-drops', noStore).then(r => r.ok ? r.json() : { configured: false, mints: [] }),
+    // Only query /changes when we have a baseline — no baseline means we
+    // can't distinguish "new" from "everything." First visit gets a clean
+    // page; the baseline gets set on the way out.
+    lastBuilt
+      ? fetch('/api/nft-changes?since=' + encodeURIComponent(lastBuilt), noStore)
+          .then(r => r.ok ? r.json() : { configured: false, changedIds: [] })
+      : Promise.resolve({ configured: false, changedIds: [] }),
+  ]);
+  const curated  = curatedRes.status === 'fulfilled' ? (curatedRes.value.mints || []) : [];
+  const opensea  = openseaRes.status === 'fulfilled' ? (openseaRes.value.mints || []) : [];
+  const nftFeed  = nftRes.status === 'fulfilled' ? (nftRes.value.mints || []) : [];
+  const openseaConfigured = openseaRes.status === 'fulfilled' && openseaRes.value.configured === true;
+  const nftConfigured     = nftRes.status === 'fulfilled' && nftRes.value.configured === true;
+  const nftBuilt          = nftRes.status === 'fulfilled' ? (nftRes.value.built || null) : null;
+
+  // Build the set of contract addresses that changed since last visit.
+  // Falls through cleanly when /changes returned an error or wasn't queried.
+  const changedIds = changesRes.status === 'fulfilled' ? (changesRes.value.changedIds || []) : [];
+  const newSince = new Set(changedIds.map(x => (x.contract || '').toLowerCase()).filter(Boolean));
+
+  // Sources chip row — one chip per data source, showing count or setup state.
+  // Skip the curated chip entirely when the curated list is empty — showing
+  // "CURATED · 0" was reading as "grug forgot the curated feed."
+  const bits = [];
+  if (curated.length > 0) {
+    bits.push(`<span class="src-chip curated">CURATED · ${curated.length}</span>`);
   }
-});
-
-// Run the shared grug engine against a collection contract and swap the
-// button for a coloured score chip. Cached per-address by the engine
-// itself, so a second click on the same row is instant.
-const rugCache = new Map();
-async function checkRug(btn, addr) {
-  if (!addr || btn.dataset.busy === '1') return;
-  btn.dataset.busy = '1';
-  btn.disabled = true;
-  btn.textContent = 'grug thinking…';
-  btn.className = 'rug-check-btn checking';
-  try {
-    let res = rugCache.get(addr);
-    if (!res) {
-      res = await fullScore(addr);
-      rugCache.set(addr, res);
-    }
-    if (res && res.error) {
-      btn.className = 'rug-check-btn score-note';
-      btn.textContent = 'no code';
-      btn.title = 'contract has no bytecode (EOA or self-destructed)';
-      return;
-    }
-    const score = typeof res?.score === 'number' ? res.score : null;
-    const tone = res?.tone || (score == null ? 'note' : score < 25 ? 'green' : score < 60 ? 'yellow' : 'red');
-    const verdict = res?.verdict || '';
-    btn.className = 'rug-check-btn score-chip tone-' + tone;
-    btn.innerHTML = `<b>${score ?? '?'}</b><span>${escapeHtml(verdict)}</span>`;
-    btn.title = 'click for full radar';
-    btn.dataset.action = 'open-scanner';
-  } catch (err) {
-    btn.className = 'rug-check-btn score-note';
-    btn.textContent = 'try again';
-    btn.title = String(err?.message || err);
-    btn.disabled = false;
-    delete btn.dataset.busy;
+  if (openseaConfigured) {
+    bits.push(`<span class="src-chip opensea">OPENSEA · ${opensea.length}</span>`);
+  } else {
+    bits.push(`<span class="src-chip pending">OPENSEA · set up API key</span>`);
   }
-}
+  if (nftConfigured) {
+    bits.push(`<span class="src-chip nft">NFT · ${nftFeed.length}</span>`);
+  } else {
+    bits.push(`<span class="src-chip pending">NFT · set up API key</span>`);
+  }
+  sourcesEl.innerHTML = bits.join(' ');
 
-// Also allow click-through on the resolved chip to open the full scanner.
-document.addEventListener('click', e => {
-  const btn = e.target.closest('button[data-action="open-scanner"]');
-  if (!btn) return;
-  window.open('/scanner.html?addr=' + btn.dataset.addr, '_blank', 'noopener');
-});
+  // Merge every source, dedupe by contract. Order matters: curated wins over
+  // OpenSea wins over NFT if a contract appears in multiple — curated has
+  // editorial context we don't want to lose.
+  const scheduled = dedupe([...curated, ...opensea, ...nftFeed]);
+  const upcoming = partition(scheduled);
 
-async function loadPortfolio(wallet) {
-  if (state.loadAbort) state.loadAbort.abort();
-  if (state.floorAbort) state.floorAbort.abort();
-  state.loadAbort = new AbortController();
-  state.floorAbort = new AbortController();
-  const signal = state.loadAbort.signal;
+  const upcomingSection = document.getElementById('upcoming-section');
 
-  state.wallet = wallet;
-  state.collections = [];
-  state.floors = new Map();
-  $('collections').innerHTML = '';
-  $('stats-bar').hidden = false;
-  $('filter-bar').hidden = false;
-  $('stat-tokens').textContent = '0';
-  $('stat-collections').textContent = '0';
-  setStatus(`grug asking opensea for every nft in ${shortAddr(wallet)}…`);
-
-  try {
-    const r = await fetch('/api/portfolio?wallet=' + wallet, { signal });
-    if (signal.aborted) return;
-    if (!r.ok) {
-      const body = await r.json().catch(() => ({}));
-      if (body?.error === 'not_configured') {
-        setStatus('opensea api key not configured on the server. tell grug in the discord.', true);
-      } else if (r.status === 429) {
-        setStatus('opensea is rate-limiting grug right now. wait ~30 seconds and try again.', true);
-      } else {
-        setStatus(`grug could not reach opensea (status ${r.status}). try again in a moment.`, true);
+  if (upcoming.length > 0) {
+    let newCount = 0;
+    upcoming.forEach(m => {
+      const card = renderCard(m);
+      if (m.contract && newSince.has(m.contract.toLowerCase())) {
+        card.dataset.fresh = '1';
+        const badge = document.createElement('span');
+        badge.className = 'new-badge';
+        badge.textContent = 'NEW';
+        card.appendChild(badge);
+        newCount++;
       }
-      return;
+      upcomingEl.appendChild(card);
+    });
+    upcomingSection.hidden = false;
+
+    // If any drops are new since last visit, show a filter toggle above
+    // the grid. Skip the row entirely when there's nothing new — the UI
+    // shouldn't advertise a feature that has nothing to offer this session.
+    if (newCount > 0) {
+      const row  = document.getElementById('new-filter-row');
+      const hint = document.getElementById('new-count-hint');
+      const cb   = document.getElementById('only-new');
+      hint.textContent = `(${newCount} new)`;
+      row.hidden = false;
+      cb.addEventListener('change', () => {
+        const onlyNew = cb.checked;
+        upcomingEl.querySelectorAll('.mint-card').forEach(card => {
+          card.classList.toggle('filtered-out', onlyNew && card.dataset.fresh !== '1');
+        });
+      });
     }
-    const data = await r.json();
-    if (signal.aborted) return;
-    state.collections = Array.isArray(data.collections) ? data.collections : [];
-    if (state.collections.length === 0) {
-      setStatus('this wallet holds no NFTs on RHC yet (or opensea hasn’t indexed them).');
-    } else if (data.truncated) {
-      setStatus(`grug loaded ${data.ownedTokens} tokens across ${data.collectionCount} collections (capped — very large wallets get truncated)${data.cached ? ' · cached' : ''}`);
-    } else {
-      setStatus(data.cached ? `${data.collectionCount} collections · cached from earlier scan` : '');
-    }
-    renderAll();
-    // Kick lazy floor loading in the background — rows re-render as prices
-    // trickle in. Don't block the initial paint on this.
-    loadAllFloors(state.floorAbort.signal);
-  } catch (e) {
-    if (e.name === 'AbortError') return;
-    setStatus('grug had a network hiccup. try again in a moment.', true);
   }
+
+  // Persist the current build timestamp so next visit can diff against it.
+  // Only save when the NFT feed actually returned a built (otherwise we'd
+  // overwrite a good baseline with nothing on a bad load).
+  if (nftBuilt) {
+    try { localStorage.setItem(LAST_BUILT_KEY, nftBuilt); } catch (e) {}
+  }
+
+  startCountdowns();
+
+  // Throttled scan — max 3 in flight at a time so Blockscout's public tier stays happy
+  const cards = [...document.querySelectorAll('.mint-card[data-addr]')].filter(c => c.dataset.addr);
+  pool(cards, 3, scanCard);
+
+  // Enrich every card with OpenSea metadata (pfp / twitter / website / discord).
+  // In practice: on-chain deploys never carry socials, and even the OpenSea
+  // /drops feed omits twitter for a lot of collections — so we let enrichCard
+  // run over every card, and the "existing link" set prevents duplicates.
+  // Silent no-op when OPENSEA_API_KEY isn't configured.
+  const allCards = [...document.querySelectorAll('.mint-card[data-addr]')];
+  pool(allCards, 3, enrichCard);
+})();
+
+// "3d ago" / "12h ago" / "just now". Assumes ISO string or ms timestamp.
+function timeAgo(input) {
+  if (!input) return null;
+  const then = typeof input === 'number' ? input : new Date(input).getTime();
+  if (!Number.isFinite(then)) return null;
+  const diff = Date.now() - then;
+  if (diff < 0) return null;               // "created in the future" — skip rather than lie
+  const min  = 60_000;
+  const hour = 60 * min;
+  const day  = 24 * hour;
+  if (diff < 10 * min) return 'just now';
+  if (diff < hour)     return `${Math.floor(diff / min)}m ago`;
+  if (diff < day)      return `${Math.floor(diff / hour)}h ago`;
+  if (diff < 60 * day) return `${Math.floor(diff / day)}d ago`;
+  const months = Math.floor(diff / (30 * day));
+  return `${months}mo ago`;
 }
 
-async function connectWallet() {
-  if (typeof window === 'undefined' || !window.ethereum) {
-    setStatus('no wallet detected. install MetaMask, Rainbow, or Coinbase Wallet.', true);
-    return;
-  }
+async function enrichCard(card) {
+  const addr = card.dataset.addr;
+  if (!addr) return;
   try {
-    const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    const addr = (accs && accs[0]) || null;
-    if (!addr) { setStatus('no account approved.', true); return; }
-    $('wallet-input').value = addr;
-    loadPortfolio(addr.toLowerCase());
-  } catch (e) {
-    setStatus('wallet connect refused.', true);
-  }
-}
+    const r = await fetch('/api/collection-detail?contract=' + addr, { cache: 'no-store' });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (!j.ok) return;
 
-$('load-btn').addEventListener('click', () => {
-  const v = $('wallet-input').value.trim();
-  if (!/^0x[0-9a-fA-F]{40}$/.test(v)) {
-    setStatus('please paste a valid 0x… wallet address (40 hex chars after 0x).', true);
-    return;
-  }
-  loadPortfolio(v.toLowerCase());
-});
-$('connect-btn').addEventListener('click', connectWallet);
-$('wallet-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') $('load-btn').click();
-});
-$('search-input').addEventListener('input', e => {
-  state.search = e.target.value;
-  renderAll();
-});
-$('sort-select').addEventListener('change', e => {
-  state.sort = e.target.value;
-  renderAll();
-});
-// Deep-link: ?wallet=0x…
-const url = new URL(location.href);
-const preload = url.searchParams.get('wallet');
-if (preload && /^0x[0-9a-fA-F]{40}$/.test(preload)) {
-  $('wallet-input').value = preload;
-  loadPortfolio(preload.toLowerCase());
+    // Swap in the OpenSea PFP if the Blockscout icon was missing or generic
+    if (j.image) {
+      const img = card.querySelector('.mc-avatar-img');
+      const fb  = card.querySelector('.mc-avatar-fallback');
+      const avatar = card.querySelector('.mc-avatar');
+      if (avatar) {
+        avatar.innerHTML = `<img class="mc-avatar-img" src="${j.image.replace(/"/g,'&quot;')}" alt="" loading="lazy">`;
+      }
+    }
+
+    // Show "listed 3d ago" if OpenSea knows when the collection was
+    // registered. It's a close proxy for on-chain deploy date (usually
+    // within a day) and works when Blockscout's creation_tx_hash lookup
+    // doesn't — which is most contracts on RHC right now.
+    if (j.createdDate) {
+      const ago = timeAgo(j.createdDate);
+      if (ago) {
+        const sub = card.querySelector('.mc-sub');
+        if (sub && !sub.querySelector('.mc-deployed')) {
+          const chip = document.createElement('span');
+          chip.className = 'mc-deployed';
+          chip.textContent = '· listed ' + ago;
+          chip.title = 'listed on OpenSea ' + new Date(j.createdDate).toLocaleDateString();
+          sub.appendChild(chip);
+        }
+      }
+    }
+
+    // Add / merge social links
+    const linksBox = card.querySelector('.mc-links') || (() => {
+      const wrap = document.createElement('div');
+      wrap.className = 'mc-links';
+      const cta = card.querySelector('.mc-cta');
+      card.insertBefore(wrap, cta);
+      return wrap;
+    })();
+    const existing = new Set([...linksBox.querySelectorAll('a')].map(a => a.textContent.trim()));
+    const add = (label, href) => {
+      if (!href || existing.has(label)) return;
+      const a = document.createElement('a');
+      a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.textContent = label;
+      linksBox.appendChild(a);
+      existing.add(label);
+    };
+    add('twitter ↗', j.twitter);
+    add('site ↗',    j.website);
+    add('discord ↗', j.discord);
+    if (j.openseaUrl) add('opensea ↗', j.openseaUrl);
+  } catch (e) { /* silent — enrichment is best-effort */ }
 }
 </script>
 
-<!-- Grugs gate — must hold REQUIRED_BALANCE grugs to view the portfolio.
-     Overlay is a no-op when GATE_ENABLED=false or a valid session exists. -->
 <script type="module" src="/scripts/gate.mjs"></script>
 
 </body>
