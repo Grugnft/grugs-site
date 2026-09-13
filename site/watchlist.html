@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Watchlist — Grugs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="grug watches your NFT contracts. paste addresses, grug rescans every visit and shows what changed.">
+<meta name="theme-color" content="#1A140F">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Grugs">
+<meta property="og:title" content="Watchlist — grug watches for you">
+<meta property="og:description" content="paste the contracts you're eyeing. grug rescans and flags anything that changed.">
+<meta property="og:url" content="https://grugnft.xyz/watchlist">
+<meta property="og:image" content="https://grugnft.xyz/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@GrugNFT">
+<meta name="twitter:title" content="Watchlist — grug watches for you">
+<meta name="twitter:description" content="paste the contracts you're eyeing. grug rescans and flags anything that changed.">
+<meta name="twitter:image" content="https://grugnft.xyz/og.png">
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%231a140f'/><rect x='4' y='3' width='8' height='9' fill='%237b5a3e'/><rect x='3' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='12' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='4' y='5' width='2' height='1' fill='%23000'/><rect x='10' y='5' width='2' height='1' fill='%23000'/><rect x='5' y='6' width='1' height='1' fill='%23fff'/><rect x='10' y='6' width='1' height='1' fill='%23fff'/><rect x='6' y='9' width='4' height='1' fill='%23000'/><rect x='4' y='2' width='8' height='2' fill='%23000'/></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --stone: #1A140F;
+  --stone-2: #241A12;
+  --wall: #2B1F17;
+  --wall-2: #3A2A1E;
+  --torch: #E8A147;
+  --torch-hot: #FFC864;
+  --ember: #D14B2F;
+  --ember-hot: #F26A47;
+  --ember-deep: #7C2718;
+  --bone: #EDE1CE;
+  --bone-dim: #B8AA95;
+  --ash: #6B584A;
+  --moss: #7A9B5C;
+  --moss-hot: #8ac560;
+  --danger: #ff5a4a;
+  --warn: #ffb040;
+}
+
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(232,161,71,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 90%, rgba(209,75,47,0.05) 0%, transparent 40%),
+    var(--stone);
+  color: var(--bone);
+  font-family: 'VT323', ui-monospace, monospace;
+  font-size: 22px;
+  line-height: 1.35;
+  padding-bottom: 60px;
+  -webkit-font-smoothing: antialiased;
+}
+
+header.nav {
+  position: sticky; top: 0; z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 14px 32px;
+  gap: 16px;
+  background: linear-gradient(to bottom, rgba(26,20,15,0.98), rgba(26,20,15,0.90));
+  border-bottom: 3px double var(--wall-2);
+  backdrop-filter: blur(6px);
+}
+.wordmark {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: var(--torch);
+  letter-spacing: 2px;
+  text-shadow: 0 0 14px rgba(232,161,71,0.35);
+  cursor: pointer;
+  user-select: none;
+  justify-self: start;
+  text-decoration: none;
+}
+.tabs { display: flex; gap: 4px; justify-self: center; flex-wrap: wrap; }
+.tab {
+  padding: 8px 16px;
+  color: var(--bone-dim);
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: transparent;
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  letter-spacing: 1px;
+  text-transform: lowercase;
+  text-decoration: none;
+}
+.tab:hover { color: var(--bone); border-color: var(--wall-2); }
+.tab.active {
+  color: var(--stone);
+  background: var(--torch);
+  border-color: var(--torch);
+}
+.tab .tab-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  letter-spacing: 1px;
+  background: var(--ember);
+  color: var(--bone);
+  vertical-align: middle;
+  border-radius: 2px;
+}
+.nav-right { justify-self: end; display: inline-flex; align-items: center; gap: 10px; }
+.chain-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border: 2px solid var(--wall-2);
+  color: var(--bone-dim);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px; letter-spacing: 1px;
+}
+.chain-badge::before {
+  content: ""; width: 8px; height: 8px;
+  background: var(--moss);
+  box-shadow: 0 0 6px var(--moss);
+}
+.nav-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
+  color: var(--bone-dim);
+  border: 2px solid var(--wall-2);
+  text-decoration: none;
+  transition: color 120ms, border-color 120ms, transform 120ms;
+}
+.nav-x:hover { color: var(--torch); border-color: var(--torch); transform: translateY(-1px); }
+
+main { max-width: 1180px; margin: 0 auto; padding: 40px 32px; }
+
+.page-hero {
+  text-align: center;
+  padding: 12px 0 28px;
+  border-bottom: 3px double var(--wall-2);
+  margin-bottom: 24px;
+}
+.page-hero h1 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(28px, 5vw, 44px);
+  letter-spacing: 4px;
+  color: var(--bone);
+  margin: 6px 0 10px;
+  text-shadow: 3px 3px 0 var(--ember-deep), 6px 6px 0 rgba(0,0,0,0.5);
+}
+.page-hero .tagline {
+  color: var(--torch);
+  font-size: clamp(20px, 2vw, 26px);
+  letter-spacing: 2px;
+  margin: 0 0 4px;
+}
+.page-hero .sub {
+  color: var(--bone-dim);
+  font-size: 18px;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+/* Add-contract input row */
+.add-row {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 20px;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+.add-row input {
+  flex: 1 1 320px;
+  min-width: 0;
+  padding: 12px 14px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  color: var(--bone);
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  letter-spacing: 0.5px;
+  border-radius: 0;
+  outline: none;
+  transition: border-color 120ms;
+}
+.add-row input:focus { border-color: var(--torch); }
+.add-row input::placeholder { color: var(--ash); }
+.btn {
+  padding: 10px 18px;
+  background: var(--torch);
+  color: var(--stone);
+  border: 2px solid var(--torch);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 120ms, transform 120ms;
+}
+.btn:hover { background: var(--torch-hot); }
+.btn:active { transform: translateY(1px); }
+.btn.ghost {
+  background: transparent;
+  color: var(--bone-dim);
+  border-color: var(--wall-2);
+}
+.btn.ghost:hover { color: var(--torch); border-color: var(--torch); background: transparent; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.add-error {
+  color: var(--danger);
+  font-size: 17px;
+  margin: -12px 0 12px;
+  min-height: 22px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0 0 22px;
+}
+.toolbar .count {
+  color: var(--bone-dim);
+  font-size: 17px;
+}
+
+.alerts-notice {
+  padding: 12px 16px;
+  margin: 0 0 24px;
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-left: 5px solid var(--torch);
+  color: var(--bone);
+  font-size: 17px;
+  line-height: 1.45;
+}
+.alerts-notice b { color: var(--torch); }
+
+/* Empty state */
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  border: 2px dashed var(--wall-2);
+  color: var(--bone-dim);
+}
+.empty .big {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: var(--torch);
+  letter-spacing: 3px;
+  margin: 0 0 12px;
+}
+.empty p { margin: 6px 0; font-size: 18px; }
+
+/* Watchlist grid */
+.wl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.wl-card {
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  padding: 16px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  transition: border-color 120ms;
+}
+.wl-card:hover { border-color: var(--ash); }
+.wl-card.flash-changed { border-color: var(--warn); }
+.wl-card.flash-worse   { border-color: var(--danger); }
+.wl-card.flash-better  { border-color: var(--moss-hot); }
+
+.wl-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.wl-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.wl-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--bone);
+  margin: 0 0 4px;
+  word-break: break-word;
+  line-height: 1.3;
+}
+.wl-addr {
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  color: var(--bone-dim);
+  word-break: break-all;
+}
+.wl-addr a { color: var(--bone-dim); text-decoration: underline dotted; }
+.wl-addr a:hover { color: var(--torch); }
+
+.wl-score {
+  flex: 0 0 auto;
+  min-width: 62px;
+  max-width: 82px;
+  padding: 8px 8px 6px;
+  background: var(--stone);
+  border: 2px solid var(--wall-2);
+  text-align: center;
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1.1;
+}
+.wl-score .n {
+  font-size: 20px;
+  color: var(--bone-dim);
+  display: block;
+}
+.wl-score .l {
+  font-size: 7px;
+  color: var(--bone-dim);
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  display: block;
+  word-break: break-word;
+}
+.wl-score.pending { border-color: var(--ash); }
+.wl-score.pending .n { color: var(--ash); font-size: 12px; padding: 4px 0; }
+.wl-score.green  { border-color: var(--moss-hot); }
+.wl-score.green .n  { color: var(--moss-hot); }
+.wl-score.yellow { border-color: var(--warn); }
+.wl-score.yellow .n { color: var(--warn); }
+.wl-score.red    { border-color: var(--danger); }
+.wl-score.red .n    { color: var(--danger); }
+.wl-score.grey   { border-color: var(--bone-dim); }
+.wl-score.grey .n { color: var(--bone-dim); }
+
+.wl-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  padding: 8px 0;
+  border-top: 1px dashed var(--wall-2);
+  border-bottom: 1px dashed var(--wall-2);
+  font-size: 16px;
+  color: var(--bone-dim);
+}
+.wl-meta .k {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--ash);
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 2px;
+}
+.wl-meta .v { color: var(--bone); font-size: 17px; }
+
+.delta {
+  display: inline-block;
+  padding: 1px 6px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  letter-spacing: 1px;
+  border: 1px solid transparent;
+}
+.delta.up   { color: var(--danger);   border-color: var(--danger);   background: rgba(255,90,74,0.08); }   /* score up = worse for rug score */
+.delta.down { color: var(--moss-hot); border-color: var(--moss-hot); background: rgba(138,197,96,0.08); } /* score down = better */
+.delta.flat { color: var(--bone-dim); border-color: var(--wall-2);   }
+
+.wl-cta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.wl-cta a, .wl-cta button {
+  padding: 6px 12px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.wl-cta a {
+  color: var(--bone);
+  background: transparent;
+  border: 2px solid var(--wall-2);
+  transition: color 120ms, border-color 120ms;
+}
+.wl-cta a:hover { color: var(--torch); border-color: var(--torch); }
+.wl-cta .remove {
+  color: var(--bone-dim);
+  background: transparent;
+  border: 2px solid var(--wall-2);
+  margin-left: auto;
+}
+.wl-cta .remove:hover { color: var(--danger); border-color: var(--danger); }
+
+.wl-error {
+  padding: 8px 10px;
+  background: rgba(255,90,74,0.06);
+  border: 1px dashed var(--danger);
+  color: var(--danger);
+  font-size: 15px;
+}
+
+@media (max-width: 720px) {
+  main { padding: 24px 18px; }
+  .wl-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <a class="wordmark" href="index.html">GRUGS</a>
+  <nav class="tabs" role="tablist">
+    <a class="tab" href="index.html">home</a>
+    <a class="tab" href="scanner.html">rug radar</a>
+    <a class="tab" href="coin-radar.html">coin radar</a>
+    <a class="tab" href="mints.html">mints</a>
+    <a class="tab active" href="watchlist.html">watchlist<span class="tab-badge">NEW</span></a>
+  </nav>
+  <div class="nav-right">
+    <a class="nav-x" href="https://twitter.com/GrugNFT" target="_blank" rel="noopener noreferrer" title="@GrugNFT on Twitter" aria-label="Twitter">
+      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+        <path fill="currentColor" d="M12.6 1.5h2.3l-5 5.7 5.9 7.8h-4.6l-3.6-4.7-4.1 4.7H1.2l5.4-6.1L1 1.5h4.7l3.3 4.4L12.6 1.5zm-.8 12.1h1.3L4.3 2.8H2.9l8.9 10.8z"/>
+      </svg>
+    </a>
+    <div class="chain-badge">RHC</div>
+  </div>
+</header>
+
+<main>
+
+  <section class="page-hero">
+    <h1>WATCHLIST</h1>
+    <p class="tagline">grug watch. grug remember.</p>
+    <p class="sub">paste every contract you're eyeing. grug rescans on every visit and flags anything that shifted.</p>
+  </section>
+
+  <div class="alerts-notice" id="alerts-notice">
+    <b>coming this week:</b> hook up telegram and grug will ping you the moment a score on your list changes — even when you're not on the page.
+  </div>
+
+  <div class="add-row">
+    <input id="addr-input" type="text" spellcheck="false" autocomplete="off" placeholder="paste contract address (0x…)" aria-label="contract address">
+    <button class="btn" id="add-btn">ADD TO WATCHLIST</button>
+    <button class="btn ghost" id="refresh-btn" title="rescan every contract now">REFRESH ALL</button>
+  </div>
+  <div class="add-error" id="add-error"></div>
+
+  <div class="toolbar">
+    <div class="count" id="count">0 contracts on watchlist</div>
+  </div>
+
+  <div id="wl-body"></div>
+
+</main>
+
+<script type="module">
+import { fullScore, TIERS, SIGNAL_TIER } from '/scripts/grug-score-engine.mjs';
+
+// ============================================================================
+// STORAGE — localStorage keyed model. Bumped v when the shape changes.
+// ============================================================================
+const STORAGE_KEY = 'grug_watchlist_v1';
+
+/**
+ * Watchlist entry shape:
+ *   {
+ *     addr:            "0x…"                     lowercased contract address
+ *     addedAt:         epoch ms                  first added
+ *     lastScore:       0-100 | null              most recent scan score
+ *     lastTone:        'green'|'yellow'|'red'|'grey'|null
+ *     lastVerdict:     string | null
+ *     lastConfidence:  0-100 | null
+ *     lastScannedAt:   epoch ms | null
+ *     prevScore:       0-100 | null              score BEFORE the latest scan, for delta
+ *     name:            string | null             collection name if known
+ *     error:           string | null             last error message, if any
+ *   }
+ */
+function readList() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed?.items)) return [];
+    return parsed.items;
+  } catch (e) { return []; }
+}
+function writeList(items) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ v: 1, items }));
+  } catch (e) {}
+}
+
+let list = readList();
+
+// ============================================================================
+// DOM refs
+// ============================================================================
+const $body = document.getElementById('wl-body');
+const $count = document.getElementById('count');
+const $input = document.getElementById('addr-input');
+const $addBtn = document.getElementById('add-btn');
+const $refreshBtn = document.getElementById('refresh-btn');
+const $addError = document.getElementById('add-error');
+
+// ============================================================================
+// UTIL
+// ============================================================================
+const isAddr = (s) => /^0x[0-9a-f]{40}$/.test(String(s || '').toLowerCase().trim());
+const shortAddr = (a) => a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '';
+
+function relativeTime(ts) {
+  if (!ts) return 'never';
+  const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+  if (s < 45) return 'just now';
+  if (s < 90) return '1m ago';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 7200) return '1h ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+
+// ============================================================================
+// RENDER
+// ============================================================================
+function render() {
+  $count.textContent = list.length === 0
+    ? '0 contracts on watchlist'
+    : `${list.length} contract${list.length === 1 ? '' : 's'} on watchlist`;
+
+  if (list.length === 0) {
+    $body.innerHTML = `
+      <div class="empty">
+        <p class="big">EMPTY WATCHLIST</p>
+        <p>paste any RHC contract above.</p>
+        <p>grug remembers it, rescans it, and shows what changed.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'wl-grid';
+
+  // Sort: worst score first (most useful to see at a glance)
+  const sorted = [...list].sort((a, b) => (b.lastScore ?? -1) - (a.lastScore ?? -1));
+
+  for (const item of sorted) {
+    grid.appendChild(renderCard(item));
+  }
+  $body.innerHTML = '';
+  $body.appendChild(grid);
+}
+
+function renderCard(item) {
+  const card = document.createElement('article');
+  card.className = 'wl-card';
+  card.dataset.addr = item.addr;
+
+  const tone = item.lastTone || 'pending';
+  const scoreDisplay = item.lastScore == null ? '…' : String(item.lastScore);
+  const verdictDisplay = item.lastVerdict || (item.error ? 'error' : 'scanning');
+
+  let deltaHtml = '';
+  if (item.lastScore != null && item.prevScore != null && item.prevScore !== item.lastScore) {
+    const d = item.lastScore - item.prevScore;
+    const cls = d > 0 ? 'up' : d < 0 ? 'down' : 'flat';
+    // Score up = rug signals went UP = worse. Show sign explicitly.
+    deltaHtml = `<span class="delta ${cls}">${d > 0 ? '+' : ''}${d}</span>`;
+  }
+
+  const nameHtml = item.name
+    ? `<p class="wl-name">${escapeHtml(item.name)}</p>`
+    : `<p class="wl-name">${shortAddr(item.addr)}</p>`;
+
+  card.innerHTML = `
+    <div class="wl-head">
+      <div class="wl-title">
+        ${nameHtml}
+        <div class="wl-addr">
+          <a href="https://robinhoodchain.blockscout.com/address/${item.addr}" target="_blank" rel="noopener">${shortAddr(item.addr)} ↗</a>
+        </div>
+      </div>
+      <div class="wl-score ${tone}">
+        <span class="n">${scoreDisplay}</span>
+        <span class="l">${verdictDisplay}</span>
+      </div>
+    </div>
+
+    <div class="wl-meta">
+      <div>
+        <span class="k">confidence</span>
+        <span class="v">${item.lastConfidence != null ? item.lastConfidence + '%' : '—'}</span>
+      </div>
+      <div>
+        <span class="k">last scan</span>
+        <span class="v">${relativeTime(item.lastScannedAt)}</span>
+      </div>
+      <div>
+        <span class="k">added</span>
+        <span class="v">${relativeTime(item.addedAt)}</span>
+      </div>
+      <div>
+        <span class="k">delta</span>
+        <span class="v">${deltaHtml || '<span class="delta flat">—</span>'}</span>
+      </div>
+    </div>
+
+    ${item.error ? `<div class="wl-error">${escapeHtml(item.error)}</div>` : ''}
+
+    <div class="wl-cta">
+      <a href="scanner.html#${item.addr}" title="open full rug radar report">FULL SCAN ↗</a>
+      <button class="remove" data-remove="${item.addr}">REMOVE</button>
+    </div>
+  `;
+
+  card.querySelector('.remove').addEventListener('click', () => {
+    removeAddr(item.addr);
+  });
+
+  return card;
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+// ============================================================================
+// MUTATIONS
+// ============================================================================
+function addAddr(rawAddr) {
+  $addError.textContent = '';
+  const addr = String(rawAddr || '').toLowerCase().trim();
+  if (!isAddr(addr)) {
+    $addError.textContent = 'that does not look like a 0x… contract address.';
+    return false;
+  }
+  if (list.some(x => x.addr === addr)) {
+    $addError.textContent = 'already on your watchlist.';
+    return false;
+  }
+  list.push({
+    addr,
+    addedAt: Date.now(),
+    lastScore: null,
+    lastTone: null,
+    lastVerdict: null,
+    lastConfidence: null,
+    lastScannedAt: null,
+    prevScore: null,
+    name: null,
+    error: null,
+  });
+  writeList(list);
+  render();
+  // Kick off a scan for the freshly-added one only.
+  scanOne(addr);
+  return true;
+}
+
+function removeAddr(addr) {
+  list = list.filter(x => x.addr !== addr);
+  writeList(list);
+  render();
+}
+
+// ============================================================================
+// SCANNING — reuses the shared engine used by scanner.html and mints.html.
+// ============================================================================
+async function scanOne(addr) {
+  const idx = list.findIndex(x => x.addr === addr);
+  if (idx === -1) return;
+  try {
+    const result = await fullScore(addr);
+    // fullScore returns { score, tone, verdict, confidence, resolved, totalSignals, cached }
+    // or { error: 'not_a_contract' }
+    if (result?.error) {
+      list[idx].error = result.error === 'not_a_contract'
+        ? 'this address has no contract bytecode. did you mean a wallet?'
+        : String(result.error);
+      list[idx].lastScannedAt = Date.now();
+    } else {
+      // Rotate: current lastScore becomes prevScore ONLY if it's an actual re-scan
+      // (i.e. we had a previous non-null score). Fresh adds keep prevScore=null so
+      // the delta chip stays empty on first scan instead of showing "+45".
+      if (list[idx].lastScore != null) {
+        list[idx].prevScore = list[idx].lastScore;
+      }
+      list[idx].lastScore = result.score;
+      list[idx].lastTone = result.tone;
+      list[idx].lastVerdict = result.verdict;
+      list[idx].lastConfidence = result.confidence;
+      list[idx].lastScannedAt = Date.now();
+      list[idx].error = null;
+    }
+  } catch (e) {
+    list[idx].error = e?.message || 'scan failed. try refresh.';
+    list[idx].lastScannedAt = Date.now();
+  }
+  writeList(list);
+  render();
+}
+
+async function scanAll() {
+  if (list.length === 0) return;
+  $refreshBtn.disabled = true;
+  $refreshBtn.textContent = 'SCANNING…';
+  // Scan in parallel but bounded — 3 at a time keeps us under Vercel serverless
+  // burst limits and avoids nuking the RHC RPC.
+  const CONCURRENCY = 3;
+  const queue = list.map(x => x.addr);
+  const workers = Array.from({ length: CONCURRENCY }, async () => {
+    while (queue.length) {
+      const next = queue.shift();
+      if (!next) return;
+      await scanOne(next);
+    }
+  });
+  await Promise.all(workers);
+  $refreshBtn.disabled = false;
+  $refreshBtn.textContent = 'REFRESH ALL';
+}
+
+// ============================================================================
+// WIRING
+// ============================================================================
+$addBtn.addEventListener('click', () => {
+  addAddr($input.value);
+  $input.value = '';
+  $input.focus();
+});
+
+$input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addAddr($input.value);
+    $input.value = '';
+  }
+  // Live-clear the error while typing so it doesn't feel sticky.
+  if ($addError.textContent) $addError.textContent = '';
+});
+
+$refreshBtn.addEventListener('click', scanAll);
+
+// First render + auto-scan any stale entries on load.
+render();
+
+// Auto-scan entries that either (a) never scanned OR (b) haven't been scanned
+// in the last 10 minutes. Cached engine results make this cheap for warm data.
+const STALE_MS = 10 * 60 * 1000;
+const stale = list.filter(x => !x.lastScannedAt || (Date.now() - x.lastScannedAt) > STALE_MS);
+if (stale.length) {
+  (async () => {
+    const CONCURRENCY = 3;
+    const queue = stale.map(x => x.addr);
+    const workers = Array.from({ length: CONCURRENCY }, async () => {
+      while (queue.length) {
+        const next = queue.shift();
+        if (!next) return;
+        await scanOne(next);
+      }
+    });
+    await Promise.all(workers);
+  })();
+}
+</script>
+
+<script type="module" src="/scripts/gate.mjs"></script>
+
+</body>
+</html>
