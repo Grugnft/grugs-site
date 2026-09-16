@@ -327,9 +327,18 @@ async function handleAction(action) {
 export async function initGate() {
   if (!CONFIG.GATE_ENABLED) return; // pre-mint: gate disabled, scanner runs as-is
 
-  // Existing session? Silent pass-through.
+  // Per-page override: a page (e.g. mint-bot.html) can set
+  // `window.__GRUG_GATE_MIN = 10` before importing this module to raise the
+  // required-balance threshold for that page only. Everything else runs at 5.
+  if (typeof window !== 'undefined' && Number.isFinite(window.__GRUG_GATE_MIN)) {
+    CONFIG.REQUIRED_BALANCE = Math.max(1, Math.floor(window.__GRUG_GATE_MIN));
+  }
+
+  // Existing session? Only pass-through if it satisfies THIS page's threshold.
+  // A user gated in at 5 grugs shouldn't automatically bypass a 10-grug page.
   const session = readSession();
-  if (session) return;
+  if (session && (session.balance || 0) >= CONFIG.REQUIRED_BALANCE) return;
+  if (session) clearSession();
 
   // Otherwise show the overlay and wait for user action.
   state.phase = 'idle';
