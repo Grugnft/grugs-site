@@ -17,6 +17,10 @@
  * a 15-minute TTL so repeat loads are instant.
  */
 
+import { getChain } from './chains.mjs';
+
+// Legacy top-level constants kept only for backwards compat with anything
+// that ever imported them; live code paths read from getChain(chainId).
 const RPC_URL           = 'https://rpc.mainnet.chain.robinhood.com';
 const BLOCKSCOUT_API    = 'https://robinhoodchain.blockscout.com/api/v2';
 const ZERO_ADDR         = '0x0000000000000000000000000000000000000000';
@@ -171,8 +175,8 @@ export const WEIGHTS = Object.fromEntries(
 // RPC + helpers
 // ============================================================================
 
-async function rpc(method, params) {
-  const r = await fetch(RPC_URL, {
+async function rpc(chain, method, params) {
+  const r = await fetch(chain.rpc, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
@@ -181,8 +185,8 @@ async function rpc(method, params) {
   if (j.error) throw new Error(j.error.message || 'rpc error');
   return j.result;
 }
-async function ethCall(to, data) {
-  try { return await rpc('eth_call', [{ to, data }, 'latest']); }
+async function ethCall(chain, to, data) {
+  try { return await rpc(chain, 'eth_call', [{ to, data }, 'latest']); }
   catch (e) { return null; }
 }
 function decodeAddress(hex) {
@@ -201,18 +205,18 @@ function decodeUintBigInt(hex) {
 // On-chain reads — mirrors scanner.html's readContractOnChain
 // ============================================================================
 
-async function readOnChain(addr) {
+async function readOnChain(addr, chain) {
   const out = { hasSelector: {} };
-  const code = await rpc('eth_getCode', [addr, 'latest']).catch(() => null);
+  const code = await rpc(chain, 'eth_getCode', [addr, 'latest']).catch(() => null);
   if (!code || code === '0x' || code === '0x0') { out.notAContract = true; return out; }
 
-  const implSlot = await rpc('eth_getStorageAt', [addr, EIP1967_IMPL_SLOT, 'latest']).catch(() => null);
+  const implSlot = await rpc(chain, 'eth_getStorageAt', [addr, EIP1967_IMPL_SLOT, 'latest']).catch(() => null);
   const implAddr = decodeAddress(implSlot);
   out.isProxy = !!(implAddr && implAddr !== ZERO_ADDR);
 
   let scanCode = code.toLowerCase();
   if (out.isProxy) {
-    const implCode = await rpc('eth_getCode', [implAddr, 'latest']).catch(() => null);
+    const implCode = await rpc(chain, 'eth_getCode', [implAddr, 'latest']).catch(() => null);
     if (implCode && implCode !== '0x') scanCode = implCode.toLowerCase();
   }
   for (const [k, sel] of Object.entries(ADMIN_SEL)) {
@@ -227,8 +231,8 @@ async function readOnChain(addr) {
   }
 
   const [is2981, ownerRaw] = await Promise.all([
-    ethCall(addr, SEL.supportsInterface + IFACE.ERC2981.padStart(64, '0') + '00000000'),
-    ethCall(addr, SEL.owner),
+    ethCall(chain, addr, SEL.supportsInterface + IFACE.ERC2981.padStart(64, '0') + '00000000'),
+    ethCall(chain, addr, SEL.owner),
   ]);
   out.hasRoyalty2981 = is2981 === null ? null : decodeBool(is2981);
   out.owner = decodeAddress(ownerRaw);
@@ -238,11 +242,11 @@ async function readOnChain(addr) {
   // Live-state
   out.isPaused = null;
   if (out.hasSelector.pause) {
-    const pausedRaw = await ethCall(addr, SEL.paused);
+    const pausedRaw = await ethCall(chain, addr, SEL.paused);
     out.isPaused = pausedRaw === null ? null : decodeBool(pausedRaw);
   }
 
-  const balHex = await rpc('eth_getBalance', [addr, 'latest']).catch(() => null);
+  const balHex = await rpc(chain, 'eth_getBalance', [addr, 'latest']).catch(() => null);
   out.contractBalanceEth = balHex ? Number(BigInt(balHex)) / 1e18 : null;
 
   // RPC fallback for totalSupply. Blockscout's /tokens endpoint on RHC often
@@ -250,7 +254,7 @@ async function readOnChain(addr) {
   // makes the topHeavy signal silently unresolvable. Reading totalSupply()
   // directly costs one RPC call and works for any ERC721/ERC1155 that
   // implements it. Store as string to preserve precision for the caller.
-  const supplyRaw = await ethCall(addr, SEL.totalSupply);
+  const supplyRaw = await ethCall(chain, addr, SEL.totalSupply);
   const supplyBig = decodeUintBigInt(supplyRaw);
   out.totalSupplyOnChain = supplyBig !== null ? supplyBig.toString() : null;
 
@@ -258,18 +262,18 @@ async function readOnChain(addr) {
   // a URI. Order: tokenURI(1) → tokenURI(0) → contractURI() → baseURI(). Any
   // hit is enough for the centralArt signal to determine IPFS vs centralized.
   // Kept as parallel calls where possible to stay fast.
-  const uriRaw1 = await ethCall(addr, SEL.tokenURI + encodeUint(1));
+  const uriRaw1 = await ethCall(chain, addr, SEL.tokenURI + encodeUint(1));
   let tokenURI = decodeString(uriRaw1);
   if (!tokenURI) {
-    const uriRaw0 = await ethCall(addr, SEL.tokenURI + encodeUint(0));
+    const uriRaw0 = await ethCall(chain, addr, SEL.tokenURI + encodeUint(0));
     tokenURI = decodeString(uriRaw0);
   }
   if (!tokenURI) {
-    const cUri = await ethCall(addr, SEL.contractURI);
+    const cUri = await ethCall(chain, addr, SEL.contractURI);
     tokenURI = decodeString(cUri);
   }
   if (!tokenURI) {
-    const bUri = await ethCall(addr, SEL.baseURI);
+    const bUri = await ethCall(chain, addr, SEL.baseURI);
     tokenURI = decodeString(bUri);
   }
   out.tokenURI = tokenURI;
@@ -277,9 +281,9 @@ async function readOnChain(addr) {
   // Multi-sig owner detection
   out.ownerIsMultiSig = false;
   if (out.owner && out.owner !== ZERO_ADDR) {
-    const ownerCode = await rpc('eth_getCode', [out.owner, 'latest']).catch(() => null);
+    const ownerCode = await rpc(chain, 'eth_getCode', [out.owner, 'latest']).catch(() => null);
     if (ownerCode && ownerCode !== '0x' && ownerCode !== '0x0') {
-      const threshRaw = await ethCall(out.owner, SEL.getThreshold);
+      const threshRaw = await ethCall(chain, out.owner, SEL.getThreshold);
       if (threshRaw && threshRaw.length === 66) {
         const n = parseInt(threshRaw, 16);
         if (n > 0 && n < 100) out.ownerIsMultiSig = true;
@@ -295,13 +299,21 @@ async function readOnChain(addr) {
 // scanner.html's signal-push loop, minus the UI concerns.
 // ============================================================================
 
-function passScore(cats, id, state) {
-  cats.push({ id, state, weight: WEIGHTS[id] });
-}
-
-function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug, funding, collection }) {
+function computeScoreFromData({ addr, chain, onChain, explorer, deployerHist, priorRug, funding, collection }) {
   const cats = [];
   const isUtility = UTILITY_RE.test(`${onChain.name || ''} ${onChain.symbol || ''} ${explorer?.tokenName || ''} ${explorer?.tokenSymbol || ''}`);
+
+  // Chain-aware push. Signals not in the chain's availableSignals set are
+  // stored as 'n/a' — excluded from both the score AND the confidence
+  // denominator, so scans on a chain with narrower data don't automatically
+  // fail the 60% confidence floor.
+  const passScore = (_cats, id, state) => {
+    if (chain && chain.availableSignals && !chain.availableSignals.has(id)) {
+      _cats.push({ id, state: 'n/a', weight: WEIGHTS[id] });
+      return;
+    }
+    _cats.push({ id, state, weight: WEIGHTS[id] });
+  };
 
   // ---- contract ----
   passScore(cats, 'unverified', explorer?.verified === false ? 'bad' : (explorer?.verified === true ? 'good' : 'unknown'));
@@ -491,14 +503,14 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
   for (const s of cats) if (s.state === 'bad') score += s.weight;
   if (score > 100) score = 100;
 
-  // Confidence — what fraction of signals actually resolved to good/bad.
-  // Unknowns are checks we couldn't complete (Blockscout flaked, endpoint
-  // returned nothing, or the signal is out of scope for RHC). A score
-  // built off a scan where 16/28 signals were "unknown" is a very different
-  // signal from one where 26/28 completed — the UI needs to reflect that.
-  const totalSignals = cats.length;
-  const resolved = cats.filter(s => s.state === 'good' || s.state === 'bad').length;
-  const confidence = totalSignals > 0 ? Math.round((resolved / totalSignals) * 100) : 0;
+  // Confidence — what fraction of *evaluatable* signals actually resolved.
+  // 'n/a' signals (marked as unavailable on this chain) are excluded from
+  // both numerator and denominator: an Arc scan that resolves 12/12 chain-
+  // applicable signals is 100% confidence, not 12/28 = 43%.
+  const applicable  = cats.filter(s => s.state !== 'n/a');
+  const totalSignals = applicable.length;
+  const resolved    = applicable.filter(s => s.state === 'good' || s.state === 'bad').length;
+  const confidence  = totalSignals > 0 ? Math.round((resolved / totalSignals) * 100) : 0;
 
   return { score, breakdown: cats, isUtility, confidence, resolved, totalSignals };
 }
@@ -508,51 +520,59 @@ function computeScoreFromData({ addr, onChain, explorer, deployerHist, priorRug,
 // Caches in localStorage under grug_score_v1_<addr> for 15 min.
 // ============================================================================
 
-// v6 = unpinned now resolves 'good' for any content-addressed URI (ipfs,
-// arweave, gateway wrapping a CID) instead of staying 'unknown'. Combined
-// with the scanner-side fix that drops the /api/metadata-fetch,
-// /api/socials-check, /api/ipfs-check dead calls, that recovers ~3 signals
-// per scan and pushes most well-formed contracts back above the 60%
-// confidence threshold. Old v5 caches would still carry the unknown pin,
-// so bump.
-const CACHE_KEY_PREFIX = 'grug_score_v6_';
+// v7 = chain-aware. Cache key now includes the chain id so a scan on Arc
+// doesn't get served from an RHC cache (or vice-versa). Signals not
+// applicable on a chain are marked 'n/a' and excluded from confidence math.
+const CACHE_KEY_PREFIX = 'grug_score_v7_';
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
-function readCache(addr) {
+function readCache(chainId, addr) {
   try {
-    const raw = localStorage.getItem(CACHE_KEY_PREFIX + addr.toLowerCase());
+    const raw = localStorage.getItem(CACHE_KEY_PREFIX + chainId + '_' + addr.toLowerCase());
     if (!raw) return null;
     const j = JSON.parse(raw);
     if (!j || !j.expiresAt || j.expiresAt < Date.now()) return null;
     return j.value;
   } catch (e) { return null; }
 }
-function writeCache(addr, value) {
+function writeCache(chainId, addr, value) {
   try {
-    localStorage.setItem(CACHE_KEY_PREFIX + addr.toLowerCase(),
+    localStorage.setItem(CACHE_KEY_PREFIX + chainId + '_' + addr.toLowerCase(),
       JSON.stringify({ value, expiresAt: Date.now() + CACHE_TTL_MS }));
   } catch (e) {}
 }
 
-export async function fullScore(addr) {
-  // 1. Cache hit — instant
-  const cached = readCache(addr);
-  if (cached) return { ...cached, cached: true };
+/**
+ * Score a contract on a specific chain.
+ *
+ * @param {string} addr - 0x-prefixed contract address
+ * @param {string} chainId - 'rhc' (default) or 'arc'
+ */
+export async function fullScore(addr, chainId = 'rhc') {
+  const chain = getChain(chainId);
 
-  // 2. Fire onchain reads + endpoint fetches in parallel
+  // 1. Cache hit — instant (keyed per-chain)
+  const cached = readCache(chain.id, addr);
+  if (cached) return { ...cached, cached: true, chain: chain.id };
+
+  // 2. Fire on-chain reads + endpoint fetches in parallel. Endpoints receive
+  //    ?chain= so their upstreams pick the right explorer/RPC; on Arc the
+  //    backend short-circuits with a null payload and we score just the
+  //    on-chain + OpenSea signals.
+  const q = `?addr=${addr}&chain=${chain.id}`;
   const [onChain, explorer, deployerHist, priorRug, funding, collection] = await Promise.all([
-    readOnChain(addr),
-    fetch('/api/explorer-info?addr=' + addr).then(r => r.ok ? r.json() : null).catch(() => null),
-    fetch('/api/deployer-history?addr=' + addr).then(r => r.ok ? r.json() : null).catch(() => null),
-    fetch('/api/prior-rug-check?addr=' + addr).then(r => r.ok ? r.json() : null).catch(() => null),
-    fetch('/api/deployer-funding?addr=' + addr).then(r => r.ok ? r.json() : null).catch(() => null),
-    fetch('/api/collection-detail?contract=' + addr).then(r => r.ok ? r.json() : null).catch(() => null),
+    readOnChain(addr, chain),
+    fetch('/api/explorer-info' + q).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch('/api/deployer-history' + q).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch('/api/prior-rug-check' + q).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch('/api/deployer-funding' + q).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch(`/api/collection-detail?contract=${addr}&chain=${chain.id}`).then(r => r.ok ? r.json() : null).catch(() => null),
   ]);
 
-  if (onChain.notAContract) return { error: 'not_a_contract' };
+  if (onChain.notAContract) return { error: 'not_a_contract', chain: chain.id };
 
   const { score, isUtility, confidence, resolved, totalSignals } = computeScoreFromData({
-    addr, onChain, explorer, deployerHist, priorRug, funding, collection,
+    addr, chain, onChain, explorer, deployerHist, priorRug, funding, collection,
   });
 
   // Low-confidence guard: a score built off half a scan can't be trusted to
@@ -573,8 +593,8 @@ export async function fullScore(addr) {
     tone = 'red';    verdict = 'grug run';
   }
 
-  const result = { score, tone, verdict, isUtility, confidence, resolved, totalSignals, lowConfidence };
-  writeCache(addr, result);
+  const result = { score, tone, verdict, isUtility, confidence, resolved, totalSignals, lowConfidence, chain: chain.id };
+  writeCache(chain.id, addr, result);
   return { ...result, cached: false };
 }
 
