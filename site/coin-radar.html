@@ -60,7 +60,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Nav — same shape as scanner.html */
+/* ============ NAV (matches scanner.html) ============ */
 header.nav {
   position: sticky; top: 0; z-index: 20;
   display: grid;
@@ -68,47 +68,61 @@ header.nav {
   align-items: center;
   padding: 14px 32px;
   gap: 16px;
-  background: linear-gradient(180deg, var(--stone-2) 0%, rgba(26,20,15,0.85) 100%);
-  border-bottom: 2px solid var(--wall-2);
+  background: linear-gradient(to bottom, rgba(26,20,15,0.98), rgba(26,20,15,0.90));
+  border-bottom: 3px double var(--wall-2);
   backdrop-filter: blur(6px);
 }
 .wordmark {
-  justify-self: start;
   font-family: 'Press Start 2P', monospace;
   font-size: 20px;
   color: var(--torch);
-  text-decoration: none;
   letter-spacing: 2px;
-}
-.tabs { display: flex; gap: 10px; }
-.tab {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 11px;
-  color: var(--bone-dim);
+  text-shadow: 0 0 14px rgba(232,161,71,0.35);
+  cursor: pointer;
+  user-select: none;
+  justify-self: start;
   text-decoration: none;
-  padding: 8px 14px;
-  border: 1px solid transparent;
-  border-radius: 2px;
+}
+.tabs { display: flex; gap: 4px; justify-self: center; }
+.tab {
+  padding: 8px 16px;
+  color: var(--bone-dim);
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: transparent;
+  font-family: 'VT323', monospace;
+  font-size: 20px;
   letter-spacing: 1px;
-  transition: color .2s, border-color .2s;
+  text-transform: lowercase;
+  text-decoration: none;
 }
 .tab:hover { color: var(--bone); border-color: var(--wall-2); }
-.tab.active { color: var(--torch-hot); border-color: var(--torch); background: rgba(232,161,71,0.08); }
-.nav-right { justify-self: end; display: inline-flex; align-items: center; gap: 10px; }
-.chain-pill {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  padding: 6px 10px;
-  color: var(--moss-hot);
-  border: 1px solid var(--moss);
-  border-radius: 2px;
-  letter-spacing: 1px;
+.tab.active {
+  color: var(--stone);
+  background: var(--moss);
+  border-color: var(--moss);
 }
-.chain-pill::before { content: '■ '; }
+.nav-right { justify-self: end; display: inline-flex; align-items: center; gap: 10px; }
+.chain-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border: 2px solid var(--wall-2);
+  color: var(--bone-dim);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px; letter-spacing: 1px;
+}
+.chain-badge::before {
+  content: ""; width: 8px; height: 8px;
+  background: var(--moss);
+  box-shadow: 0 0 6px var(--moss);
+}
 .nav-x {
-  color: var(--bone-dim); text-decoration: none;
-  border: 1px solid var(--wall-2); padding: 6px 10px; border-radius: 2px;
-  transition: color .2s, border-color .2s, transform .2s;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
+  color: var(--bone-dim);
+  border: 2px solid var(--wall-2);
+  text-decoration: none;
+  transition: color 120ms, border-color 120ms, transform 120ms;
 }
 .nav-x:hover { color: var(--torch); border-color: var(--torch); transform: translateY(-1px); }
 
@@ -433,6 +447,7 @@ header.nav {
     <a class="tab" href="index.html">home</a>
     <a class="tab" href="scanner.html">rug radar</a>
     <a class="tab active" href="coin-radar.html">coin radar</a>
+    <a class="tab" href="mint-bot.html">mint bot</a>
     <a class="tab" href="mints.html">mints</a>
     <a class="tab" href="portfolio.html">portfolio</a>
   </nav>
@@ -440,7 +455,7 @@ header.nav {
     <a class="nav-x" href="https://twitter.com/GrugNFT" target="_blank" rel="noopener noreferrer" title="@GrugNFT on Twitter" aria-label="Twitter">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:block"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
     </a>
-    <span class="chain-pill">RHC</span>
+    <div class="chain-badge">RHC</div>
   </div>
 </header>
 
