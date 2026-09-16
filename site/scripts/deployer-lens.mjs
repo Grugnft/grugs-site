@@ -32,8 +32,11 @@
  */
 
 import { fullScore } from '/scripts/grug-score-engine.mjs';
+import { getChain } from '/scripts/chains.mjs';
 
-const CACHE_KEY_PREFIX = 'grug_deployer_v3_';
+// v4 — cache key now includes chain id so a scan of the same contract on
+// Arc doesn't return the RHC lens payload (and vice-versa).
+const CACHE_KEY_PREFIX = 'grug_deployer_v4_';
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
 // How many prior contracts we score in parallel. Each fullScore() spawns
@@ -48,19 +51,19 @@ const SCORE_CONCURRENCY = 3;
 // listed in the profile but marked scored:false.
 const SCORE_CAP = 8;
 
-function readCache(addr) {
+function readCache(chainId, addr) {
   try {
-    const raw = localStorage.getItem(CACHE_KEY_PREFIX + addr.toLowerCase());
+    const raw = localStorage.getItem(CACHE_KEY_PREFIX + chainId + '_' + addr.toLowerCase());
     if (!raw) return null;
     const j = JSON.parse(raw);
     if (!j || !j.expiresAt || j.expiresAt < Date.now()) return null;
     return j.value;
   } catch (e) { return null; }
 }
-function writeCache(addr, value) {
+function writeCache(chainId, addr, value) {
   try {
     localStorage.setItem(
-      CACHE_KEY_PREFIX + addr.toLowerCase(),
+      CACHE_KEY_PREFIX + chainId + '_' + addr.toLowerCase(),
       JSON.stringify({ value, expiresAt: Date.now() + CACHE_TTL_MS })
     );
   } catch (e) {}
@@ -187,19 +190,41 @@ function collectRedFlags({ walletAgeDays, walletAgeIsExact, txCount, coinBalance
   return flags;
 }
 
-export async function getDeployerProfile(contractAddr) {
+export async function getDeployerProfile(contractAddr, chainId = 'rhc') {
+  const chain = getChain(chainId);
   const addr = (contractAddr || '').toLowerCase();
   if (!/^0x[0-9a-f]{40}$/.test(addr)) {
     return { contract: contractAddr, error: 'invalid_addr' };
   }
 
-  const cached = readCache(addr);
+  const cached = readCache(chain.id, addr);
   if (cached) return { ...cached, cached: true };
 
+  // Chains without a reachable Blockscout upstream (Arc is CF-locked) can't
+  // populate the deployer profile — every field this function derives comes
+  // from explorer data. Short-circuit with a shape the UI can render as a
+  // "not available on this chain" note instead of showing "endpoint failed".
+  if (!chain.explorerReachable) {
+    const stub = {
+      contract: addr,
+      chain: chain.id,
+      deployer: null,
+      unavailableOnChain: true,
+      reputation: 'unavailable',
+      reputationLine: `deployer lens uses the block-explorer data we don't have on ${chain.shortName} yet. rely on the contract outline + OpenSea signals above.`,
+      priorDeploys: [],
+      priorDeployStats: { total: 0, scored: 0, clean: 0, rugged: 0, dead: 0, alive: 0, verdict: null },
+      redFlags: [],
+    };
+    writeCache(chain.id, addr, stub);
+    return { ...stub, cached: false };
+  }
+
+  const q = `?addr=${addr}&chain=${chain.id}`;
   const [history, funding, priorRug] = await Promise.all([
-    fetchJson('/api/deployer-history?addr=' + addr),
-    fetchJson('/api/deployer-funding?addr=' + addr),
-    fetchJson('/api/prior-rug-check?addr=' + addr),
+    fetchJson('/api/deployer-history' + q),
+    fetchJson('/api/deployer-funding' + q),
+    fetchJson('/api/prior-rug-check' + q),
   ]);
 
   // deployer-history occasionally returns no_creator_found even when the
@@ -266,7 +291,7 @@ export async function getDeployerProfile(contractAddr) {
   const toScore = priorAddrs.slice(0, SCORE_CAP);
   const scoredResults = await mapWithConcurrency(toScore, SCORE_CONCURRENCY, async (a) => {
     try {
-      const r = await fullScore(a);
+      const r = await fullScore(a, chain.id);
       if (!r || r.error) return { addr: a, error: r?.error || 'score_failed' };
       return {
         addr: a,
@@ -398,8 +423,8 @@ export async function getDeployerProfile(contractAddr) {
     redFlags,
   };
 
-  writeCache(addr, profile);
-  return { ...profile, cached: false };
+  writeCache(chain.id, addr, profile);
+  return { ...profile, chain: chain.id, cached: false };
 }
 
 // Convenience: expose the cache key prefix so tests / debugging tools can
