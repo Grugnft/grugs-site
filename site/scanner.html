@@ -248,6 +248,47 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
 }
 .scan-error.on { display: block; }
 
+/* Chain switcher — one chip per supported chain. Active chip inherits the
+   moss active-tab styling used across the sub-nav so the affordance is the
+   same everywhere on site. */
+.chain-switch {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.chain-switch-label {
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  color: var(--bone-dim);
+  letter-spacing: 1px;
+  text-transform: lowercase;
+}
+.chain-chip {
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  letter-spacing: 1px;
+  padding: 4px 14px;
+  background: transparent;
+  border: 2px solid #3a2f24;
+  color: var(--bone-dim);
+  cursor: pointer;
+  text-transform: lowercase;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.chain-chip:hover { color: var(--bone); border-color: var(--moss); }
+.chain-chip.active {
+  background: rgba(122, 154, 90, 0.15);
+  border-color: var(--moss);
+  color: var(--moss);
+}
+.chain-chip .badge {
+  font-size: 14px;
+  opacity: 0.7;
+  margin-left: 6px;
+}
+
 /* ============ RESULT ============ */
 #result { display: none; }
 #result.on { display: block; animation: result-in 0.35s ease-out; }
@@ -1115,6 +1156,11 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
   </aside>
 
   <section class="scan-panel">
+    <div class="chain-switch" role="tablist" aria-label="chain">
+      <span class="chain-switch-label">chain:</span>
+      <button type="button" class="chain-chip active" data-chain="rhc" role="tab" aria-selected="true">RHC<span class="badge">ETH</span></button>
+      <button type="button" class="chain-chip" data-chain="arc" role="tab" aria-selected="false">Arc<span class="badge">USDC</span></button>
+    </div>
     <label for="addr" class="scan-label">CONTRACT ADDRESS</label>
     <div class="scan-row">
       <input
@@ -1123,13 +1169,13 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
         type="text"
         spellcheck="false"
         autocomplete="off"
-        placeholder="0x…  (paste NFT contract address on Robinhood Chain)"
+        placeholder="0x…  (paste NFT contract address)"
         aria-label="NFT contract address"
       >
       <button id="scan-btn" class="scan-btn" type="button">GRUG SNIFF</button>
     </div>
-    <p class="scan-hint">
-      grug scan <b>ERC-721 / ERC-1155</b> on Robinhood Chain only for now. more chains later. <b>free scan</b> for tribe.
+    <p class="scan-hint" id="scan-hint">
+      grug scan <b>ERC-721 / ERC-1155</b> on <b id="scan-hint-chain">Robinhood Chain</b>. <b>free scan</b> for tribe.
     </p>
     <div id="scan-error" class="scan-error" role="alert"></div>
   </section>
@@ -1328,9 +1374,57 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
    story renders consistently.
    ============================================================ */
 
-const RPC_URL        = 'https://rpc.mainnet.chain.robinhood.com';
-const BLOCKSCOUT_API = 'https://robinhoodchain.blockscout.com/api/v2';
-const EXPLORER       = 'https://robinhoodchain.blockscout.com/address/';
+// Chain registry inline mirror (kept in sync with site/scripts/chains.mjs).
+// scanner.html is a classic <script> so we can't import — this local copy
+// covers the same fields the shared engines read. When adding a chain, add
+// it in BOTH places.
+const CHAIN_CONFIG = {
+  rhc: {
+    id: 'rhc',
+    label: 'Robinhood Chain',
+    rpc: 'https://rpc.mainnet.chain.robinhood.com',
+    explorer: 'https://robinhoodchain.blockscout.com/address/',
+    explorerReachable: true,
+    nativeSymbol: 'ETH',
+    // Every signal id in CATALOG is applicable on RHC — full coverage.
+    availableSignals: new Set([
+      'unverified','proxy','ownerActive','adminMint','openBaseURI',
+      'transferLock','currentlyPaused','withdrawExposure','transferBlocked',
+      'freshDeploy','mutableRoyalty','walletDrainer',
+      'freshWallet','emptyBalance','firstDeploy','mixerFunded','priorRug','freshFunding',
+      'topHeavy','deadContract','sniperStack','washTrades','noMarket',
+      'websiteReachable','twitterExists','centralArt','unpinned','noRoyalty',
+    ]),
+  },
+  arc: {
+    id: 'arc',
+    label: 'Arc Chain',
+    rpc: 'https://rpc.mainnet.arc.io',
+    explorer: 'https://explorer.arc.io/address/',
+    explorerReachable: false, // Cloudflare-locked; API endpoints skip
+    nativeSymbol: 'USDC',
+    // Every signal that needs Blockscout data (verified flag, deployer
+    // history, funding, top holders, first-transfer sniper detection, prior
+    // rug) is dropped here — on-chain + OpenSea signals still evaluate.
+    availableSignals: new Set([
+      // On-chain (RPC works)
+      'proxy','ownerActive','adminMint','openBaseURI','transferLock',
+      'currentlyPaused','withdrawExposure','transferBlocked','mutableRoyalty',
+      'walletDrainer',
+      // OpenSea (chain slug is 'arc')
+      'noMarket','websiteReachable','twitterExists',
+      // Metadata (on-chain tokenURI)
+      'centralArt','unpinned','noRoyalty',
+    ]),
+  },
+};
+// Mutable — updated by the chain switcher. Every downstream helper reads
+// these instead of hardcoded strings, so switching chain doesn't require a
+// page reload.
+let CURRENT_CHAIN = 'rhc';
+let RPC_URL       = CHAIN_CONFIG.rhc.rpc;
+let EXPLORER      = CHAIN_CONFIG.rhc.explorer;
+
 const ZERO_ADDR      = '0x0000000000000000000000000000000000000000';
 const EIP1967_IMPL_SLOT = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc';
 
@@ -1887,7 +1981,7 @@ async function readExplorer(addr) {
   // occasionally handed us an HTML challenge (which JSON.parse threw on) and
   // the signal flipped to "?". Server-side is stable.
   try {
-    const r = await fetch('/api/explorer-info?addr=' + addr, { cache: 'no-store' });
+    const r = await fetch(`/api/explorer-info?addr=${addr}&chain=${CURRENT_CHAIN}`, { cache: 'no-store' });
     if (!r.ok) return {};
     const j = await r.json();
     return {
@@ -1917,6 +2011,11 @@ async function readExplorer(addr) {
 
 function pushSig(cats, catKey, id, state, override) {
   const meta = CATALOG[catKey].find(s => s.id === id);
+  // Signals not applicable on this chain get marked 'n/a'. State stays in the
+  // report for downstream code that inspects the full breakdown, but the
+  // confidence-math + rendering paths skip 'n/a' entirely.
+  const chainCfg = CHAIN_CONFIG[CURRENT_CHAIN];
+  const applicable = !chainCfg || chainCfg.availableSignals.has(id);
   cats[catKey].push({
     id,
     name: meta.name,
@@ -1928,7 +2027,7 @@ function pushSig(cats, catKey, id, state, override) {
     // (missing data source, out-of-scope for this chain, etc). Falls back to
     // a generic "grug still learning" line when no override is given.
     unknownText: (override && override.unknown) || null,
-    state, // 'good' | 'bad' | 'unknown'
+    state: applicable ? state : 'n/a', // 'good' | 'bad' | 'unknown' | 'n/a'
   });
 }
 
@@ -1949,19 +2048,19 @@ async function computeRealReport(addr) {
      tank the report. */
 
   const [deployerHistRes, priorRugRes, fundingRes, collectionRes] = await Promise.allSettled([
-    fetch('/api/deployer-history?addr=' + addr, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
+    fetch(`/api/deployer-history?addr=${addr}&chain=${CURRENT_CHAIN}`, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
     // Fire this in parallel with the others — prior-rug-check re-fetches the
     // deployer's tx history from Blockscout server-side, so we can't reuse
     // deployerHist's cached copy, but the endpoint's own bsCache dedupes hits.
     // cache: 'no-store' so the browser doesn't hold onto a stale 502 across
     // scans (Blockscout has real transient failures on RHC).
-    fetch('/api/prior-rug-check?addr=' + addr, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
+    fetch(`/api/prior-rug-check?addr=${addr}&chain=${CURRENT_CHAIN}`, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
     // Deployer funding trace (freshFunding signal) — one-hop back through
     // incoming ETH transfers on the deployer wallet.
-    fetch('/api/deployer-funding?addr=' + addr, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
+    fetch(`/api/deployer-funding?addr=${addr}&chain=${CURRENT_CHAIN}`, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
     // OpenSea collection stats (noMarket signal). Also serves double duty
     // enriching the socials for downstream signals (website + twitter).
-    fetch('/api/collection-detail?contract=' + addr, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
+    fetch(`/api/collection-detail?contract=${addr}&chain=${CURRENT_CHAIN}`, { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
   ]);
   const deployerHist   = deployerHistRes.status === 'fulfilled' ? deployerHistRes.value : null;
   const priorRugData   = priorRugRes.status === 'fulfilled' ? priorRugRes.value : null;
@@ -2728,6 +2827,10 @@ function renderSignals(containerId, items) {
   const el = document.getElementById(containerId);
   el.innerHTML = '';
   for (const sig of items) {
+    // Skip signals marked 'n/a' — they were disabled by CHAIN_CONFIG for
+    // the current chain (e.g. Blockscout-only signals on Arc). Rendering
+    // them as "?" would confuse the reader into thinking a check flaked.
+    if (sig.state === 'n/a') continue;
     const row = document.createElement('div');
     row.className = 'signal ' + rowClass(sig);
     const p = pointsFor(sig);
@@ -2753,7 +2856,8 @@ function renderSignals(containerId, items) {
 
 function renderDataQuality(report) {
   const el = document.getElementById('data-quality');
-  const all = [].concat(...Object.values(report.cats));
+  // Exclude 'n/a' signals — they're chain-not-applicable, not "unknown".
+  const all  = [].concat(...Object.values(report.cats)).filter(s => s.state !== 'n/a');
   const good = all.filter(s => s.state === 'good').length;
   const bad  = all.filter(s => s.state === 'bad').length;
   const unk  = all.filter(s => s.state === 'unknown').length;
@@ -2935,7 +3039,7 @@ async function enrichDeployerProfile(contractAddr) {
   let profile = null;
   try {
     const mod = await import('/scripts/deployer-lens.mjs');
-    profile = await mod.getDeployerProfile(contractAddr);
+    profile = await mod.getDeployerProfile(contractAddr, CURRENT_CHAIN);
   } catch (e) {
     loadingEl.textContent = 'grug could not check prior deploys right now.';
     return;
@@ -3439,13 +3543,15 @@ function renderReport(report) {
     metaEl.hidden = true;
   }
 
-  // Confidence = fraction of signals that resolved to good/bad. A score
-  // built off 12/28 resolved signals shouldn't read as "grug approve" —
-  // even if only 1 flag fired, we haven't actually checked whether any of
-  // the other 16 hidden ones would have caught a rug.
+  // Confidence = fraction of *evaluatable* signals that resolved to good/bad.
+  // 'n/a' signals (not applicable on this chain — e.g. explorer-based signals
+  // on Arc where Blockscout is CF-locked) are excluded from both numerator
+  // and denominator: a scan that resolved 13/16 chain-applicable signals is
+  // 81% confidence, not 13/28 = 46%.
   const allSigs = [].concat(...Object.values(report.cats));
-  const resolved = allSigs.filter(s => s.state === 'good' || s.state === 'bad').length;
-  const confidence = allSigs.length > 0 ? Math.round((resolved / allSigs.length) * 100) : 0;
+  const applicableSigs = allSigs.filter(s => s.state !== 'n/a');
+  const resolved = applicableSigs.filter(s => s.state === 'good' || s.state === 'bad').length;
+  const confidence = applicableSigs.length > 0 ? Math.round((resolved / applicableSigs.length) * 100) : 0;
 
   const v = verdictFor(report.score, confidence);
   const verdictEl = document.getElementById('verdict');
@@ -3466,7 +3572,7 @@ function renderReport(report) {
   }
   const confTone = confidence >= 80 ? 'good' : confidence >= 60 ? 'ok' : 'low';
   confEl.className = 'score-confidence ' + confTone;
-  confEl.innerHTML = `CONF <b>${confidence}%</b><br><span class="conf-sub">${resolved}/${allSigs.length} checks</span>`;
+  confEl.innerHTML = `CONF <b>${confidence}%</b><br><span class="conf-sub">${resolved}/${applicableSigs.length} checks</span>`;
 
   const gauge = document.getElementById('gauge-fill');
   const CIRC = 2 * Math.PI * 50;
@@ -3565,13 +3671,45 @@ document.querySelectorAll('.example').forEach(btn => {
   });
 });
 
+/* Chain switcher — swap CURRENT_CHAIN + derived RPC/EXPLORER and reflect it
+   in the URL so a share link carries the chain choice too. Doesn't rescan
+   automatically — the user's next Grug Sniff picks up the new chain. */
+function setChain(id) {
+  const cfg = CHAIN_CONFIG[id];
+  if (!cfg) return;
+  CURRENT_CHAIN = cfg.id;
+  RPC_URL       = cfg.rpc;
+  EXPLORER      = cfg.explorer;
+  // Update chip actives.
+  document.querySelectorAll('.chain-chip').forEach(el => {
+    const on = el.dataset.chain === cfg.id;
+    el.classList.toggle('active', on);
+    el.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  const hint = document.getElementById('scan-hint-chain');
+  if (hint) hint.textContent = cfg.label;
+  // Reflect the choice in the URL without a full navigation. Keep an
+  // existing `addr` query around so refreshing preserves the deep link.
+  try {
+    const url = new URL(location.href);
+    url.searchParams.set('chain', cfg.id);
+    history.replaceState(null, '', url.toString());
+  } catch (e) {}
+}
+document.querySelectorAll('.chain-chip').forEach(el => {
+  el.addEventListener('click', () => setChain(el.dataset.chain));
+});
+
 /* Deep link for share cards. Accepts either:
-     scanner.html?addr=0x…   (query — normal case)
-     scanner.html#addr=0x…   (hash — survives clean-URL rewrites) */
+     scanner.html?addr=0x…&chain=arc   (query — normal case)
+     scanner.html#addr=0x…             (hash — survives clean-URL rewrites) */
 (() => {
-  const fromQuery = new URLSearchParams(location.search).get('addr');
-  const fromHash  = new URLSearchParams((location.hash || '').replace(/^#/, '')).get('addr');
-  const a = fromQuery || fromHash;
+  const qs        = new URLSearchParams(location.search);
+  const hashQs    = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+  const chainArg  = (qs.get('chain') || hashQs.get('chain') || '').toLowerCase();
+  if (chainArg && CHAIN_CONFIG[chainArg]) setChain(chainArg);
+
+  const a = qs.get('addr') || hashQs.get('addr');
   if (a && isValidAddress(a)) setTimeout(() => runScan(a), 200);
 })();
 </script>
