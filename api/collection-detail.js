@@ -73,11 +73,13 @@ function normalize(c, slug) {
 export default async function handler(req, res) {
   const q = req.query || Object.fromEntries(new URL(req.url, 'http://x/').searchParams.entries());
   const contract = (q.contract || '').toLowerCase();
-  // OpenSea's /chain/{chain}/contract/ endpoint uses the marketing slug
-  // "robinhood" (NOT "robinhood_chain" — that returns "Unrecognized chain").
-  // /drops and /collections silently accept either. Different endpoints,
-  // different rules, thanks OpenSea.
-  const chain = q.chain || 'robinhood';
+  // Accept both internal chain ids ('rhc', 'arc') and OpenSea's own slugs
+  // ('robinhood', 'arc') — the scanner passes the internal id, but external
+  // callers may still send the OpenSea slug. Map internal → OpenSea here so
+  // one endpoint speaks both dialects.
+  const CHAIN_ALIAS = { rhc: 'robinhood', arc: 'arc' };
+  const raw = (q.chain || 'robinhood').toLowerCase();
+  const chain = CHAIN_ALIAS[raw] || raw;
 
   res.setHeader('access-control-allow-origin', '*');
   res.setHeader('content-type', 'application/json');
