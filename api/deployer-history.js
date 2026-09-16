@@ -217,16 +217,28 @@ function looksLikeFactory(d) {
 }
 
 export default async function handler(req, res) {
-  const addr = (req.query && req.query.addr) ||
-               new URL(req.url, 'http://x/').searchParams.get('addr');
+  const query = req.query || Object.fromEntries(new URL(req.url, 'http://x/').searchParams.entries());
+  const addr = (query.addr || '').toLowerCase();
+  const chain = (query.chain || 'rhc').toLowerCase();
 
   res.setHeader('access-control-allow-origin', '*');
   res.setHeader('content-type', 'application/json');
   res.setHeader('cache-control', 'public, max-age=900, s-maxage=900'); // 15min
 
-  if (!addr || !/^0x[0-9a-fA-F]{40}$/.test(addr)) {
+  if (!addr || !/^0x[0-9a-f]{40}$/.test(addr)) {
     res.statusCode = 400;
     res.end(JSON.stringify({ error: 'invalid_addr', hint: 'expected 0x… 40-hex' }));
+    return;
+  }
+
+  if (chain !== 'rhc') {
+    res.setHeader('cache-control', 'public, max-age=3600, s-maxage=3600');
+    res.statusCode = 200;
+    res.end(JSON.stringify({
+      skip: true, chain,
+      contract: addr, creator: null,
+      note: 'deployer history unavailable on this chain',
+    }));
     return;
   }
 
