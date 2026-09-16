@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mint Bot — Grugs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="grug mint like caveman. burner wallet, price cap, one-click sweep. holders only.">
+<meta name="theme-color" content="#1A140F">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Grugs">
+<meta property="og:title" content="Mint Bot — grug mint like caveman">
+<meta property="og:description" content="hot-wallet mint tool for grug holders. burner + price cap + auto sweep.">
+<meta property="og:url" content="https://grugnft.xyz/mint-bot">
+<meta property="og:image" content="https://grugnft.xyz/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@GrugNFT">
+<meta name="twitter:title" content="Mint Bot — grug mint like caveman">
+<meta name="twitter:description" content="hot-wallet mint tool for grug holders. burner + price cap + auto sweep.">
+<meta name="twitter:image" content="https://grugnft.xyz/og.png">
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%231a140f'/><rect x='4' y='3' width='8' height='9' fill='%237b5a3e'/><rect x='3' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='12' y='4' width='1' height='6' fill='%237b5a3e'/><rect x='4' y='5' width='2' height='1' fill='%23000'/><rect x='10' y='5' width='2' height='1' fill='%23000'/><rect x='5' y='6' width='1' height='1' fill='%23fff'/><rect x='10' y='6' width='1' height='1' fill='%23fff'/><rect x='6' y='9' width='4' height='1' fill='%23000'/><rect x='4' y='2' width='8' height='2' fill='%23000'/></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --stone: #1A140F;
+  --stone-2: #241A12;
+  --wall: #2B1F17;
+  --wall-2: #3A2A1E;
+  --torch: #E8A147;
+  --torch-hot: #FFC864;
+  --torch-peak: #FFF4C0;
+  --ember: #D14B2F;
+  --ember-hot: #F26A47;
+  --ember-deep: #7C2718;
+  --bone: #EDE1CE;
+  --bone-dim: #B8AA95;
+  --ash: #6B584A;
+  --moss: #7A9B5C;
+  --moss-hot: #8ac560;
+  --danger: #ff5a4a;
+  --warn: #ffb040;
+}
+
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(122,155,92,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 90%, rgba(209,75,47,0.05) 0%, transparent 40%),
+    var(--stone);
+  color: var(--bone);
+  font-family: 'VT323', ui-monospace, monospace;
+  font-size: 22px;
+  line-height: 1.35;
+  padding-bottom: 80px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============ NAV (matches scanner.html) ============ */
+header.nav {
+  position: sticky; top: 0; z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 14px 32px;
+  gap: 16px;
+  background: linear-gradient(to bottom, rgba(26,20,15,0.98), rgba(26,20,15,0.90));
+  border-bottom: 3px double var(--wall-2);
+  backdrop-filter: blur(6px);
+}
+.wordmark {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: var(--torch);
+  letter-spacing: 2px;
+  text-shadow: 0 0 14px rgba(232,161,71,0.35);
+  cursor: pointer;
+  user-select: none;
+  justify-self: start;
+  text-decoration: none;
+}
+.tabs { display: flex; gap: 4px; justify-self: center; flex-wrap: wrap; }
+.tab {
+  padding: 8px 16px;
+  color: var(--bone-dim);
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: transparent;
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  letter-spacing: 1px;
+  text-transform: lowercase;
+  text-decoration: none;
+}
+.tab:hover { color: var(--bone); border-color: var(--wall-2); }
+.tab.active {
+  color: var(--stone);
+  background: var(--moss);
+  border-color: var(--moss);
+}
+.nav-right { justify-self: end; display: inline-flex; align-items: center; gap: 10px; }
+.chain-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border: 2px solid var(--wall-2);
+  color: var(--bone-dim);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px; letter-spacing: 1px;
+}
+.chain-badge::before {
+  content: ""; width: 8px; height: 8px;
+  background: var(--moss);
+  box-shadow: 0 0 6px var(--moss);
+}
+.nav-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
+  color: var(--bone-dim);
+  border: 2px solid var(--wall-2);
+  text-decoration: none;
+  transition: color 120ms, border-color 120ms, transform 120ms;
+}
+.nav-x:hover { color: var(--torch); border-color: var(--torch); transform: translateY(-1px); }
+
+/* Hero */
+.hero {
+  max-width: 960px;
+  margin: 40px auto 24px;
+  padding: 0 24px;
+  text-align: center;
+}
+.hero h1 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 40px;
+  color: var(--torch);
+  margin: 0 0 14px;
+  letter-spacing: 3px;
+  text-shadow: 3px 3px 0 var(--ember-deep);
+}
+.hero .sub {
+  color: var(--moss-hot);
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+.hero .hint {
+  color: var(--bone-dim);
+  font-size: 18px;
+}
+.hero .hint b { color: var(--torch-hot); }
+
+/* Panels */
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+.panel {
+  background: var(--stone-2);
+  border: 2px solid var(--wall-2);
+  border-radius: 4px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+.panel h2 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--torch-hot);
+  letter-spacing: 2px;
+  margin: 0 0 14px;
+}
+.panel .row {
+  display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap;
+}
+.panel input, .panel select {
+  background: var(--stone);
+  border: 1px solid var(--wall-2);
+  color: var(--bone);
+  padding: 12px 14px;
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  border-radius: 3px;
+  min-width: 0;
+}
+.panel input:focus, .panel select:focus { outline: none; border-color: var(--torch); }
+.panel .grow { flex: 1; }
+.panel .lbl {
+  display: block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--bone-dim);
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
+}
+.panel .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+.panel .foot { color: var(--ash); font-size: 16px; margin-top: 10px; }
+
+button.btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  padding: 12px 22px;
+  color: var(--stone);
+  background: var(--moss-hot);
+  border: 2px solid var(--moss-hot);
+  border-radius: 3px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: background .2s, transform .1s, opacity .2s;
+}
+button.btn:hover { background: var(--torch-hot); border-color: var(--torch-hot); }
+button.btn:active { transform: translateY(1px); }
+button.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+button.btn.warn {
+  background: var(--warn); border-color: var(--warn); color: var(--stone);
+}
+button.btn.danger {
+  background: transparent; color: var(--danger); border-color: var(--danger);
+}
+button.btn.danger:hover { background: var(--danger); color: var(--stone); }
+button.btn.ghost {
+  background: transparent; color: var(--bone); border-color: var(--wall-2);
+}
+button.btn.ghost:hover { border-color: var(--torch); color: var(--torch); }
+
+/* Warning strip */
+.warn-strip {
+  padding: 12px 18px;
+  border: 1px solid var(--warn);
+  border-radius: 3px;
+  background: rgba(255,176,64,0.08);
+  color: var(--bone);
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+.warn-strip b { color: var(--warn); }
+
+/* Rug Radar badge */
+.radar-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 3px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+}
+.radar-badge.green { color: var(--moss-hot); border: 1px solid var(--moss); background: rgba(122,155,92,0.10); }
+.radar-badge.yellow { color: var(--warn); border: 1px solid var(--warn); background: rgba(255,176,64,0.10); }
+.radar-badge.red { color: var(--danger); border: 1px solid var(--danger); background: rgba(255,90,74,0.10); }
+.radar-badge.grey { color: var(--bone-dim); border: 1px solid var(--wall-2); }
+
+.contract-facts { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.fact { padding: 10px 12px; background: var(--stone); border: 1px solid var(--wall-2); border-radius: 3px; font-size: 18px; }
+.fact .k { display: block; font-family: 'Press Start 2P', monospace; font-size: 9px; letter-spacing: 1px; color: var(--bone-dim); margin-bottom: 4px; }
+.fact .v { color: var(--bone); word-break: break-all; }
+
+/* Wallet panel */
+.wallet-addr {
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  padding: 12px 14px;
+  background: var(--stone);
+  border: 1px dashed var(--torch);
+  border-radius: 3px;
+  color: var(--torch-hot);
+  word-break: break-all;
+  cursor: pointer;
+}
+.wallet-addr:hover { border-style: solid; }
+.wallet-addr.hidden { color: var(--ash); border-color: var(--wall-2); }
+
+.balance {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  color: var(--moss-hot);
+  padding: 12px 14px;
+  background: var(--stone);
+  border: 1px solid var(--wall-2);
+  border-radius: 3px;
+  text-align: center;
+}
+.balance.low { color: var(--warn); }
+.balance.zero { color: var(--ash); }
+
+.pk-blob {
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  padding: 10px 12px;
+  background: var(--stone);
+  border: 1px solid var(--wall-2);
+  border-radius: 3px;
+  color: var(--bone-dim);
+  word-break: break-all;
+  margin-top: 10px;
+}
+.pk-blob.revealed { color: var(--danger); border-color: var(--danger); }
+
+.tag {
+  display: inline-block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  border-radius: 2px;
+  border: 1px solid var(--wall-2);
+  color: var(--bone-dim);
+  margin-left: 8px;
+}
+.tag.locked { color: var(--danger); border-color: var(--danger); }
+.tag.ready { color: var(--moss-hot); border-color: var(--moss); }
+
+/* Log */
+.log {
+  background: var(--stone);
+  border: 1px solid var(--wall-2);
+  border-radius: 3px;
+  padding: 12px 14px;
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  color: var(--bone-dim);
+  max-height: 260px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+.log .ok { color: var(--moss-hot); }
+.log .err { color: var(--danger); }
+.log .info { color: var(--torch-hot); }
+.log a { color: var(--torch); }
+
+.actions-row {
+  display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .hero h1 { font-size: 28px; }
+  header.nav { padding: 10px 16px; grid-template-columns: 1fr auto; }
+  .nav-right { display: none; }
+  .wordmark { font-size: 16px; }
+  .tab { font-size: 10px; padding: 6px 10px; }
+}
+</style>
+
+<!-- Gate: this page needs 10 grugs. Must run BEFORE gate.mjs imports. -->
+<script>window.__GRUG_GATE_MIN = 10;</script>
+</head>
+<body>
+
+<header class="nav">
+  <a class="wordmark" href="index.html">GRUGS</a>
+  <nav class="tabs" role="tablist">
+    <a class="tab" href="index.html">home</a>
+    <a class="tab" href="scanner.html">rug radar</a>
+    <a class="tab" href="coin-radar.html">coin radar</a>
+    <a class="tab active" href="mint-bot.html">mint bot</a>
+    <a class="tab" href="mints.html">mints</a>
+    <a class="tab" href="portfolio.html">portfolio</a>
+  </nav>
+  <div class="nav-right">
+    <a class="nav-x" href="https://twitter.com/GrugNFT" target="_blank" rel="noopener noreferrer" title="@GrugNFT on Twitter" aria-label="Twitter">
+      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+        <path fill="currentColor" d="M12.6 1.5h2.3l-5 5.7 5.9 7.8h-4.6l-3.6-4.7-4.1 4.7H1.2l5.4-6.1L1 1.5h4.7l3.3 4.4L12.6 1.5zm-.8 12.1h1.3L4.3 2.8H2.9l8.9 10.8z"/>
+      </svg>
+    </a>
+    <div class="chain-badge">RHC</div>
+  </div>
+</header>
+
+<section class="hero">
+  <h1>MINT BOT</h1>
+  <div class="sub">grug mint like caveman. burner wallet do work.</div>
+  <div class="hint">paste contract → set price cap → mint → sweep → refund. <b>10 grugs</b> to open.</div>
+</section>
+
+<div class="wrap">
+
+  <div class="warn-strip">
+    <b>HOT WALLET.</b> the burner lives in this browser's storage. only fund it with what you need for the mint + gas. use <b>clear burner</b> when you're done — otherwise it sticks around across tabs and reloads. do not paste your main wallet's private key. ever.
+  </div>
+
+  <!-- 1. CONTRACT -->
+  <div class="panel">
+    <h2>1. TARGET CONTRACT</h2>
+    <div class="row">
+      <input id="c-addr" class="grow" type="text" placeholder="0x… mint contract address" autocomplete="off" spellcheck="false">
+      <button id="c-probe" class="btn">probe</button>
+    </div>
+    <div id="c-badge-row" style="margin-top:14px; display:none;">
+      <span id="c-badge" class="radar-badge grey">grug thinking…</span>
+      <a id="c-full-scan" class="tag" href="#" target="_blank" rel="noopener" style="display:none;">run full rug radar →</a>
+    </div>
+    <div id="c-facts" class="contract-facts" style="display:none;"></div>
+    <div class="foot">grug reads contract + creator on-chain. always run the full rug radar before minting a stranger's contract.</div>
+  </div>
+
+  <!-- 2. MINT CONFIG -->
+  <div class="panel">
+    <h2>2. MINT CONFIG</h2>
+    <div class="grid">
+      <div>
+        <label class="lbl">MINT FUNCTION</label>
+        <select id="m-fn"></select>
+      </div>
+      <div>
+        <label class="lbl">PRICE / TOKEN (ETH)</label>
+        <input id="m-price" type="text" placeholder="0.0" inputmode="decimal">
+      </div>
+      <div>
+        <label class="lbl">QUANTITY</label>
+        <input id="m-qty" type="number" min="1" step="1" value="1">
+      </div>
+      <div>
+        <label class="lbl">MAX TOTAL SPEND (ETH)</label>
+        <input id="m-cap" type="text" placeholder="0.0" inputmode="decimal">
+      </div>
+      <div>
+        <label class="lbl">GAS BOOST</label>
+        <select id="m-gas">
+          <option value="1.0">1.0× (normal)</option>
+          <option value="1.25">1.25× (hurry)</option>
+          <option value="1.5">1.5× (front-run)</option>
+          <option value="2.0">2.0× (send it)</option>
+        </select>
+      </div>
+    </div>
+    <div class="foot">grug refuses to spend more than the cap. if the contract changed its price since probe, the tx will revert and cost only gas.</div>
+  </div>
+
+  <!-- 3. BURNER WALLET -->
+  <div class="panel">
+    <h2>3. BURNER WALLET <span id="w-lock-tag" class="tag" style="display:none;">locked</span></h2>
+    <div class="row" style="align-items:center; margin-bottom:12px;">
+      <button id="w-new" class="btn">generate burner</button>
+      <button id="w-import" class="btn ghost">import key</button>
+      <button id="w-reveal" class="btn ghost" style="display:none;">reveal key</button>
+      <button id="w-download" class="btn ghost" style="display:none;">download</button>
+      <button id="w-lock" class="btn ghost" style="display:none;">lock</button>
+      <button id="w-clear" class="btn danger" style="display:none;">clear burner</button>
+    </div>
+    <div id="w-addr-row" style="display:none;">
+      <label class="lbl">BURNER ADDRESS (click to copy — send funds here)</label>
+      <div id="w-addr" class="wallet-addr">—</div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+        <div>
+          <label class="lbl">BALANCE</label>
+          <div id="w-bal" class="balance zero">0.000000 ETH</div>
+        </div>
+        <div>
+          <label class="lbl">REFRESH</label>
+          <button id="w-refresh" class="btn ghost" style="width:100%;">refresh balance</button>
+        </div>
+      </div>
+      <div id="w-pk" class="pk-blob" style="display:none;"></div>
+    </div>
+    <div class="foot">private key stored in this browser's localStorage. persists across tabs + reloads so you can recover from a failed mint. lock to prevent accidental rotation or clear.</div>
+  </div>
+
+  <!-- 4. RETURN ADDRESS -->
+  <div class="panel">
+    <h2>4. RETURN ADDRESS</h2>
+    <div class="row">
+      <input id="r-addr" class="grow" type="text" placeholder="0x… where nfts + refund go">
+      <button id="r-fromgate" class="btn ghost">use gate wallet</button>
+    </div>
+    <div class="foot">where the swept nfts land and the leftover eth goes. grug pre-fills the wallet you unlocked the gate with.</div>
+  </div>
+
+  <!-- 5. PRIME (optional) -->
+  <div class="panel" id="prime-panel">
+    <h2>5. PRIME MODE <span class="tag" id="prime-status" style="display:none;">idle</span></h2>
+    <div class="grid">
+      <div>
+        <label class="lbl">FIRE AT (local time)</label>
+        <input id="p-time" type="datetime-local" step="1">
+      </div>
+      <div>
+        <label class="lbl">MODE</label>
+        <select id="p-mode">
+          <option value="normal">normal (1 send + retries)</option>
+          <option value="aggressive">aggressive (2 rapid sends)</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl">RETRY WINDOW</label>
+        <select id="p-retries">
+          <option value="30">30 attempts (default)</option>
+          <option value="60">60 attempts</option>
+          <option value="120">120 attempts</option>
+          <option value="5">5 attempts (single shot)</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions-row" style="margin-top:12px;">
+      <button id="p-use-drop" class="btn ghost">use seadrop start time</button>
+      <button id="p-arm" class="btn">arm bot</button>
+      <button id="p-disarm" class="btn danger" style="display:none;">disarm</button>
+      <label style="display:inline-flex; align-items:center; gap:8px; padding:12px 22px; font-family:'VT323', monospace; font-size:20px; color:var(--bone-dim); cursor:pointer;">
+        <input type="checkbox" id="p-wake" checked style="width:18px; height:18px; accent-color:var(--torch);"> keep screen awake
+      </label>
+    </div>
+    <div id="p-countdown" class="foot" style="display:none; font-size:22px; color:var(--torch-hot); text-align:center; padding:14px; margin-top:12px; border:1px dashed var(--torch); border-radius:3px;">countdown</div>
+    <div class="foot">bot pre-signs the tx 2s ahead, so at T=0 only a single broadcast RPC call happens (~150ms on RHC). retries "not started" reverts. schedule persists across reloads. <b>keep this tab open</b> — closing the browser drops the schedule.</div>
+  </div>
+
+  <!-- 6. ACTIONS -->
+  <div class="panel">
+    <h2>6. GO</h2>
+    <div class="actions-row">
+      <button id="a-sim" class="btn ghost">simulate mint</button>
+      <button id="a-mint" class="btn">execute mint now</button>
+      <button id="a-sweep" class="btn warn">sweep nfts → return</button>
+      <button id="a-refund" class="btn warn">refund eth → return</button>
+    </div>
+    <div class="foot">simulate first — it's a free eth_call that catches "sale not started" and "insufficient payment" before you pay gas.</div>
+  </div>
+
+  <!-- LOG -->
+  <div class="panel">
+    <h2>LOG</h2>
+    <div id="log" class="log">grug ready.\n</div>
+  </div>
+
+</div>
+
+<script type="module" src="scripts/gate.mjs"></script>
+<script type="module">
+import {
+  RHC, provider,
+  createBurner, importBurner, loadBurner, clearBurner, burnerExists,
+  isLocked, setLocked, burnerBalance,
+  probePrice, probeSaleStatus, readContractMeta, probeSeaDrop,
+  simulateMint, executeMint, sweepNfts, refundNative,
+  armMint, saveSchedule, loadSchedule, clearSchedule,
+  MINT_FN_CANDIDATES, SEADROP, ethers,
+} from './scripts/mint-engine.mjs';
+
+// Detected SeaDrop config for the currently-loaded contract. Set by
+// probeContract when getPublicDrop returns non-empty; readMintConfig
+// uses it to route the mint call and supply the fee recipient.
+let seadropDetected = null;
+
+// ============================================================================
+// LOG
+// ============================================================================
+const $log = document.getElementById('log');
+function log(msg, cls = '') {
+  const t = new Date().toLocaleTimeString();
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.innerHTML = `[${t}] ` + msg;
+  $log.appendChild(line);
+  $log.scrollTop = $log.scrollHeight;
+}
+function logTx(hash) {
+  return `<a href="${RHC.explorer}/tx/${hash}" target="_blank" rel="noopener">${hash.slice(0, 10)}…${hash.slice(-6)}</a>`;
+}
+
+// ============================================================================
+// FN DROPDOWN
+// ============================================================================
+// Sentinel option values used to identify non-Solidity-sig routes:
+//   __seadrop__  → route through SeaDrop router (populated by probeSeaDrop)
+//   __custom__   → user pastes a raw signature
+const $fnSel = document.getElementById('m-fn');
+// SeaDrop option is inserted at the top when probeSeaDrop detects a drop;
+// this placeholder gets removed and re-added by ensureSeaDropOption().
+for (const c of MINT_FN_CANDIDATES) {
+  const opt = document.createElement('option');
+  opt.value = c.sig;
+  opt.textContent = c.label;
+  $fnSel.appendChild(opt);
+}
+const customOpt = document.createElement('option');
+customOpt.value = '__custom__';
+customOpt.textContent = 'custom signature…';
+$fnSel.appendChild(customOpt);
+
+function ensureSeaDropOption(present) {
+  const existing = $fnSel.querySelector('option[value="__seadrop__"]');
+  if (present && !existing) {
+    const opt = document.createElement('option');
+    opt.value = '__seadrop__';
+    opt.textContent = '★ seadrop mintPublic';
+    $fnSel.insertBefore(opt, $fnSel.firstChild);
+    $fnSel.value = '__seadrop__';
+  } else if (!present && existing) {
+    existing.remove();
+    if ($fnSel.value === '__seadrop__') $fnSel.value = MINT_FN_CANDIDATES[0].sig;
+  }
+}
+
+$fnSel.addEventListener('change', () => {
+  if ($fnSel.value === '__custom__') {
+    const sig = prompt('paste solidity signature, e.g.\nfunction mint(uint256 quantity) payable');
+    if (!sig || !sig.trim().startsWith('function ')) {
+      $fnSel.value = MINT_FN_CANDIDATES[0].sig;
+      return;
+    }
+    // Add as a new option and select it.
+    const opt = document.createElement('option');
+    opt.value = sig.trim();
+    opt.textContent = 'custom: ' + sig.trim().slice(9, 60);
+    $fnSel.insertBefore(opt, customOpt);
+    $fnSel.value = sig.trim();
+  }
+});
+
+// ============================================================================
+// CONTRACT PROBE
+// ============================================================================
+const $cAddr = document.getElementById('c-addr');
+const $cProbe = document.getElementById('c-probe');
+const $cBadgeRow = document.getElementById('c-badge-row');
+const $cBadge = document.getElementById('c-badge');
+const $cFullScan = document.getElementById('c-full-scan');
+const $cFacts = document.getElementById('c-facts');
+
+function setBadge(tone, text) {
+  $cBadge.className = 'radar-badge ' + tone;
+  $cBadge.textContent = text;
+  $cBadgeRow.style.display = '';
+}
+
+function fact(k, v) {
+  const el = document.createElement('div');
+  el.className = 'fact';
+  el.innerHTML = `<span class="k">${k}</span><span class="v">${v}</span>`;
+  return el;
+}
+
+async function probeContract() {
+  const addr = $cAddr.value.trim();
+  if (!ethers.isAddress(addr)) { log('bad address', 'err'); return; }
+  $cProbe.disabled = true;
+  $cBadgeRow.style.display = '';
+  $cFacts.style.display = 'none';
+  $cFacts.innerHTML = '';
+  setBadge('grey', 'grug reading contract…');
+  $cFullScan.style.display = 'none';
+
+  log(`probing ${addr}`, 'info');
+  const t0 = performance.now();
+
+  // Run in parallel: on-chain meta + price + sale status + SeaDrop probe +
+  // explorer info. Each internal probe is itself parallelized (see engine)
+  // so the whole thing lands in ~1.5s cold, ~300ms warm.
+  const [meta, priceRes, saleRes, drop, explorer] = await Promise.all([
+    readContractMeta(addr).catch(() => ({})),
+    probePrice(addr).catch(() => null),
+    probeSaleStatus(addr).catch(() => null),
+    probeSeaDrop(addr).catch(() => null),
+    fetch(`/api/explorer-info?addr=${addr}`).then(r => r.ok ? r.json() : null).catch(() => null),
+  ]);
+  seadropDetected = drop; // for readMintConfig
+  ensureSeaDropOption(!!drop);
+
+  // Facts
+  $cFacts.style.display = '';
+  if (meta.name || meta.symbol) $cFacts.appendChild(fact('name / symbol', `${meta.name || '?'} (${meta.symbol || '?'})`));
+  if (meta.totalSupply != null || meta.maxSupply != null) {
+    // Some ERC-721A contracts hide totalSupply — fall back to maxSupply alone.
+    const supplyStr = meta.totalSupply != null
+      ? meta.totalSupply + (meta.maxSupply ? ` / ${meta.maxSupply}` : '')
+      : `max ${meta.maxSupply}`;
+    $cFacts.appendChild(fact('supply', supplyStr));
+  }
+
+  // SeaDrop facts take priority over direct-price probing when detected —
+  // they're authoritative for OpenSea drops.
+  if (drop) {
+    $cFacts.appendChild(fact('route', 'SeaDrop (opensea)'));
+    $cFacts.appendChild(fact('mint price', `${ethers.formatEther(drop.mintPrice)} ETH`));
+    const startISO = new Date(drop.startTime * 1000).toISOString().slice(0, 16).replace('T', ' ') + 'Z';
+    const endISO = new Date(drop.endTime * 1000).toISOString().slice(0, 16).replace('T', ' ') + 'Z';
+    const stateLbl = drop.isLive ? 'LIVE now' : drop.startsInSec > 0 ? `starts in ${humanTime(drop.startsInSec)}` : `ended ${humanTime(drop.endedSecAgo)} ago`;
+    $cFacts.appendChild(fact('drop window', `${startISO} → ${endISO}`));
+    $cFacts.appendChild(fact('drop state', stateLbl));
+    $cFacts.appendChild(fact('per wallet cap', `${drop.maxPerWallet}`));
+    $cFacts.appendChild(fact('opensea fee', `${(drop.feeBps / 100).toFixed(2)}%`));
+  } else if (priceRes) {
+    $cFacts.appendChild(fact('price probe', `${ethers.formatEther(priceRes.price)} ETH (via ${priceRes.fn}())`));
+  }
+
+  if (saleRes) $cFacts.appendChild(fact('sale state', `${saleRes.fn}() → ${saleRes.live ? 'LIVE' : 'CLOSED'}`));
+  if (explorer?.verified != null) $cFacts.appendChild(fact('verified', explorer.verified ? 'yes' : 'no'));
+  if (explorer?.creator) $cFacts.appendChild(fact('deployer', explorer.creator.slice(0, 10) + '…' + explorer.creator.slice(-6)));
+  if (explorer?.holdersCount != null) $cFacts.appendChild(fact('holders', explorer.holdersCount));
+
+  // Auto-fill price + cap. SeaDrop wins over direct probe.
+  const effectivePrice = drop ? drop.mintPrice : (priceRes ? priceRes.price : null);
+  if (effectivePrice != null && !document.getElementById('m-price').value) {
+    document.getElementById('m-price').value = ethers.formatEther(effectivePrice);
+    // Cap defaults to 5× the mint qty at current price, or the SeaDrop wallet
+    // cap × price when we know it — whichever is larger, so a legit big buy
+    // doesn't hit the cap by accident.
+    const capMultiplier = drop && drop.maxPerWallet ? BigInt(drop.maxPerWallet) : 5n;
+    document.getElementById('m-cap').value = ethers.formatEther(effectivePrice * capMultiplier);
+    log(`price auto-set to ${ethers.formatEther(effectivePrice)} ETH${drop ? ' (SeaDrop)' : ''}`, 'info');
+  }
+
+  // Verdict
+  let tone = 'grey', text = 'grug not sure — run full radar';
+  if (drop) {
+    // SeaDrop drops are on OpenSea's rails — safer floor than random contracts.
+    if (drop.isLive) { tone = 'green'; text = 'grug says: seadrop LIVE — mint ready'; }
+    else if (drop.startsInSec > 0) { tone = 'yellow'; text = `grug says: seadrop starts in ${humanTime(drop.startsInSec)}`; }
+    else { tone = 'yellow'; text = 'grug says: seadrop window ended'; }
+  } else if (explorer) {
+    const verified = !!explorer.verified;
+    const hasHolders = (explorer.holdersCount || 0) > 3;
+    if (verified && hasHolders && saleRes?.live !== false) { tone = 'green'; text = 'grug says: verified + live'; }
+    else if (!verified) { tone = 'yellow'; text = 'grug says: unverified — careful'; }
+    else if (saleRes?.live === false) { tone = 'yellow'; text = 'grug says: sale reads CLOSED'; }
+    else { tone = 'yellow'; text = 'grug says: thin data — check radar'; }
+  }
+  setBadge(tone, text);
+  $cFullScan.style.display = '';
+  $cFullScan.href = `/scanner.html?addr=${addr}`;
+
+  $cProbe.disabled = false;
+  const dt = Math.round(performance.now() - t0);
+  log(`probe complete in ${dt}ms${drop ? ' — seadrop detected' : ''}`, 'ok');
+}
+
+// Format a duration in seconds as "3d 4h", "5h 12m", "42m", "18s".
+function humanTime(sec) {
+  const d = Math.floor(sec / 86400);
+  const h = Math.floor((sec % 86400) / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = Math.floor(sec % 60);
+  if (d) return `${d}d ${h}h`;
+  if (h) return `${h}h ${m}m`;
+  if (m) return `${m}m`;
+  return `${s}s`;
+}
+$cProbe.addEventListener('click', probeContract);
+$cAddr.addEventListener('keydown', e => { if (e.key === 'Enter') probeContract(); });
+
+// Deep-link support: /mint-bot?addr=0x…
+const qsAddr = new URLSearchParams(location.search).get('addr');
+if (qsAddr && ethers.isAddress(qsAddr)) {
+  $cAddr.value = qsAddr;
+  probeContract();
+}
+
+// ============================================================================
+// BURNER WALLET
+// ============================================================================
+const $wNew = document.getElementById('w-new');
+const $wImport = document.getElementById('w-import');
+const $wReveal = document.getElementById('w-reveal');
+const $wDownload = document.getElementById('w-download');
+const $wLock = document.getElementById('w-lock');
+const $wClear = document.getElementById('w-clear');
+const $wAddrRow = document.getElementById('w-addr-row');
+const $wAddr = document.getElementById('w-addr');
+const $wBal = document.getElementById('w-bal');
+const $wRefresh = document.getElementById('w-refresh');
+const $wPk = document.getElementById('w-pk');
+const $wLockTag = document.getElementById('w-lock-tag');
+
+let pkRevealed = false;
+
+function renderWallet() {
+  const exists = burnerExists();
+  const locked = isLocked();
+  $wAddrRow.style.display = exists ? '' : 'none';
+  $wReveal.style.display = exists ? '' : 'none';
+  $wDownload.style.display = exists ? '' : 'none';
+  $wLock.style.display = exists ? '' : 'none';
+  $wClear.style.display = exists ? '' : 'none';
+  $wLockTag.style.display = locked ? '' : 'none';
+  $wLockTag.textContent = locked ? 'locked' : '';
+  $wLockTag.className = locked ? 'tag locked' : 'tag';
+  $wLock.textContent = locked ? 'unlock' : 'lock';
+  $wNew.disabled = locked;
+  $wImport.disabled = locked;
+  $wClear.disabled = locked;
+
+  if (exists) {
+    const w = loadBurner();
+    $wAddr.textContent = w.address;
+    if (pkRevealed) {
+      $wPk.style.display = '';
+      $wPk.textContent = w.privateKey;
+      $wPk.className = 'pk-blob revealed';
+    } else {
+      $wPk.style.display = 'none';
+    }
+    refreshBalance();
+  }
+}
+
+async function refreshBalance() {
+  const w = loadBurner();
+  if (!w) return;
+  try {
+    const bal = await burnerBalance();
+    const eth = Number(ethers.formatEther(bal));
+    $wBal.textContent = eth.toFixed(6) + ' ETH';
+    $wBal.className = 'balance ' + (eth === 0 ? 'zero' : eth < 0.001 ? 'low' : '');
+  } catch (e) {
+    $wBal.textContent = '— (rpc err)';
+    $wBal.className = 'balance low';
+  }
+}
+
+$wNew.addEventListener('click', () => {
+  if (burnerExists() && !confirm('overwrite existing burner? the old private key is lost.')) return;
+  try { createBurner(); pkRevealed = false; renderWallet(); log('new burner generated', 'ok'); }
+  catch (e) { log(e.message, 'err'); }
+});
+$wImport.addEventListener('click', () => {
+  const pk = prompt('paste burner private key (0x…). do not paste a main wallet.');
+  if (!pk) return;
+  try { importBurner(pk); pkRevealed = false; renderWallet(); log('burner imported', 'ok'); }
+  catch (e) { log('import failed: ' + e.message, 'err'); }
+});
+$wReveal.addEventListener('click', () => {
+  if (!pkRevealed && !confirm('reveal private key on screen? make sure nobody is looking.')) return;
+  pkRevealed = !pkRevealed;
+  $wReveal.textContent = pkRevealed ? 'hide key' : 'reveal key';
+  renderWallet();
+});
+$wDownload.addEventListener('click', () => {
+  const w = loadBurner();
+  if (!w) return;
+  const blob = new Blob([JSON.stringify({ address: w.address, privateKey: w.privateKey, chain: 'RHC', savedAt: new Date().toISOString() }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `grug-burner-${w.address.slice(0, 8)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  log('burner exported to disk', 'info');
+});
+$wLock.addEventListener('click', () => {
+  setLocked(!isLocked());
+  log(isLocked() ? 'burner locked' : 'burner unlocked', 'info');
+  renderWallet();
+});
+$wClear.addEventListener('click', () => {
+  if (!confirm('clear burner? private key will be lost forever.')) return;
+  try { clearBurner(); pkRevealed = false; renderWallet(); log('burner cleared', 'info'); }
+  catch (e) { log(e.message, 'err'); }
+});
+$wAddr.addEventListener('click', async () => {
+  const w = loadBurner();
+  if (!w) return;
+  try { await navigator.clipboard.writeText(w.address); log('address copied', 'ok'); }
+  catch { log('copy failed', 'err'); }
+});
+$wRefresh.addEventListener('click', refreshBalance);
+
+renderWallet();
+setInterval(refreshBalance, 8000);
+
+// ============================================================================
+// RETURN ADDRESS
+// ============================================================================
+const $rAddr = document.getElementById('r-addr');
+const $rFromGate = document.getElementById('r-fromgate');
+
+// Try to prefill from the gate's saved session wallet.
+try {
+  const s = JSON.parse(localStorage.getItem('grug_gate_session') || 'null');
+  if (s?.wallet) $rAddr.value = s.wallet;
+} catch {}
+
+$rFromGate.addEventListener('click', () => {
+  try {
+    const s = JSON.parse(localStorage.getItem('grug_gate_session') || 'null');
+    if (s?.wallet) { $rAddr.value = s.wallet; log('return set to gate wallet ' + s.wallet.slice(0, 10) + '…', 'info'); }
+    else log('no gate wallet saved yet', 'err');
+  } catch (e) { log('gate wallet read failed', 'err'); }
+});
+
+// ============================================================================
+// ACTIONS
+// ============================================================================
+function readMintConfig() {
+  const contract = $cAddr.value.trim();
+  if (!ethers.isAddress(contract)) throw new Error('bad contract address');
+  const sel = $fnSel.value;
+  if (!sel || sel === '__custom__') throw new Error('pick a mint function');
+  const priceStr = document.getElementById('m-price').value.trim();
+  const capStr = document.getElementById('m-cap').value.trim();
+  const qty = parseInt(document.getElementById('m-qty').value, 10);
+  if (!priceStr) throw new Error('price required');
+  if (!capStr) throw new Error('max spend cap required');
+  if (!(qty > 0)) throw new Error('quantity must be > 0');
+  const pricePerToken = ethers.parseEther(priceStr);
+  const maxSpend = ethers.parseEther(capStr);
+  const gasBoost = parseFloat(document.getElementById('m-gas').value);
+
+  // Route split: SeaDrop is a wholly different call path (router + 4-arg fn +
+  // feeRecipient) so we drop the fnSig and pass route='seadrop' instead.
+  if (sel === '__seadrop__') {
+    if (!seadropDetected) throw new Error('SeaDrop was not detected — probe again');
+    return {
+      contract, quantity: qty, pricePerToken, maxSpend, gasBoost,
+      route: 'seadrop', feeRecipient: seadropDetected.feeRecipient,
+    };
+  }
+  return { contract, fnSig: sel, quantity: qty, pricePerToken, maxSpend, gasBoost, route: 'direct' };
+}
+
+document.getElementById('a-sim').addEventListener('click', async () => {
+  try {
+    const cfg = readMintConfig();
+    const w = loadBurner();
+    if (!w) throw new Error('generate a burner first');
+    log(`simulating ${cfg.quantity}× at ${ethers.formatEther(cfg.pricePerToken)} ETH…`, 'info');
+    const res = await simulateMint({ from: w.address, ...cfg });
+    if (res.ok) log('simulate: OK — contract would accept this mint', 'ok');
+    else log('simulate: reverts — ' + res.reason, 'err');
+  } catch (e) { log(e.message, 'err'); }
+});
+
+document.getElementById('a-mint').addEventListener('click', async () => {
+  try {
+    const cfg = readMintConfig();
+    if (!loadBurner()) throw new Error('generate a burner first');
+    const total = cfg.pricePerToken * BigInt(cfg.quantity);
+    if (!confirm(`send ${ethers.formatEther(total)} ETH from burner to mint ${cfg.quantity}? cap is ${ethers.formatEther(cfg.maxSpend)}.`)) return;
+    log(`minting ${cfg.quantity}× — sending ${ethers.formatEther(total)} ETH…`, 'info');
+    const receipt = await executeMint({
+      ...cfg,
+      onProgress: p => {
+        if (p.stage === 'estimating') log('  estimating gas…');
+        else if (p.stage === 'sent') log(`  sent: ${logTx(p.hash)}`);
+        else if (p.stage === 'confirmed') log(`  confirmed in block ${p.block} — status ${p.status}`, p.status === 1 ? 'ok' : 'err');
+      },
+    });
+    if (receipt?.status === 1) log('mint success!', 'ok');
+  } catch (e) { log('mint failed: ' + e.message, 'err'); }
+});
+
+document.getElementById('a-sweep').addEventListener('click', async () => {
+  try {
+    const contract = $cAddr.value.trim();
+    if (!ethers.isAddress(contract)) throw new Error('paste contract first');
+    const to = $rAddr.value.trim();
+    if (!ethers.isAddress(to)) throw new Error('bad return address');
+    if (!loadBurner()) throw new Error('no burner');
+    if (!confirm(`sweep all NFTs from burner to ${to.slice(0, 10)}…?`)) return;
+    log(`sweeping ${contract.slice(0, 10)}… → ${to.slice(0, 10)}…`, 'info');
+    const res = await sweepNfts({
+      contract, toAddress: to,
+      onProgress: p => {
+        if (p.stage === 'balance') log(`  burner holds ${p.count} tokens`);
+        else if (p.stage === 'transferring') log(`  transferring #${p.tokenId} (${p.i}/${p.total})…`);
+        else if (p.stage === 'transferred') log(`  → ${logTx(p.hash)}`, 'ok');
+      },
+    });
+    log(`swept ${res.swept} nft${res.swept === 1 ? '' : 's'}`, 'ok');
+  } catch (e) { log('sweep failed: ' + e.message, 'err'); }
+});
+
+// ============================================================================
+// PRIME / SCHEDULER
+// ============================================================================
+const $pTime = document.getElementById('p-time');
+const $pMode = document.getElementById('p-mode');
+const $pRetries = document.getElementById('p-retries');
+const $pUseDrop = document.getElementById('p-use-drop');
+const $pArm = document.getElementById('p-arm');
+const $pDisarm = document.getElementById('p-disarm');
+const $pCountdown = document.getElementById('p-countdown');
+const $pStatus = document.getElementById('p-status');
+const $primePanel = document.getElementById('prime-panel');
+
+// Currently-armed handle, or null. Only one arm at a time — matches the
+// "single burner, single mint" mental model.
+let armed = null;
+
+function setStatusTag(text, cls = 'tag') {
+  $pStatus.textContent = text;
+  $pStatus.className = cls;
+  $pStatus.style.display = '';
+}
+
+// Format an ISO-ish local datetime string that datetime-local inputs
+// accept. Node date + UTC offset math is annoying; use toLocaleString +
+// swaps to build a value <input type="datetime-local"> parses.
+function toLocalInputValue(d) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+$pUseDrop.addEventListener('click', () => {
+  if (!seadropDetected) { log('no seadrop detected — probe a contract first', 'err'); return; }
+  const d = new Date(seadropDetected.startTime * 1000);
+  $pTime.value = toLocalInputValue(d);
+  log(`fire time set to seadrop start: ${d.toLocaleString()}`, 'info');
+});
+
+function renderCountdown(msLeft) {
+  if (msLeft <= 0) { $pCountdown.textContent = 'FIRING…'; return; }
+  const s = Math.floor(msLeft / 1000);
+  const days = Math.floor(s / 86400);
+  const hrs = Math.floor((s % 86400) / 3600);
+  const mins = Math.floor((s % 3600) / 60);
+  const secs = s % 60;
+  const parts = [];
+  if (days) parts.push(`${days}d`);
+  if (hrs || days) parts.push(`${hrs}h`);
+  parts.push(`${mins}m`);
+  parts.push(`${secs}s`);
+  $pCountdown.textContent = `firing in ${parts.join(' ')}`;
+}
+
+function disarmUI() {
+  $pArm.style.display = '';
+  $pDisarm.style.display = 'none';
+  $pCountdown.style.display = 'none';
+  $pStatus.style.display = 'none';
+  document.getElementById('a-mint').disabled = false;
+}
+
+function armUI(targetTimeMs) {
+  $pArm.style.display = 'none';
+  $pDisarm.style.display = '';
+  $pCountdown.style.display = '';
+  renderCountdown(targetTimeMs - Date.now());
+  setStatusTag('ARMED', 'tag ready');
+  // Disable "execute mint now" to avoid double-firing — the whole point
+  // of arming is the bot does it. User can disarm to re-enable.
+  document.getElementById('a-mint').disabled = true;
+}
+
+function handleArmEvent(ev) {
+  const { stage } = ev;
+  if (stage === 'tick') {
+    renderCountdown(ev.msLeft);
+  } else if (stage === 'prewarm') {
+    log('prime: warming RPC (T-30s)', 'info');
+    setStatusTag('WARMING', 'tag ready');
+  } else if (stage === 'presigning') {
+    log('prime: signing tx (T-2s)', 'info');
+    setStatusTag('SIGNING', 'tag ready');
+  } else if (stage === 'presigned') {
+    log(`prime: presigned — hash ${logTx(ev.hash)} (gas ${ev.gasLimit})`, 'ok');
+  } else if (stage === 'presign-failed') {
+    log(`prime: presign failed — ${ev.reason} — will fall back to fresh-sign at T=0`, 'err');
+  } else if (stage === 'ready') {
+    log(`prime: READY — will broadcast in ${(ev.msLeft/1000).toFixed(2)}s`, 'ok');
+    setStatusTag('READY', 'tag ready');
+  } else if (stage === 'firing') {
+    log('prime: FIRE', 'ok');
+    setStatusTag('FIRING', 'tag ready');
+    $pCountdown.textContent = 'FIRING…';
+  } else if (stage === 'attempt') {
+    log(`prime: attempt ${ev.attempt + 1} — ${ev.mode}`, 'info');
+  } else if (stage === 'progress') {
+    const p = ev;
+    if (p.stage === 'broadcasting') log('  broadcasting pre-signed tx…');
+    else if (p.stage === 'estimating') log('  estimating gas…');
+    else if (p.stage === 'sent') log(`  sent: ${logTx(p.hash)}`);
+    else if (p.stage === 'confirmed') log(`  confirmed in block ${p.block} — status ${p.status}`, p.status === 1 ? 'ok' : 'err');
+  } else if (stage === 'retry') {
+    log(`prime: attempt ${(ev.attempt || 0) + 1} bounced — ${ev.reason}`, 'info');
+  } else if (stage === 'success') {
+    log('prime: MINT LANDED', 'ok');
+    setStatusTag('DONE', 'tag ready');
+    disarmUI();
+    releaseWakeLock();
+    armed = null;
+  } else if (stage === 'exhausted') {
+    log('prime: retry window exhausted', 'err');
+    setStatusTag('EXHAUSTED', 'tag locked');
+    disarmUI();
+    releaseWakeLock();
+    armed = null;
+  } else if (stage === 'cancelled') {
+    log('prime: disarmed', 'info');
+    disarmUI();
+    releaseWakeLock();
+    armed = null;
+  } else if (stage === 'error') {
+    log('prime: ' + ev.reason, 'err');
+    disarmUI();
+    releaseWakeLock();
+    armed = null;
+  }
+}
+
+// ---------------------------------------------------------------------
+// Wake Lock: keeps the laptop screen (and JS event loop) from sleeping
+// while armed. Browser auto-releases the lock when the tab hides — the
+// visibilitychange listener re-acquires when it comes back.
+// ---------------------------------------------------------------------
+const $pWake = document.getElementById('p-wake');
+let wakeLock = null;
+async function acquireWakeLock() {
+  if (!$pWake.checked) return;
+  if (!('wakeLock' in navigator)) {
+    log('wake lock: browser does not support the API — keep the laptop lid open manually', 'err');
+    return;
+  }
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    log('wake lock acquired — screen will stay on', 'info');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch (e) {
+    log('wake lock: ' + (e.message || 'denied'), 'err');
+  }
+}
+async function releaseWakeLock() {
+  if (wakeLock) {
+    try { await wakeLock.release(); } catch {}
+    wakeLock = null;
+  }
+}
+document.addEventListener('visibilitychange', () => {
+  // A tab that hides drops the wake lock. If we're still armed, grab it back.
+  if (document.visibilityState === 'visible' && armed && $pWake.checked) acquireWakeLock();
+});
+$pWake.addEventListener('change', () => {
+  if ($pWake.checked && armed) acquireWakeLock();
+  else releaseWakeLock();
+});
+
+function doArm(cfg, targetTimeMs, mode, maxAttempts, isRearm = false) {
+  if (armed) { log('already armed — disarm first', 'err'); return; }
+  const now = Date.now();
+  if (targetTimeMs < now && !isRearm) {
+    if (!confirm(`fire time is ${Math.round((now - targetTimeMs) / 1000)}s in the past. fire now?`)) return;
+  }
+  // Persist so a reload rearms automatically. Serialise BigInts to strings.
+  const serialCfg = {
+    ...cfg,
+    pricePerToken: cfg.pricePerToken.toString(),
+    maxSpend: cfg.maxSpend.toString(),
+  };
+  saveSchedule({ config: serialCfg, targetTimeMs, mode, maxAttempts, savedAt: now });
+  armed = armMint({ config: cfg, targetTimeMs, mode, maxAttempts, onEvent: handleArmEvent });
+  armUI(targetTimeMs);
+  acquireWakeLock();
+  log(`prime: armed for ${new Date(targetTimeMs).toLocaleString()} (${mode}, up to ${maxAttempts} attempts)`, 'ok');
+}
+
+$pArm.addEventListener('click', () => {
+  try {
+    const cfg = readMintConfig();
+    if (!loadBurner()) throw new Error('generate a burner first');
+    if (!$pTime.value) throw new Error('set a fire time');
+    const target = new Date($pTime.value).getTime();
+    if (Number.isNaN(target)) throw new Error('bad fire time');
+    const mode = $pMode.value;
+    const maxAttempts = parseInt($pRetries.value, 10);
+    doArm(cfg, target, mode, maxAttempts);
+  } catch (e) { log(e.message, 'err'); }
+});
+
+$pDisarm.addEventListener('click', () => {
+  if (armed) armed.cancel();
+  clearSchedule();
+});
+
+// Auto-rearm from a saved schedule after a reload.
+(() => {
+  const saved = loadSchedule();
+  if (!saved) return;
+  const cfg = {
+    ...saved.config,
+    pricePerToken: BigInt(saved.config.pricePerToken),
+    maxSpend: BigInt(saved.config.maxSpend),
+  };
+  const msLeft = saved.targetTimeMs - Date.now();
+  // If the target is already >2h in the past, assume it's stale and ignore.
+  if (msLeft < -2 * 3600 * 1000) { clearSchedule(); return; }
+  log(`restoring saved schedule (fire at ${new Date(saved.targetTimeMs).toLocaleString()})`, 'info');
+  // Rehydrate the UI inputs so the user sees the same settings they set.
+  $pTime.value = toLocalInputValue(new Date(saved.targetTimeMs));
+  if (saved.mode) $pMode.value = saved.mode;
+  if (saved.maxAttempts) $pRetries.value = String(saved.maxAttempts);
+  doArm(cfg, saved.targetTimeMs, saved.mode || 'normal', saved.maxAttempts || 30, /*isRearm*/ true);
+})();
+
+document.getElementById('a-refund').addEventListener('click', async () => {
+  try {
+    const to = $rAddr.value.trim();
+    if (!ethers.isAddress(to)) throw new Error('bad return address');
+    if (!loadBurner()) throw new Error('no burner');
+    if (!confirm(`send burner balance (minus gas) to ${to.slice(0, 10)}…?`)) return;
+    log('refunding native…', 'info');
+    const res = await refundNative({
+      toAddress: to,
+      onProgress: p => {
+        if (p.stage === 'sending') log(`  sending ${ethers.formatEther(p.value)} ETH…`);
+        else if (p.stage === 'confirmed') log(`  → ${logTx(p.hash)} (block ${p.block})`, 'ok');
+      },
+    });
+    log(`refunded ${ethers.formatEther(res.value)} ETH`, 'ok');
+    refreshBalance();
+  } catch (e) { log('refund failed: ' + e.message, 'err'); }
+});
+
+log('grug ready. paste a contract to begin.', 'info');
+</script>
+</body>
+</html>
