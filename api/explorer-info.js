@@ -124,6 +124,7 @@ async function j(url) {
 export default async function handler(req, res) {
   const q = req.query || Object.fromEntries(new URL(req.url, 'http://x/').searchParams.entries());
   const addr = (q.addr || '').toLowerCase();
+  const chain = (q.chain || 'rhc').toLowerCase();
 
   res.setHeader('access-control-allow-origin', '*');
   res.setHeader('content-type', 'application/json');
@@ -131,6 +132,20 @@ export default async function handler(req, res) {
   if (!/^0x[0-9a-f]{40}$/.test(addr)) {
     res.statusCode = 400;
     res.end(JSON.stringify({ error: 'invalid_addr' }));
+    return;
+  }
+
+  // Non-RHC chains: no reachable Blockscout upstream (Arc's is Cloudflare-
+  // locked; other chains have no explorer wired). Short-circuit with a
+  // stub payload so the engine can still score on-chain + OpenSea signals
+  // without hanging on a 30s timeout per scan.
+  if (chain !== 'rhc') {
+    res.setHeader('cache-control', 'public, max-age=3600, s-maxage=3600');
+    res.statusCode = 200;
+    res.end(JSON.stringify({
+      skip: true, chain,
+      note: 'explorer unreachable on this chain — engine relies on on-chain + OpenSea signals',
+    }));
     return;
   }
 
