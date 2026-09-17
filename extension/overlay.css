@@ -1,0 +1,3 @@
+/* Placeholder — the badge lives inside a shadow-root so its styles are
+   defined inline in content.js. This file exists only so Chrome doesn't
+   warn about a missing css entry in the manifest. */
