@@ -831,12 +831,12 @@ async function pool(items, parallel, work) {
   const [curatedRes, openseaRes, nftRes, changesRes] = await Promise.allSettled([
     fetch('mints.json').then(r => r.ok ? r.json() : { mints: [] }),
     fetch('/api/opensea-drops', noStore).then(r => r.ok ? r.json() : { configured: false, mints: [] }),
-    fetch('/api/nft-drops', noStore).then(r => r.ok ? r.json() : { configured: false, mints: [] }),
-    // Only query /changes when we have a baseline — no baseline means we
+    fetch('/api/trencher?mode=drops', noStore).then(r => r.ok ? r.json() : { configured: false, mints: [] }),
+    // Only query changes when we have a baseline — no baseline means we
     // can't distinguish "new" from "everything." First visit gets a clean
     // page; the baseline gets set on the way out.
     lastBuilt
-      ? fetch('/api/nft-changes?since=' + encodeURIComponent(lastBuilt), noStore)
+      ? fetch('/api/trencher?mode=changes&since=' + encodeURIComponent(lastBuilt), noStore)
           .then(r => r.ok ? r.json() : { configured: false, changedIds: [] })
       : Promise.resolve({ configured: false, changedIds: [] }),
   ]);
