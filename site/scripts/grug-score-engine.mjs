@@ -205,7 +205,7 @@ function decodeUintBigInt(hex) {
 // On-chain reads — mirrors scanner.html's readContractOnChain
 // ============================================================================
 
-async function readOnChain(addr, chain) {
+export async function readOnChain(addr, chain) {
   const out = { hasSelector: {} };
   const code = await rpc(chain, 'eth_getCode', [addr, 'latest']).catch(() => null);
   if (!code || code === '0x' || code === '0x0') { out.notAContract = true; return out; }
@@ -299,7 +299,7 @@ async function readOnChain(addr, chain) {
 // scanner.html's signal-push loop, minus the UI concerns.
 // ============================================================================
 
-function computeScoreFromData({ addr, chain, onChain, explorer, deployerHist, priorRug, funding, collection }) {
+export function computeScoreFromData({ addr, chain, onChain, explorer, deployerHist, priorRug, funding, collection }) {
   const cats = [];
   const isUtility = UTILITY_RE.test(`${onChain.name || ''} ${onChain.symbol || ''} ${explorer?.tokenName || ''} ${explorer?.tokenSymbol || ''}`);
 
