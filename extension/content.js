@@ -5,28 +5,31 @@
  * a chain we support (Robinhood or Arc), fires ONE request to
  * grugnft.xyz/api/rug-score and injects a floating badge with the verdict.
  *
- * WHAT THIS SCRIPT DOES NOT DO:
+ * SUPPORTED URL SHAPES:
+ *   /collection/{slug}                         — resolved via /api/collection-by-slug
+ *   /assets/{chain}/{contract}/{tokenId}       — direct match
+ *   /assets/{chain}/{contract}
+ *   /item/{chain}/{contract}/{tokenId}         — legacy shape some SEO paths use
+ *
+ * SAFETY NOTES:
  *   - never touches window.ethereum, MetaMask, or any wallet API
  *   - never reads cookies, localStorage, or DOM data outside the URL
- *   - never sends anything except the contract address + chain slug
  *   - never runs on any origin other than opensea.io
- *
- * Everything's stateless. Refresh clears any badge.
+ *   - `chrome.storage.local` is used ONLY to persist an on/off toggle
+ *     ({ enabled: boolean }). No PII, no addresses, no history.
  */
 
 const API_BASE = 'https://www.grugnft.xyz';
 
-// OpenSea chain slug → grug chain id. Anything not in this map means we
-// don't have a rug-radar backend for that chain, so we stay silent (no
-// badge). Add new chains here in the same order as chains.mjs.
+// OpenSea chain slug → grug chain id. When we hit a chain not in this map
+// (Ethereum, Base, Polygon, ...) the badge stays silent. Add new chains
+// here in the same order as chains.mjs when we expand support.
 const CHAIN_MAP = {
   'robinhood': 'rhc',
   'arc':       'arc',
 };
 
-// Cache in-memory per page load. OpenSea is a heavy SPA — the user might
-// bounce between item pages a lot; hitting /api/rug-score every time is
-// wasteful and slow. 5-min TTL matches the server-side edge cache.
+// In-memory response cache. 5-min TTL matches the server-side edge cache.
 const CACHE = new Map();
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -34,20 +37,27 @@ const CACHE_TTL_MS = 5 * 60 * 1000;
 // stacking three of them.
 let BADGE_HOST = null;
 let CURRENT_KEY = null;
+let ENABLED = true; // Reflects chrome.storage.local.enabled — see loadEnabled()
 
 /**
- * Parse the URL for (chain, contract). Handles a few OpenSea shapes:
- *   /assets/{chain}/{contract}/{tokenId}          — item page
- *   /assets/{chain}/{contract}                    — collection group (rare)
- *   /item/{chain}/{contract}/{tokenId}            — some SEO redirects
- * Returns null when the URL doesn't reference a contract on a chain we
- * support, so the caller can silently skip.
+ * Parse the URL for one of the supported shapes. Returns:
+ *   { mode: 'asset', chainId, contract }              — direct match
+ *   { mode: 'collection', slug }                      — needs slug→contract lookup
+ *   null                                              — unsupported page
  */
 function parseUrl(url) {
   try {
     const u = new URL(url);
     if (u.hostname !== 'opensea.io') return null;
     const parts = u.pathname.split('/').filter(Boolean);
+
+    // /collection/{slug}
+    if (parts[0] === 'collection' && parts[1]) {
+      const slug = parts[1].toLowerCase();
+      if (!/^[a-z0-9\-_]+$/.test(slug)) return null;
+      return { mode: 'collection', slug };
+    }
+
     // /assets/<chain>/<contract>/<tokenId?>
     // /item/<chain>/<contract>/<tokenId?>
     if ((parts[0] === 'assets' || parts[0] === 'item') && parts.length >= 3) {
@@ -56,8 +66,9 @@ function parseUrl(url) {
       if (!/^0x[0-9a-f]{40}$/.test(contract)) return null;
       const chainId = CHAIN_MAP[chainSlug];
       if (!chainId) return null;
-      return { chainId, contract, chainSlug };
+      return { mode: 'asset', chainId, contract, chainSlug };
     }
+
     return null;
   } catch (e) {
     return null;
@@ -65,13 +76,25 @@ function parseUrl(url) {
 }
 
 async function fetchScore(chainId, contract) {
-  const key = `${chainId}|${contract}`;
+  const key = `score|${chainId}|${contract}`;
   const cached = CACHE.get(key);
   if (cached && cached.expiresAt > Date.now()) return cached.data;
 
   const url = `${API_BASE}/api/rug-score?addr=${contract}&chain=${chainId}`;
   const r = await fetch(url, { cache: 'no-store' });
   if (!r.ok) throw new Error(`grug api HTTP ${r.status}`);
+  const data = await r.json();
+  CACHE.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+  return data;
+}
+
+async function resolveSlug(slug) {
+  const key = `slug|${slug}`;
+  const cached = CACHE.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  const r = await fetch(`${API_BASE}/api/collection-by-slug?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' });
+  if (!r.ok) throw new Error(`slug lookup HTTP ${r.status}`);
   const data = await r.json();
   CACHE.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
   return data;
@@ -85,7 +108,6 @@ function toneClass(tone) {
 }
 
 function shadowStyles() {
-  // Injected into the shadow root so OpenSea's CSS can't leak into the badge.
   return `
     :host { all: initial; }
     * { box-sizing: border-box; font-family: 'Courier New', ui-monospace, monospace; }
@@ -139,19 +161,19 @@ function shadowStyles() {
   `;
 }
 
-function renderLoading(host) {
+function renderLoading(host, msg = 'grug sniffing contract…') {
   host.shadowRoot.innerHTML = `<style>${shadowStyles()}</style>
     <div class="card grug-grey">
       <div class="head">
         <span class="badge">RUG RADAR</span>
         <button class="close" title="close">×</button>
       </div>
-      <div class="loading">grug sniffing contract…</div>
+      <div class="loading">${escapeHtml(msg)}</div>
     </div>`;
   host.shadowRoot.querySelector('.close').addEventListener('click', () => host.remove());
 }
 
-function renderResult(host, data) {
+function renderResult(host, data, ctx) {
   const cls = toneClass(data.tone);
   const short = data.addr ? `${data.addr.slice(0, 6)}…${data.addr.slice(-4)}` : '';
   const chainLbl = data.chain === 'arc' ? 'Arc' : 'RHC';
@@ -165,7 +187,7 @@ function renderResult(host, data) {
         </div>
         <div class="verdict grug-grey">grug not sure</div>
         <div class="sub">${data.error === 'not_a_contract' ? 'address is not a contract' : 'grug scan failed. try opening the full report.'}</div>
-        <a class="cta" target="_blank" rel="noopener" href="${data.scannerUrl || (API_BASE + '/scanner')}">open full report →</a>
+        <a class="cta" target="_blank" rel="noopener" href="${escapeAttr(data.scannerUrl || (API_BASE + '/scanner'))}">open full report →</a>
       </div>`;
     host.shadowRoot.querySelector('.close').addEventListener('click', () => host.remove());
     return;
@@ -177,9 +199,9 @@ function renderResult(host, data) {
         <span class="badge">RUG RADAR · ${chainLbl}</span>
         <button class="close" title="close">×</button>
       </div>
-      <div class="verdict ${cls}">${data.verdict}</div>
+      <div class="verdict ${cls}">${escapeHtml(data.verdict)}</div>
       <div class="score"><b>${data.score}</b> / 100 risk · CONF ${data.confidence}% (${data.resolved}/${data.totalSignals})</div>
-      <div class="sub">${escapeHtml(data.name || short)}${data.symbol ? ' · $' + escapeHtml(data.symbol) : ''}</div>
+      <div class="sub">${escapeHtml(data.name || (ctx && ctx.name) || short)}${data.symbol ? ' · $' + escapeHtml(data.symbol) : ''}</div>
       <a class="cta" target="_blank" rel="noopener" href="${escapeAttr(data.scannerUrl)}">open full report →</a>
       <div class="safety">read-only · no wallet · no data collected</div>
     </div>`;
@@ -203,30 +225,102 @@ function ensureBadgeHost() {
   return host;
 }
 
+function removeBadge() {
+  if (BADGE_HOST && document.body.contains(BADGE_HOST)) BADGE_HOST.remove();
+  BADGE_HOST = null;
+  CURRENT_KEY = null;
+}
+
 async function runOnCurrentUrl() {
+  if (!ENABLED) { removeBadge(); return; }
+
   const parsed = parseUrl(location.href);
-  if (!parsed) {
-    // Not a contract page → remove any existing badge.
-    if (BADGE_HOST && document.body.contains(BADGE_HOST)) BADGE_HOST.remove();
-    BADGE_HOST = null;
-    CURRENT_KEY = null;
-    return;
-  }
-  const key = `${parsed.chainId}|${parsed.contract}`;
-  if (key === CURRENT_KEY && BADGE_HOST && document.body.contains(BADGE_HOST)) return; // same page
-  CURRENT_KEY = key;
+  if (!parsed) { removeBadge(); return; }
 
   const host = ensureBadgeHost();
-  renderLoading(host);
-  try {
-    const data = await fetchScore(parsed.chainId, parsed.contract);
-    // If the URL changed while we were fetching, throw the result away.
-    const stillParsed = parseUrl(location.href);
-    if (!stillParsed || `${stillParsed.chainId}|${stillParsed.contract}` !== key) return;
-    renderResult(host, data);
-  } catch (e) {
-    renderResult(host, { ok: false, addr: parsed.contract, chain: parsed.chainId, error: 'fetch_failed' });
+
+  if (parsed.mode === 'asset') {
+    const key = `asset|${parsed.chainId}|${parsed.contract}`;
+    if (key === CURRENT_KEY) return;
+    CURRENT_KEY = key;
+    renderLoading(host);
+    try {
+      const data = await fetchScore(parsed.chainId, parsed.contract);
+      const still = parseUrl(location.href);
+      if (!still || still.mode !== 'asset'
+          || `asset|${still.chainId}|${still.contract}` !== key) return;
+      renderResult(host, data);
+    } catch (e) {
+      renderResult(host, { ok: false, addr: parsed.contract, chain: parsed.chainId, error: 'fetch_failed' });
+    }
+    return;
   }
+
+  if (parsed.mode === 'collection') {
+    const key = `collection|${parsed.slug}`;
+    if (key === CURRENT_KEY) return;
+    CURRENT_KEY = key;
+    renderLoading(host, 'grug looking up collection…');
+    try {
+      const info = await resolveSlug(parsed.slug);
+      // Bail if the user has navigated away during the round-trip.
+      const still = parseUrl(location.href);
+      if (!still || still.mode !== 'collection' || still.slug !== parsed.slug) return;
+
+      if (!info.ok || !info.contract) {
+        renderResult(host, {
+          ok: false,
+          error: 'unknown_collection',
+          scannerUrl: `${API_BASE}/scanner`,
+        });
+        return;
+      }
+      if (!info.chain) {
+        // Contract found but chain not one we score yet (Ethereum, Base, etc.)
+        renderResult(host, {
+          ok: false,
+          addr: info.contract,
+          error: 'unsupported_chain',
+          scannerUrl: `${API_BASE}/scanner`,
+        });
+        return;
+      }
+
+      const data = await fetchScore(info.chain, info.contract);
+      const still2 = parseUrl(location.href);
+      if (!still2 || still2.mode !== 'collection' || still2.slug !== parsed.slug) return;
+      renderResult(host, data, { name: info.name });
+    } catch (e) {
+      renderResult(host, { ok: false, error: 'fetch_failed', scannerUrl: `${API_BASE}/scanner` });
+    }
+    return;
+  }
+
+  removeBadge();
+}
+
+/**
+ * Read the on/off toggle from chrome.storage.local. Defaults to enabled.
+ * The popup writes { enabled: true|false } here.
+ */
+async function loadEnabled() {
+  try {
+    const st = await chrome.storage.local.get('enabled');
+    ENABLED = st.enabled !== false; // default = true
+  } catch (e) {
+    ENABLED = true;
+  }
+}
+
+// Listen for toggle changes from the popup. When flipped OFF, hide the
+// badge immediately; when flipped ON, re-run against the current URL.
+if (chrome?.storage?.onChanged) {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local' || !('enabled' in changes)) return;
+    ENABLED = changes.enabled.newValue !== false;
+    if (!ENABLED) removeBadge();
+    else runOnCurrentUrl();
+  });
 }
 
 // OpenSea is an SPA: pushState / replaceState / popstate. Hook all three so
@@ -245,5 +339,8 @@ function hookHistory() {
   window.addEventListener('popstate', runOnCurrentUrl);
 }
 
-hookHistory();
-runOnCurrentUrl();
+(async () => {
+  await loadEnabled();
+  hookHistory();
+  runOnCurrentUrl();
+})();
