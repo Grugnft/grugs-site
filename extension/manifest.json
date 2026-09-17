@@ -1,22 +1,23 @@
 {
   "manifest_version": 3,
   "name": "Grug's Rug Radar",
-  "version": "1.0.0",
-  "description": "Read-only rug score badge on OpenSea. Shows Grug's rug-radar verdict on any NFT contract you view. No wallet access. No data collection.",
+  "version": "1.1.0",
+  "description": "Read-only rug score badge on OpenSea. Shows Grug's rug-radar verdict on any NFT contract or collection. No wallet access. No data collection.",
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
   "action": {
-    "default_title": "Grug's Rug Radar — click a contract on OpenSea",
+    "default_title": "Grug's Rug Radar — click to enable / disable",
+    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",
       "48": "icons/icon-48.png",
       "128": "icons/icon-128.png"
     }
   },
-  "permissions": [],
+  "permissions": ["storage"],
   "host_permissions": [
     "https://opensea.io/*",
     "https://www.grugnft.xyz/*"
