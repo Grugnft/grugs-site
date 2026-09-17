@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Grug's Rug Radar</title>
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    width: 260px;
+    background: #1A140F;
+    color: #E7DDCF;
+    font-family: 'Courier New', ui-monospace, monospace;
+  }
+  .wrap { padding: 14px 16px; }
+  h1 {
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin: 0 0 12px;
+    color: #7A9A5A;
+  }
+  .row {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-top: 1px solid #241A12;
+  }
+  .row:first-of-type { border-top: none; }
+  .label { font-size: 13px; }
+  .status {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #B0A498;
+    margin-top: 2px;
+  }
+  .status.on  { color: #7A9A5A; }
+  .status.off { color: #C55C4B; }
+  .toggle {
+    position: relative;
+    width: 40px; height: 22px;
+    background: #241A12;
+    border: 1px solid #3a2f24;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    flex: 0 0 auto;
+  }
+  .toggle .dot {
+    position: absolute;
+    top: 2px; left: 3px;
+    width: 16px; height: 16px;
+    background: #C55C4B;
+    transition: left 0.15s, background 0.15s;
+  }
+  .toggle.on { background: rgba(122,154,90,0.15); border-color: #7A9A5A; }
+  .toggle.on .dot { left: 20px; background: #7A9A5A; }
+  .footer {
+    font-size: 10px;
+    color: #7c6f61;
+    line-height: 1.5;
+    padding-top: 12px;
+    border-top: 1px solid #241A12;
+    margin-top: 4px;
+  }
+  a { color: #7A9A5A; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>GRUG'S RUG RADAR</h1>
+  <div class="row">
+    <div>
+      <div class="label">show badge on OpenSea</div>
+      <div id="status" class="status">…</div>
+    </div>
+    <div id="toggle" class="toggle" role="switch" aria-label="enable rug radar badge">
+      <div class="dot"></div>
+    </div>
+  </div>
+  <div class="footer">
+    read-only · no wallet · no data collected<br>
+    <a href="https://www.grugnft.xyz/scanner" target="_blank">grugnft.xyz/scanner →</a>
+  </div>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>
