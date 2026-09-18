@@ -46,6 +46,18 @@ let BADGE_HOST = null;
 let CURRENT_KEY = null;
 let ENABLED = true; // Reflects chrome.storage.local.enabled — see loadEnabled()
 
+// Reflects chrome.storage.local.unlock ({ address, expires }). See loadUnlock().
+// When unlocked === false the extension renders a "hold 10 grugs to unlock"
+// chip instead of the full badge on every supported page.
+let UNLOCKED = false;
+let UNLOCK_ADDR = null;
+let UNLOCK_EXPIRES = 0;
+const UNLOCK_URL = `${API_BASE}/extension-unlock`;
+
+function isUnlocked() {
+  return UNLOCKED && UNLOCK_EXPIRES > Date.now();
+}
+
 /**
  * Parse the URL for one of the supported shapes. Returns:
  *   { mode: 'asset', chainId, contract }              — direct match
@@ -375,6 +387,20 @@ async function recordScan(entry) {
   }
 }
 
+function renderLocked(host) {
+  host.shadowRoot.innerHTML = `<style>${shadowStyles()}</style>
+    <div class="card grug-grey">
+      <div class="head">
+        <span class="badge">RUG RADAR · LOCKED</span>
+        <button class="close" title="close">×</button>
+      </div>
+      <div class="verdict grug-grey">grug locked</div>
+      <div class="sub">hold 10 grugs on robinhood chain to unlock. 7-day session. free.</div>
+      <a class="cta" target="_blank" rel="noopener" href="${escapeAttr(UNLOCK_URL)}">UNLOCK NOW →</a>
+    </div>`;
+  host.shadowRoot.querySelector('.close').addEventListener('click', () => host.remove());
+}
+
 function renderLoading(host, msg = 'grug sniffing contract') {
   host.shadowRoot.innerHTML = `<style>${shadowStyles()}</style>
     <div class="card grug-grey">
@@ -515,6 +541,14 @@ async function runOnCurrentUrl(forceRerun = false) {
 
   const host = ensureBadgeHost();
 
+  // Gate: without a valid unlock, show the lock chip instead of a score.
+  if (!isUnlocked()) {
+    log('locked → render unlock chip');
+    CURRENT_KEY = 'locked';
+    renderLocked(host);
+    return;
+  }
+
   if (parsed.mode === 'asset') {
     const key = `asset|${parsed.chainId}|${parsed.contract}`;
     if (!forceRerun && key === CURRENT_KEY) { log('same asset key, skip'); return; }
@@ -586,14 +620,52 @@ async function loadEnabled() {
   }
 }
 
-// Listen for toggle changes from the popup. When flipped OFF, hide the
-// badge immediately; when flipped ON, re-run against the current URL.
+/**
+ * Read the unlock record from chrome.storage.local. The popup writes
+ * { unlock: { address, expires } } after the user pastes a valid code and
+ * the backend verifies both the signature and the 10-grug balance.
+ */
+async function loadUnlock() {
+  try {
+    const st = await chrome.storage.local.get('unlock');
+    const u = st.unlock;
+    if (u && typeof u.expires === 'number' && u.expires > Date.now() && u.address) {
+      UNLOCKED = true;
+      UNLOCK_ADDR = u.address;
+      UNLOCK_EXPIRES = u.expires;
+    } else {
+      UNLOCKED = false;
+      UNLOCK_ADDR = null;
+      UNLOCK_EXPIRES = 0;
+    }
+  } catch (e) {
+    UNLOCKED = false;
+  }
+}
+
+// Listen for toggle + unlock changes from the popup. When either flips, we
+// re-render whatever the current URL calls for.
 if (chrome?.storage?.onChanged) {
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== 'local' || !('enabled' in changes)) return;
-    ENABLED = changes.enabled.newValue !== false;
-    if (!ENABLED) removeBadge();
-    else runOnCurrentUrl();
+    if (area !== 'local') return;
+    if ('enabled' in changes) {
+      ENABLED = changes.enabled.newValue !== false;
+      if (!ENABLED) { removeBadge(); return; }
+    }
+    if ('unlock' in changes) {
+      const u = changes.unlock.newValue;
+      if (u && typeof u.expires === 'number' && u.expires > Date.now() && u.address) {
+        UNLOCKED = true;
+        UNLOCK_ADDR = u.address;
+        UNLOCK_EXPIRES = u.expires;
+      } else {
+        UNLOCKED = false;
+        UNLOCK_ADDR = null;
+        UNLOCK_EXPIRES = 0;
+      }
+      CURRENT_KEY = null; // force re-render
+    }
+    runOnCurrentUrl(true);
   });
 }
 
@@ -681,7 +753,7 @@ function hookNavigation() {
 // which is exactly the "have to refresh" symptom the user reported.
 hookNavigation();
 (async () => {
-  await loadEnabled();
-  log('extension loaded, enabled=', ENABLED);
+  await Promise.all([loadEnabled(), loadUnlock()]);
+  log('extension loaded, enabled=', ENABLED, 'unlocked=', isUnlocked());
   runOnCurrentUrl();
 })();

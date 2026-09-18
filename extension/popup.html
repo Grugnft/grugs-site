@@ -285,6 +285,118 @@
     margin-bottom: 4px;
     letter-spacing: 1.5px;
   }
+
+  /* ---- Locked view + unlock form ---- */
+  .hidden { display: none !important; }
+  .lock-hero {
+    text-align: center;
+    padding: 8px 0 12px;
+  }
+  .lock-hero h2 {
+    font-family: 'Menlo', ui-monospace, monospace;
+    font-size: 13px; letter-spacing: 2px;
+    color: var(--torch);
+    margin: 0 0 6px;
+  }
+  .lock-hero p {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin: 0 0 4px;
+  }
+  .lock-hero small {
+    display: block;
+    font-size: 9.5px; color: var(--text-mute);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+  .unlock-cta {
+    display: block; text-align: center;
+    padding: 10px;
+    background: var(--torch);
+    color: #1A140F;
+    text-decoration: none;
+    border: 1px solid var(--torch);
+    border-radius: 4px;
+    font-size: 10.5px; letter-spacing: 2px; font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .unlock-cta:hover { background: var(--torch-soft); color: var(--torch); }
+  .paste-label {
+    display: block;
+    font-size: 9.5px; letter-spacing: 1.5px;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    margin: 6px 0 4px;
+  }
+  #unlock-code {
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--bg-lift);
+    border: 1px solid var(--border-lift);
+    color: var(--text);
+    padding: 8px;
+    border-radius: 3px;
+    font-family: 'Menlo', ui-monospace, monospace;
+    font-size: 10px;
+    resize: none;
+    height: 66px;
+  }
+  #unlock-code:focus { outline: none; border-color: var(--torch); }
+  #unlock-submit {
+    display: block; width: 100%;
+    background: var(--moss);
+    color: #0f150a;
+    border: none;
+    padding: 9px;
+    margin-top: 8px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 10.5px; letter-spacing: 2px; font-weight: 700;
+    cursor: pointer;
+  }
+  #unlock-submit:hover { filter: brightness(1.05); }
+  #unlock-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+  #unlock-msg {
+    font-size: 10.5px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    padding: 6px 8px;
+    border-radius: 3px;
+    line-height: 1.4;
+    min-height: 14px;
+  }
+  #unlock-msg.err { color: var(--ember); background: rgba(232,95,59,0.08); }
+  #unlock-msg.ok  { color: var(--moss);  background: rgba(138,181,101,0.10); }
+
+  .unlock-info {
+    padding: 6px 8px;
+    background: var(--moss-soft);
+    border-left: 2px solid var(--moss);
+    font-size: 10px;
+    color: var(--moss);
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+    border-radius: 2px;
+  }
+  .unlock-expiry {
+    font-size: 9.5px;
+    color: var(--text-mute);
+    text-align: right;
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+  .lock-btn {
+    background: none; border: none;
+    color: var(--text-mute);
+    font-size: 9px; letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+    padding: 0;
+    text-decoration: underline;
+  }
+  .lock-btn:hover { color: var(--ember); }
 </style>
 </head>
 <body>
@@ -297,6 +409,26 @@
       <div class="brand-title">GRUG'S RUG RADAR</div>
       <div class="brand-sub">grug smell rug on opensea</div>
     </div>
+  </div>
+
+  <!-- ================= LOCKED VIEW ================= -->
+  <section id="view-locked" class="hidden">
+    <div class="lock-hero">
+      <h2>🔒 UNLOCK GRUG</h2>
+      <p>hold 10+ grugs on robinhood chain to activate the extension. 7-day sessions. no gas.</p>
+      <small>step 1: click below · step 2: paste code</small>
+    </div>
+    <a class="unlock-cta" href="https://www.grugnft.xyz/extension-unlock" target="_blank" rel="noopener">GET UNLOCK CODE →</a>
+    <label class="paste-label" for="unlock-code">paste your unlock code</label>
+    <textarea id="unlock-code" spellcheck="false" placeholder="paste code from grugnft.xyz/extension-unlock"></textarea>
+    <button id="unlock-submit">UNLOCK EXTENSION</button>
+    <div id="unlock-msg"></div>
+  </section>
+
+  <!-- ================= UNLOCKED VIEW ================= -->
+  <section id="view-unlocked" class="hidden">
+  <div class="unlock-info" id="unlock-info">
+    <span id="unlock-info-text">unlocked</span>
   </div>
 
   <div class="toggle-row">
@@ -333,10 +465,13 @@
     <a class="btn" href="https://www.grugnft.xyz/scanner" target="_blank" rel="noopener">OPEN FULL SCANNER →</a>
     <a class="btn secondary" href="https://opensea.io/collection/grugs" target="_blank" rel="noopener">GRAB A GRUG</a>
   </div>
+  </section>
+  <!-- /view-unlocked -->
 
   <div class="footer">
     <span class="safety">READ-ONLY · NO WALLET</span>
     <a href="https://www.grugnft.xyz/" target="_blank" rel="noopener">grugnft.xyz</a>
+    · <button id="btn-lock" class="lock-btn hidden">re-lock</button>
   </div>
 </div>
 <script src="popup.js"></script>

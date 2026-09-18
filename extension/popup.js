@@ -15,6 +15,16 @@ const totalEl   = document.getElementById('stats-total');
 const tonesEl   = document.getElementById('stats-tones');
 const recentEl  = document.getElementById('recent-list');
 
+const viewLocked   = document.getElementById('view-locked');
+const viewUnlocked = document.getElementById('view-unlocked');
+const codeInput    = document.getElementById('unlock-code');
+const submitBtn    = document.getElementById('unlock-submit');
+const unlockMsg    = document.getElementById('unlock-msg');
+const infoText     = document.getElementById('unlock-info-text');
+const btnLock      = document.getElementById('btn-lock');
+
+const API_BASE = 'https://www.grugnft.xyz';
+
 const CHAIN_LABEL = {
   rhc:      { short: 'RHC', name: 'Robinhood' },
   arc:      { short: 'ARC', name: 'Arc' },
@@ -77,14 +87,102 @@ function paintRecent(history) {
   }).join('');
 }
 
+function isUnlocked(u) {
+  return !!(u && typeof u.expires === 'number' && u.expires > Date.now() && u.address);
+}
+
+function daysLeft(expires) {
+  const ms = expires - Date.now();
+  const days = Math.max(0, Math.round(ms / (24 * 60 * 60 * 1000)));
+  return days;
+}
+
+function switchView(unlockObj) {
+  if (isUnlocked(unlockObj)) {
+    viewLocked.classList.add('hidden');
+    viewUnlocked.classList.remove('hidden');
+    btnLock.classList.remove('hidden');
+    const short = `${unlockObj.address.slice(0, 6)}…${unlockObj.address.slice(-4)}`;
+    const d = daysLeft(unlockObj.expires);
+    infoText.textContent = `unlocked · ${short} · ${d} day${d === 1 ? '' : 's'} left`;
+  } else {
+    viewLocked.classList.remove('hidden');
+    viewUnlocked.classList.add('hidden');
+    btnLock.classList.add('hidden');
+  }
+}
+
+async function verifyAndStore(code) {
+  submitBtn.disabled = true;
+  unlockMsg.className = '';
+  unlockMsg.textContent = 'grug checking code…';
+  try {
+    const url = `${API_BASE}/api/rug-score?action=verify-unlock&code=${encodeURIComponent(code)}`;
+    const r = await fetch(url, { method: 'GET' });
+    const json = await r.json();
+    if (!json.ok) {
+      const errMap = {
+        no_code:               'no code pasted.',
+        malformed_code:        'code is malformed — copy fresh from the site.',
+        bad_address:           'code has a bad wallet address.',
+        expired:               'code expired. get a fresh one.',
+        bad_signature:         'code has a bad signature.',
+        signature_verify_failed: 'grug could not verify the signature.',
+        signature_mismatch:    'signature does not match the wallet in the code.',
+        balance_check_failed:  'grug could not check the balance right now. try again.',
+        insufficient_balance:  `wallet holds ${json.held || 0} grugs — need ${json.required || 10}.`,
+      };
+      unlockMsg.className = 'err';
+      unlockMsg.textContent = errMap[json.error] || (json.message || 'verify failed');
+      submitBtn.disabled = false;
+      return;
+    }
+    await chrome.storage.local.set({
+      unlock: { address: json.address, expires: json.expires, verifiedAt: Date.now() },
+    });
+    unlockMsg.className = 'ok';
+    unlockMsg.textContent = 'unlocked! grug now sniffs on opensea for 7 days.';
+    setTimeout(() => switchView({ address: json.address, expires: json.expires }), 700);
+  } catch (e) {
+    unlockMsg.className = 'err';
+    unlockMsg.textContent = 'network error. try again.';
+    submitBtn.disabled = false;
+  }
+}
+
+submitBtn.addEventListener('click', () => {
+  const code = codeInput.value.trim();
+  if (!code) {
+    unlockMsg.className = 'err';
+    unlockMsg.textContent = 'paste your unlock code first.';
+    return;
+  }
+  verifyAndStore(code);
+});
+
+codeInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    submitBtn.click();
+  }
+});
+
+btnLock.addEventListener('click', async () => {
+  if (!confirm('lock the extension? you will need to unlock again with your wallet.')) return;
+  await chrome.storage.local.remove('unlock');
+  switchView(null);
+});
+
 // -- initial paint --
 (async () => {
   try {
-    const st = await chrome.storage.local.get(['enabled', 'history', 'stats']);
+    const st = await chrome.storage.local.get(['enabled', 'history', 'stats', 'unlock']);
+    switchView(st.unlock);
     paintToggle(st.enabled !== false);
     paintStats(st.stats);
     paintRecent(st.history);
   } catch (e) {
+    switchView(null);
     paintToggle(true);
     paintStats(null);
     paintRecent(null);
@@ -112,6 +210,7 @@ try {
       if ('enabled' in changes) paintToggle(changes.enabled.newValue !== false);
       if ('stats'   in changes) paintStats(changes.stats.newValue);
       if ('history' in changes) paintRecent(changes.history.newValue);
+      if ('unlock'  in changes) switchView(changes.unlock.newValue);
     });
   }
 } catch (e) {}
