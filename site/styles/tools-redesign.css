@@ -1173,6 +1173,25 @@ button.primary:hover {
    RESPONSIVE
    ============================================================ */
 
+/* ============================================================
+   Sub-nav "NEW" badge — used on the extension tab to boost
+   discoverability. Uses the same style watchlist.html defined
+   inline; centralized here so any tab can wear it.
+   ============================================================ */
+.tab-badge {
+  display: inline-block !important;
+  margin-left: 6px !important;
+  padding: 2px 5px !important;
+  font-size: 9px !important;
+  letter-spacing: 1px !important;
+  background: var(--tr-moss) !important;
+  color: #0f150a !important;
+  border-radius: 2px !important;
+  vertical-align: middle !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+}
+
 @media (max-width: 900px) {
   main { padding: var(--tr-s-5) var(--tr-s-4) var(--tr-s-8) !important; }
   .scanner-hero h1,
