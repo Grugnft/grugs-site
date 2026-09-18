@@ -4,42 +4,90 @@
 <meta charset="utf-8">
 <title>Grug's Rug Radar</title>
 <style>
+  :root {
+    --bg:        #1E1712;
+    --bg-lift:   #251C15;
+    --bg-hover:  #2C2219;
+    --border:    #33261C;
+    --border-lift: #45341E;
+    --text:      #F0E5D2;
+    --text-dim:  #A89A82;
+    --text-mute: #6E6152;
+    --torch:     #E8A147;
+    --torch-soft:rgba(232,161,71,0.16);
+    --moss:      #8AB565;
+    --moss-soft: rgba(138,181,101,0.14);
+    --ember:     #E85F3B;
+  }
   html, body {
     margin: 0; padding: 0;
-    width: 260px;
-    background: #1A140F;
-    color: #E7DDCF;
-    font-family: 'Courier New', ui-monospace, monospace;
+    width: 300px;
+    background:
+      radial-gradient(ellipse 300px 200px at 50% 100%, rgba(232,95,59,0.10) 0%, transparent 70%),
+      var(--bg);
+    color: var(--text);
+    font-family: ui-monospace, Menlo, 'Courier New', monospace;
   }
-  .wrap { padding: 14px 16px; }
-  h1 {
-    font-size: 12px;
-    letter-spacing: 2px;
-    margin: 0 0 12px;
-    color: #7A9A5A;
+  body::before {
+    content: ""; position: absolute; inset: 0;
+    pointer-events: none; opacity: 0.5; z-index: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><circle cx='12' cy='34' r='0.6' fill='%23FFE9C2' opacity='0.08'/><circle cx='68' cy='18' r='0.5' fill='%23FFE9C2' opacity='0.06'/><circle cx='102' cy='60' r='0.5' fill='%23FFE9C2' opacity='0.07'/><circle cx='34' cy='98' r='0.5' fill='%23FFE9C2' opacity='0.06'/><circle cx='96' cy='120' r='0.6' fill='%23FFE9C2' opacity='0.07'/><circle cx='50' cy='56' r='0.4' fill='%23FFE9C2' opacity='0.05'/></svg>");
+    background-size: 140px 140px;
+    mix-blend-mode: overlay;
   }
-  .row {
+  .wrap { position: relative; z-index: 1; padding: 16px 18px 14px; }
+
+  /* Header — brand row */
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand-icon {
+    width: 34px; height: 34px; flex-shrink: 0;
+    background: var(--bg-lift);
+    border: 1px solid var(--border-lift);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    image-rendering: pixelated;
+  }
+  .brand-title {
+    font-family: 'Menlo', ui-monospace, monospace;
+    font-size: 12px; letter-spacing: 2.5px;
+    color: var(--torch);
+    font-weight: 700;
+    margin: 0;
+  }
+  .brand-sub {
+    font-size: 10px; color: var(--text-mute);
+    letter-spacing: 1px;
+    margin: 2px 0 0;
+  }
+
+  /* Toggle row */
+  .toggle-row {
     display: flex; align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 8px 0;
-    border-top: 1px solid #241A12;
+    padding: 6px 0 10px;
   }
-  .row:first-of-type { border-top: none; }
-  .label { font-size: 13px; }
+  .label { font-size: 13px; color: var(--text); }
   .status {
     font-size: 10px;
-    letter-spacing: 1px;
-    color: #B0A498;
-    margin-top: 2px;
+    letter-spacing: 1.5px;
+    color: var(--text-mute);
+    margin-top: 3px;
   }
-  .status.on  { color: #7A9A5A; }
-  .status.off { color: #C55C4B; }
+  .status.on  { color: var(--moss); }
+  .status.off { color: var(--ember); }
+
   .toggle {
     position: relative;
-    width: 40px; height: 22px;
-    background: #241A12;
-    border: 1px solid #3a2f24;
+    width: 44px; height: 24px;
+    background: var(--bg-lift);
+    border: 1px solid var(--border-lift);
+    border-radius: 12px;
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s;
     flex: 0 0 auto;
@@ -47,28 +95,211 @@
   .toggle .dot {
     position: absolute;
     top: 2px; left: 3px;
-    width: 16px; height: 16px;
-    background: #C55C4B;
-    transition: left 0.15s, background 0.15s;
+    width: 18px; height: 18px;
+    background: var(--ember);
+    border-radius: 50%;
+    transition: left 0.18s cubic-bezier(0.22, 1, 0.36, 1), background 0.15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
   }
-  .toggle.on { background: rgba(122,154,90,0.15); border-color: #7A9A5A; }
-  .toggle.on .dot { left: 20px; background: #7A9A5A; }
+  .toggle.on { background: var(--moss-soft); border-color: var(--moss); }
+  .toggle.on .dot { left: 21px; background: var(--moss); }
+
+  /* Supported chains chips */
+  .chains {
+    display: flex; gap: 5px;
+    padding: 10px 0 6px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    font-size: 10px; letter-spacing: 1.5px;
+    padding: 3px 8px;
+    background: var(--bg-lift);
+    border: 1px solid var(--border-lift);
+    border-radius: 3px;
+    color: var(--text-dim);
+    font-weight: 700;
+  }
+  .chip.rhc  { color: var(--torch); border-color: rgba(232,161,71,0.4); }
+  .chip.arc  { color: var(--moss);  border-color: rgba(138,181,101,0.4); }
+  .chip.eth  { color: #7A93D4; border-color: rgba(122,147,212,0.4); }
+  .chips-note {
+    font-size: 9px; letter-spacing: 1.5px;
+    color: var(--text-mute);
+    margin: 8px 0 0;
+    text-transform: uppercase;
+  }
+
+  /* Stats + recent */
+  .stats {
+    display: flex; align-items: baseline; gap: 8px;
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: var(--bg-lift);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .stats-total {
+    font-family: 'Menlo', ui-monospace, monospace;
+    font-size: 20px; font-weight: 700;
+    color: var(--torch);
+  }
+  .stats-label {
+    font-size: 10px; color: var(--text-mute);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    flex: 1;
+  }
+  .stats-tones {
+    display: flex; gap: 4px;
+  }
+  .stats-tone {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10px; color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+  .stats-tone::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; box-shadow: 0 0 6px currentColor;
+  }
+  .stats-tone.g { color: var(--moss); }
+  .stats-tone.y { color: #EBB958; }
+  .stats-tone.r { color: var(--ember); }
+
+  .recent {
+    margin-top: 12px;
+  }
+  .recent-title {
+    font-size: 9.5px; letter-spacing: 2px;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    margin: 0 0 6px;
+    padding-left: 2px;
+  }
+  .recent-list {
+    display: flex; flex-direction: column;
+    gap: 4px;
+    max-height: 168px;
+    overflow-y: auto;
+  }
+  .recent-list::-webkit-scrollbar { width: 4px; }
+  .recent-list::-webkit-scrollbar-thumb {
+    background: var(--border-lift);
+    border-radius: 2px;
+  }
+  .recent-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px;
+    background: var(--bg-lift);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border-lift);
+    border-radius: 3px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .recent-item:hover { background: var(--bg-hover); }
+  .recent-item.g { border-left-color: var(--moss); }
+  .recent-item.y { border-left-color: #EBB958; }
+  .recent-item.r { border-left-color: var(--ember); }
+  .recent-item.u { border-left-color: var(--border-lift); }
+  .recent-score {
+    font-family: 'Menlo', ui-monospace, monospace;
+    font-size: 12px; font-weight: 700;
+    color: var(--text);
+    width: 26px; text-align: center;
+    flex-shrink: 0;
+  }
+  .recent-item.g .recent-score { color: var(--moss); }
+  .recent-item.y .recent-score { color: #EBB958; }
+  .recent-item.r .recent-score { color: var(--ember); }
+  .recent-name {
+    flex: 1; min-width: 0;
+    font-size: 11px;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .recent-chain {
+    font-size: 8.5px;
+    letter-spacing: 1px;
+    padding: 2px 5px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .recent-chain.rhc { color: var(--torch); }
+  .recent-chain.arc { color: var(--moss); }
+  .recent-chain.eth { color: #7A93D4; }
+  .recent-empty {
+    font-size: 10px; color: var(--text-mute);
+    text-align: center;
+    letter-spacing: 1px;
+    padding: 14px 8px;
+    font-style: italic;
+  }
+
+  /* Quick actions */
+  .actions {
+    display: grid; grid-template-columns: 1fr;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .btn {
+    display: block; text-align: center;
+    padding: 9px 12px;
+    background: var(--torch);
+    color: #1A140F;
+    text-decoration: none;
+    border: 1px solid var(--torch);
+    border-radius: 4px;
+    font-size: 10.5px; letter-spacing: 2px; font-weight: 700;
+    transition: background 0.12s, color 0.12s;
+  }
+  .btn:hover { background: var(--torch-soft); color: var(--torch); }
+  .btn.secondary {
+    background: transparent;
+    color: var(--text-dim);
+    border-color: var(--border-lift);
+  }
+  .btn.secondary:hover {
+    color: var(--text);
+    border-color: var(--torch);
+  }
+
+  /* Footer */
   .footer {
-    font-size: 10px;
-    color: #7c6f61;
-    line-height: 1.5;
+    font-size: 9.5px;
+    color: var(--text-mute);
+    line-height: 1.6;
     padding-top: 12px;
-    border-top: 1px solid #241A12;
-    margin-top: 4px;
+    margin-top: 12px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    letter-spacing: 1px;
   }
-  a { color: #7A9A5A; text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  .footer a { color: var(--torch); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+  .safety {
+    display: block;
+    color: var(--moss);
+    margin-bottom: 4px;
+    letter-spacing: 1.5px;
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>GRUG'S RUG RADAR</h1>
-  <div class="row">
+  <div class="brand">
+    <div class="brand-icon">
+      <img src="icons/icon-48.png" width="26" height="26" alt="" />
+    </div>
+    <div>
+      <div class="brand-title">GRUG'S RUG RADAR</div>
+      <div class="brand-sub">grug smell rug on opensea</div>
+    </div>
+  </div>
+
+  <div class="toggle-row">
     <div>
       <div class="label">show badge on OpenSea</div>
       <div id="status" class="status">…</div>
@@ -77,9 +308,35 @@
       <div class="dot"></div>
     </div>
   </div>
+
+  <div class="chains" title="chains grug can scan">
+    <span class="chip rhc">RHC</span>
+    <span class="chip arc">ARC</span>
+    <span class="chip eth">ETH</span>
+  </div>
+  <div class="chips-note">chains grug can sniff</div>
+
+  <div class="stats">
+    <span id="stats-total" class="stats-total">0</span>
+    <span class="stats-label">contracts<br>sniffed</span>
+    <div id="stats-tones" class="stats-tones"></div>
+  </div>
+
+  <div class="recent">
+    <p class="recent-title">recent sniffs</p>
+    <div id="recent-list" class="recent-list">
+      <div class="recent-empty">grug not sniff nothing yet</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <a class="btn" href="https://www.grugnft.xyz/scanner" target="_blank" rel="noopener">OPEN FULL SCANNER →</a>
+    <a class="btn secondary" href="https://opensea.io/collection/grugs" target="_blank" rel="noopener">GRAB A GRUG</a>
+  </div>
+
   <div class="footer">
-    read-only · no wallet · no data collected<br>
-    <a href="https://www.grugnft.xyz/scanner" target="_blank">grugnft.xyz/scanner →</a>
+    <span class="safety">READ-ONLY · NO WALLET</span>
+    <a href="https://www.grugnft.xyz/" target="_blank" rel="noopener">grugnft.xyz</a>
   </div>
 </div>
 <script src="popup.js"></script>
