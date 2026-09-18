@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unlock Grug's Rug Radar Extension — Grugs</title>
+<meta name="description" content="Connect your wallet holding 10+ Grugs to unlock Grug's Rug Radar Chrome extension.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.png">
+<link rel="stylesheet" href="/styles/tools-redesign.css">
+<style>
+  :root {
+    --tr-torch: #E8A147;
+    --tr-moss:  #8AB565;
+    --tr-ember: #E85F3B;
+    --tr-warn:  #EBB958;
+    --bg-deep:  #0a0806;
+    --bg-cave:  #14100c;
+    --bg-panel: rgba(232, 161, 71, 0.06);
+    --border:   rgba(232, 161, 71, 0.28);
+    --text:     #f5e9d3;
+    --text-dim: #a89876;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg-deep); color: var(--text); font-family: 'Silkscreen', 'Courier New', monospace; }
+  body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px; }
+  a { color: var(--tr-torch); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .wrap { max-width: 560px; width: 100%; margin: 40px auto; }
+  header.brand { text-align: center; margin-bottom: 24px; }
+  header.brand h1 { color: var(--tr-torch); font-size: 22px; letter-spacing: 2px; margin: 0 0 8px; }
+  header.brand p { color: var(--text-dim); font-size: 13px; margin: 0; }
+
+  .panel {
+    background: var(--bg-cave);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 0 40px rgba(232, 161, 71, 0.05);
+  }
+
+  .step-num { color: var(--tr-torch); font-size: 12px; letter-spacing: 1px; margin-bottom: 6px; }
+  .step-title { color: var(--text); font-size: 16px; margin: 0 0 12px; }
+  .step-desc { color: var(--text-dim); font-size: 13px; line-height: 1.6; margin: 0 0 16px; }
+
+  button.tr-btn {
+    background: var(--tr-torch);
+    color: #1a1208;
+    border: none;
+    padding: 12px 20px;
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 4px;
+    text-transform: uppercase;
+    transition: transform 0.1s, box-shadow 0.2s;
+  }
+  button.tr-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(232, 161, 71, 0.4); }
+  button.tr-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  button.tr-btn.moss { background: var(--tr-moss); }
+  button.tr-btn.ghost { background: transparent; color: var(--tr-torch); border: 1px solid var(--border); }
+
+  .status-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 12px; color: var(--text-dim); }
+  .status-row .dot { width: 8px; height: 8px; border-radius: 50%; background: #444; }
+  .status-row.ok .dot { background: var(--tr-moss); box-shadow: 0 0 8px var(--tr-moss); }
+  .status-row.err .dot { background: var(--tr-ember); box-shadow: 0 0 8px var(--tr-ember); }
+  .status-row.busy .dot { background: var(--tr-torch); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .code-box {
+    background: #0f0c08;
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    padding: 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--tr-torch);
+    word-break: break-all;
+    max-height: 140px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+    user-select: all;
+  }
+
+  .copy-row { display: flex; gap: 8px; }
+  .copy-row .tr-btn { flex: 1; }
+
+  .hidden { display: none !important; }
+
+  .instructions {
+    background: rgba(138, 181, 101, 0.06);
+    border-left: 3px solid var(--tr-moss);
+    padding: 12px 14px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .instructions strong { color: var(--tr-moss); }
+
+  .err-box {
+    background: rgba(232, 95, 59, 0.08);
+    border-left: 3px solid var(--tr-ember);
+    padding: 12px 14px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--tr-ember);
+  }
+
+  footer { text-align: center; margin-top: 24px; font-size: 11px; color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="brand">
+    <h1>GRUG'S RUG RADAR · EXTENSION UNLOCK</h1>
+    <p>hold 10+ grugs to activate the chrome extension. 7-day session. no gas required.</p>
+  </header>
+
+  <!-- STEP 1: connect wallet + check balance -->
+  <section class="panel" id="step-connect">
+    <div class="step-num">STEP 1</div>
+    <h2 class="step-title">connect wallet</h2>
+    <p class="step-desc">grug check how many grugs you hold on robinhood chain. wallet only reads. no transactions.</p>
+    <button class="tr-btn" id="btn-connect">connect wallet</button>
+    <div class="status-row" id="connect-status"><div class="dot"></div><span id="connect-msg">waiting</span></div>
+  </section>
+
+  <!-- STEP 2: sign message -->
+  <section class="panel hidden" id="step-sign">
+    <div class="step-num">STEP 2</div>
+    <h2 class="step-title">sign unlock message</h2>
+    <p class="step-desc">grug ask wallet to sign a message proving you own this address. free — no transaction, no gas. wallet may show a signature prompt.</p>
+    <button class="tr-btn moss" id="btn-sign">sign unlock</button>
+    <div class="status-row" id="sign-status"><div class="dot"></div><span id="sign-msg">waiting</span></div>
+  </section>
+
+  <!-- STEP 3: copy code -->
+  <section class="panel hidden" id="step-code">
+    <div class="step-num">STEP 3</div>
+    <h2 class="step-title">copy unlock code</h2>
+    <p class="step-desc">paste this into the extension popup (click the grug icon in your chrome toolbar → paste field).</p>
+    <div class="code-box" id="code-box"></div>
+    <div class="copy-row">
+      <button class="tr-btn" id="btn-copy">copy code</button>
+      <button class="tr-btn ghost" id="btn-again">start over</button>
+    </div>
+    <div class="instructions">
+      <strong>next:</strong> click the grug icon in your chrome toolbar → click "unlock" → paste the code → done. your session lasts 7 days.
+    </div>
+  </section>
+
+  <footer>
+    <a href="/">back to grugs</a>
+  </footer>
+</div>
+
+<script type="module">
+const GRUGS_CONTRACT   = '0x71b125F8cD4ebb8180ffA072fCbd5409Ee392517';
+const RPC_URL          = 'https://rpc.mainnet.chain.robinhood.com';
+const CHAIN_ID         = 4663;
+const CHAIN_HEX        = '0x' + (4663).toString(16);
+const UNLOCK_MIN       = 10;
+const UNLOCK_DAYS      = 7;
+const BALANCE_OF_SEL   = '0x70a08231';
+
+const $ = (id) => document.getElementById(id);
+
+function setStatus(el, kind, msg) {
+  const row = $(el);
+  row.classList.remove('ok', 'err', 'busy');
+  if (kind) row.classList.add(kind);
+  row.querySelector('span').textContent = msg;
+}
+
+function show(el) { $(el).classList.remove('hidden'); }
+
+async function ensureChain() {
+  const eth = window.ethereum;
+  if (!eth) throw new Error('no wallet — install metamask, rainbow, or coinbase');
+  const chainId = await eth.request({ method: 'eth_chainId' });
+  if (chainId.toLowerCase() !== CHAIN_HEX) {
+    try {
+      await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_HEX }] });
+    } catch {
+      throw new Error('wallet is not on robinhood chain — switch to rhc and try again');
+    }
+  }
+}
+
+async function balanceOfViaRpc(address) {
+  const padded = address.toLowerCase().replace(/^0x/, '').padStart(64, '0');
+  const data = BALANCE_OF_SEL + padded;
+  const r = await fetch(RPC_URL, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_call',
+      params: [{ to: GRUGS_CONTRACT, data }, 'latest'] }),
+  });
+  const json = await r.json();
+  if (!json.result || json.result === '0x') return 0;
+  return parseInt(json.result, 16);
+}
+
+// -------- state --------
+let userAddress = null;
+let userBalance = 0;
+let expiresTs = null;
+let signature = null;
+
+// -------- step 1: connect --------
+$('btn-connect').addEventListener('click', async () => {
+  try {
+    setStatus('connect-status', 'busy', 'connecting...');
+    if (!window.ethereum) {
+      setStatus('connect-status', 'err', 'no wallet detected — install metamask, rainbow, or coinbase');
+      return;
+    }
+    await ensureChain();
+    const [addr] = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    userAddress = addr.toLowerCase();
+
+    setStatus('connect-status', 'busy', 'checking grug balance...');
+    userBalance = await balanceOfViaRpc(userAddress);
+
+    if (userBalance < UNLOCK_MIN) {
+      setStatus('connect-status', 'err',
+        `you hold ${userBalance} grug${userBalance === 1 ? '' : 's'} — need ${UNLOCK_MIN}. `);
+      const msg = document.querySelector('#connect-status span');
+      const a = document.createElement('a');
+      a.href = 'https://opensea.io/collection/grugs';
+      a.target = '_blank';
+      a.textContent = 'grab more →';
+      msg.appendChild(a);
+      return;
+    }
+
+    setStatus('connect-status', 'ok',
+      `connected · ${userAddress.slice(0, 6)}…${userAddress.slice(-4)} · holds ${userBalance} grugs`);
+    show('step-sign');
+  } catch (e) {
+    setStatus('connect-status', 'err', e.message || 'connect failed');
+  }
+});
+
+// -------- step 2: sign --------
+$('btn-sign').addEventListener('click', async () => {
+  try {
+    setStatus('sign-status', 'busy', 'awaiting signature...');
+    expiresTs = Date.now() + (UNLOCK_DAYS * 24 * 60 * 60 * 1000);
+    const message = `Grug Rug Radar unlock\n\nWallet: ${userAddress}\nExpires: ${expiresTs}`;
+    signature = await window.ethereum.request({
+      method: 'personal_sign',
+      params: [message, userAddress],
+    });
+
+    const payload = { address: userAddress, expires: expiresTs, signature };
+    const code = btoa(JSON.stringify(payload))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+    $('code-box').textContent = code;
+    setStatus('sign-status', 'ok', 'signed · code ready below');
+    show('step-code');
+    document.getElementById('step-code').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch (e) {
+    if (e.code === 4001 || /user reject/i.test(e.message || '')) {
+      setStatus('sign-status', 'err', 'signature cancelled');
+    } else {
+      setStatus('sign-status', 'err', e.message || 'signing failed');
+    }
+  }
+});
+
+// -------- step 3: copy --------
+$('btn-copy').addEventListener('click', async () => {
+  const code = $('code-box').textContent;
+  try {
+    await navigator.clipboard.writeText(code);
+    $('btn-copy').textContent = 'copied ✓';
+    setTimeout(() => { $('btn-copy').textContent = 'copy code'; }, 2000);
+  } catch {
+    // fallback: select the code box for manual copy
+    const range = document.createRange();
+    range.selectNodeContents($('code-box'));
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+});
+
+$('btn-again').addEventListener('click', () => {
+  location.reload();
+});
+</script>
+</body>
+</html>
