@@ -77,7 +77,7 @@ export default async function handler(req, res) {
   // ('robinhood', 'arc') — the scanner passes the internal id, but external
   // callers may still send the OpenSea slug. Map internal → OpenSea here so
   // one endpoint speaks both dialects.
-  const CHAIN_ALIAS = { rhc: 'robinhood', arc: 'arc' };
+  const CHAIN_ALIAS = { rhc: 'robinhood', arc: 'arc', eth: 'ethereum' };
   const raw = (q.chain || 'robinhood').toLowerCase();
   const chain = CHAIN_ALIAS[raw] || raw;
 
