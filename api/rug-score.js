@@ -37,6 +37,13 @@ import {
   computeScoreFromData,
 } from '../site/scripts/grug-score-engine.mjs';
 import { getChain } from '../site/scripts/chains.mjs';
+import { verifyMessage } from 'ethers';
+
+const GRUGS_CONTRACT   = '0x71b125F8cD4ebb8180ffA072fCbd5409Ee392517';
+const GRUGS_RPC        = 'https://rpc.mainnet.chain.robinhood.com';
+const UNLOCK_MIN_GRUGS = 10;
+const UNLOCK_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
+const BALANCE_OF_SEL   = '0x70a08231';
 
 // The engine's fetch base is the browser's page origin ('/api/...'). Here
 // we synthesize an absolute base from the incoming request so the sibling
@@ -77,6 +84,23 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
 
   const q = req.query || Object.fromEntries(new URL(req.url, 'http://x/').searchParams.entries());
+
+  // ---- extension unlock verify path ----
+  // Extension calls: /api/rug-score?action=verify-unlock&code=<base64url>
+  // Decodes {address, expires, signature}, verifies signature was signed by
+  // address, and checks address still holds >= UNLOCK_MIN_GRUGS on RHC.
+  if (q.action === 'verify-unlock') {
+    try {
+      const result = await verifyUnlock(String(q.code || ''));
+      res.statusCode = 200;
+      res.end(JSON.stringify(result));
+    } catch (e) {
+      res.statusCode = 200;
+      res.end(JSON.stringify({ ok: false, error: 'verify_failed', message: e.message || 'verify failed' }));
+    }
+    return;
+  }
+
   const addr    = (q.addr || '').toLowerCase();
   const chainId = (q.chain || 'rhc').toLowerCase();
 
@@ -161,3 +185,77 @@ export default async function handler(req, res) {
   res.statusCode = 200;
   res.end(JSON.stringify(payload));
 }
+
+// ============================================================================
+// Chrome extension unlock verification.
+//
+// Flow: the site's /extension-unlock page asks the user to sign a message,
+// packs {address, expires, signature} into a base64url code, and the user
+// pastes that code into the extension popup. The extension then calls this
+// endpoint to (1) prove the signature came from `address` (ecrecover), and
+// (2) confirm the address still holds >= UNLOCK_MIN_GRUGS. Both must pass.
+// ============================================================================
+function unlockMessage(address, expires) {
+  return `Grug Rug Radar unlock\n\nWallet: ${address}\nExpires: ${expires}`;
+}
+
+async function grugsBalance(address) {
+  // balanceOf(address) on the Grugs contract, RHC RPC.
+  const paddedAddr = address.toLowerCase().replace(/^0x/, '').padStart(64, '0');
+  const data = BALANCE_OF_SEL + paddedAddr;
+  const body = {
+    jsonrpc: '2.0', id: 1, method: 'eth_call',
+    params: [{ to: GRUGS_CONTRACT, data }, 'latest'],
+  };
+  const r = await fetch(GRUGS_RPC, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const json = await r.json();
+  if (!json.result || json.result === '0x') return 0;
+  return parseInt(json.result, 16);
+}
+
+async function verifyUnlock(code) {
+  if (!code) return { ok: false, error: 'no_code' };
+
+  let decoded;
+  try {
+    const b64 = code.replace(/-/g, '+').replace(/_/g, '/');
+    decoded = JSON.parse(Buffer.from(b64, 'base64').toString('utf8'));
+  } catch {
+    return { ok: false, error: 'malformed_code' };
+  }
+
+  const { address, expires, signature } = decoded || {};
+  if (!/^0x[0-9a-fA-F]{40}$/.test(address || '')) return { ok: false, error: 'bad_address' };
+  if (typeof expires !== 'number' || expires < Date.now())     return { ok: false, error: 'expired' };
+  if (typeof signature !== 'string' || !signature.startsWith('0x')) return { ok: false, error: 'bad_signature' };
+
+  // 1. ecrecover: signature must have been made by `address`.
+  let recovered;
+  try {
+    recovered = verifyMessage(unlockMessage(address, expires), signature);
+  } catch {
+    return { ok: false, error: 'signature_verify_failed' };
+  }
+  if (recovered.toLowerCase() !== address.toLowerCase()) {
+    return { ok: false, error: 'signature_mismatch' };
+  }
+
+  // 2. balance check: address must still hold >= UNLOCK_MIN_GRUGS.
+  let bal = 0;
+  try {
+    bal = await grugsBalance(address);
+  } catch {
+    return { ok: false, error: 'balance_check_failed' };
+  }
+  if (bal < UNLOCK_MIN_GRUGS) {
+    return { ok: false, error: 'insufficient_balance', held: bal, required: UNLOCK_MIN_GRUGS };
+  }
+
+  return { ok: true, address: address.toLowerCase(), expires, held: bal };
+}
+
+export { unlockMessage, UNLOCK_MIN_GRUGS, UNLOCK_DURATION_MS };
