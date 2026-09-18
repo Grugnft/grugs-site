@@ -839,189 +839,6 @@ section.chamber { margin-top: 72px; }
   line-height: 1.4;
 }
 
-/* ============ RUG RADAR (utility teaser) ============
-   Hidden by default. Revealed when the user finds the easter egg
-   (click the central campfire 5 times on the home tab). Once unlocked,
-   the flag persists via localStorage. */
-.rug-radar.rr-locked { display: none !important; }
-.rr-secret-badge {
-  font-family: 'VT323', monospace;
-  font-size: 15px;
-  color: var(--moss);
-  border: 1px dashed var(--moss);
-  padding: 2px 8px;
-  margin-left: auto;
-  letter-spacing: 1px;
-  align-self: center;
-}
-.rr-comingsoon {
-  margin: 22px 0 18px;
-  padding: 28px;
-  background: linear-gradient(to bottom, rgba(15,26,16,0.85), rgba(10,15,10,0.75));
-  border: 2px dashed var(--moss);
-  border-radius: 2px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-.rr-comingsoon::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(106,138,72,0.12) 0%, transparent 60%);
-  pointer-events: none;
-}
-.rr-comingsoon-eye {
-  font-size: 48px;
-  line-height: 1;
-  filter: drop-shadow(0 0 12px rgba(106,138,72,0.5));
-  animation: rr-eye-blink 4s infinite;
-}
-@keyframes rr-eye-blink {
-  0%, 92%, 100% { transform: scale(1); }
-  95% { transform: scaleY(0.05) scaleX(1.02); }
-  97% { transform: scale(1); }
-}
-.rr-comingsoon-title {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 22px;
-  color: var(--moss);
-  margin: 12px 0 8px;
-  letter-spacing: 3px;
-}
-.rr-comingsoon-sub {
-  color: var(--bone-dim);
-  font-size: 18px;
-  line-height: 1.6;
-  max-width: 520px;
-  margin: 0 auto;
-}
-/* Unlock celebration: brief highlight when the section first appears */
-.rug-radar.rr-just-unlocked {
-  animation: rr-unlock-pop 900ms ease-out;
-}
-@keyframes rr-unlock-pop {
-  0%   { opacity: 0; transform: translateY(10px) scale(0.97); box-shadow: 0 0 0 0 rgba(106,138,72,0); }
-  60%  { opacity: 1; transform: translateY(0)    scale(1.01); box-shadow: 0 0 40px 6px rgba(106,138,72,0.35); }
-  100% { opacity: 1; transform: translateY(0)    scale(1);    box-shadow: 0 0 0 0 rgba(106,138,72,0); }
-}
-/* Fire is interactive when it's the easter egg */
-.fire-wrap.fire-clickable { pointer-events: auto; cursor: pointer; }
-.fire-wrap.fire-clickable:hover .fire-glow { animation-duration: 0.7s; }
-
-.rug-radar {
-  padding: 44px 40px;
-  background:
-    linear-gradient(180deg, rgba(232,161,71,0.05) 0%, transparent 100%),
-    var(--stone-2);
-  border: 3px solid var(--wall-2);
-  border-top: 6px solid var(--moss);
-  position: relative;
-  overflow: hidden;
-}
-/* The old "COMING SOON" corner ribbon is removed — the internal .rr-comingsoon
-   panel now serves that role, and the corner ribbon collided with the new
-   "secret · you found it" badge. */
-.rr-header {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  margin-bottom: 12px;
-}
-.rr-radar-icon {
-  width: 56px;
-  height: 56px;
-  flex-shrink: 0;
-}
-.rr-radar-icon svg { width: 100%; height: 100%; image-rendering: pixelated; }
-.rr-title {
-  font-family: 'Press Start 2P', ui-monospace, monospace;
-  font-size: 22px;
-  color: var(--torch);
-  letter-spacing: 3px;
-  margin: 0;
-}
-.rr-tagline {
-  color: var(--bone);
-  font-size: 22px;
-  margin: 0 0 24px;
-  max-width: 680px;
-}
-.rr-tagline b { color: var(--torch); }
-.rr-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin: 28px 0;
-}
-.rr-card {
-  padding: 18px 20px;
-  background: var(--stone);
-  border: 2px solid var(--wall-2);
-  border-left: 5px solid var(--moss);
-}
-.rr-card.red    { border-left-color: #e83030; }
-.rr-card.yellow { border-left-color: #e8a147; }
-.rr-card.green  { border-left-color: #6a8a48; }
-.rr-card-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 8px;
-}
-.rr-name {
-  font-family: 'Press Start 2P', ui-monospace, monospace;
-  font-size: 12px;
-  color: var(--bone);
-  letter-spacing: 1px;
-}
-.rr-score {
-  font-family: 'Press Start 2P', ui-monospace, monospace;
-  font-size: 18px;
-  letter-spacing: 1px;
-}
-.rr-score.red    { color: #ff5a4a; }
-.rr-score.yellow { color: #ffb040; }
-.rr-score.green  { color: #8ac560; }
-.rr-verdict {
-  font-size: 13px;
-  color: var(--bone-dim);
-  line-height: 1.5;
-  margin: 6px 0 10px;
-}
-.rr-flags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.rr-flag {
-  padding: 3px 8px;
-  background: var(--wall);
-  color: var(--bone-dim);
-  font-family: 'Press Start 2P', ui-monospace, monospace;
-  font-size: 8px;
-  letter-spacing: 0.5px;
-  border: 1px solid var(--wall-2);
-}
-.rr-flag.warn { background: #3a2010; color: #ffb040; border-color: #8a4820; }
-.rr-flag.danger { background: #401010; color: #ff8080; border-color: #802020; }
-.rr-flag.ok { background: #1a2818; color: #8ac560; border-color: #2a4020; }
-.rr-access {
-  padding: 22px 24px;
-  background: var(--stone);
-  border: 2px dashed var(--torch);
-  text-align: center;
-  margin-top: 24px;
-}
-.rr-access b { color: var(--torch); }
-.rr-access-lock {
-  display: inline-block;
-  margin-right: 8px;
-  font-size: 20px;
-}
-@media (max-width: 900px) {
-  .rr-grid { grid-template-columns: 1fr; }
-}
 
 /* Manifesto */
 .manifesto {
@@ -1071,299 +888,6 @@ section.chamber { margin-top: 72px; }
 .hud .stat { display: flex; gap: 8px; color: var(--bone-dim); }
 .hud .stat b { color: var(--torch); font-weight: normal; }
 .hud .stat.phase b { color: var(--moss); }
-
-/* ================ MINT ALTAR (hero-scene-mint) ================ */
-.mint-altar {
-  position: absolute;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 200px;
-  height: 300px;
-  z-index: 3;
-  pointer-events: none;
-}
-.mint-altar::before {
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 260px;
-  height: 32px;
-  background: radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, transparent 65%);
-  pointer-events: none;
-}
-.altar-stone {
-  position: absolute;
-  bottom: 0;
-  left: 22px;
-  right: 22px;
-  height: 62px;
-  background:
-    linear-gradient(to bottom, #5a3d28 0%, #3a2818 55%, #2a1808 100%);
-  border: 3px solid #1a0e05;
-  box-shadow: inset 0 3px 0 rgba(255,255,255,0.06), inset 0 -3px 0 rgba(0,0,0,0.4);
-}
-.altar-stone::before {
-  content: "";
-  position: absolute;
-  top: -10px;
-  left: -8px;
-  right: -8px;
-  height: 14px;
-  background: #6a4a30;
-  border: 3px solid #1a0e05;
-}
-.altar-stone::after {
-  /* pixel-y speckle */
-  content: "";
-  position: absolute;
-  top: 12px; left: 12px;
-  width: 4px; height: 4px;
-  background: #6a4028;
-  box-shadow:
-    16px 6px 0 #6a4028,
-    38px 10px 0 #6a4028,
-    64px 4px 0 #6a4028,
-    26px 22px 0 #6a4028,
-    54px 28px 0 #6a4028,
-    82px 18px 0 #6a4028;
-}
-.altar-grug {
-  position: absolute;
-  bottom: 68px;
-  left: 0;
-  right: 0;
-  height: 230px;
-  display: flex;
-  justify-content: center;
-  transition: opacity 0.4s ease;
-}
-.altar-grug svg { height: 100%; width: auto; image-rendering: pixelated; display: block; }
-
-/* Plaque bolted to the stone altar face */
-.altar-plaque {
-  position: absolute;
-  bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 8px 14px;
-  background: linear-gradient(to bottom, #c9a24a 0%, #a67810 55%, #7a5808 100%);
-  border: 3px solid #1a0e05;
-  box-shadow:
-    inset 0 2px 0 rgba(255,255,255,0.25),
-    inset 0 -2px 0 rgba(0,0,0,0.4),
-    3px 3px 0 rgba(0,0,0,0.55);
-  font-family: 'Press Start 2P', ui-monospace, monospace;
-  text-align: center;
-  min-width: 190px;
-  z-index: 4;
-}
-/* Corner bolts */
-.altar-plaque::before,
-.altar-plaque::after {
-  content: '';
-  position: absolute;
-  width: 4px; height: 4px;
-  background: #1a0e05;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
-  border-radius: 50%;
-}
-.altar-plaque::before { top: 3px; left: 4px; }
-.altar-plaque::after  { top: 3px; right: 4px; }
-.plaque-title {
-  font-size: 12px;
-  color: #1a0e05;
-  letter-spacing: 1.5px;
-  text-shadow: 1px 1px 0 rgba(255,255,255,0.25);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 220px;
-}
-.plaque-sub {
-  font-size: 8px;
-  color: #4a2c08;
-  margin-top: 6px;
-  letter-spacing: 1px;
-}
-
-/* Mint overlay text — sit tight to the top so the tagline/sub-tag don't
-   overhang the statue's head. Boss-bar takes the very top strip (~18-44px);
-   we leave 44px + a hair for it. */
-.hero-scene-mint .hero-overlay { padding-top: 68px; }
-.hero-scene-mint .hero-title {
-  /* GRUG is 4 letters instead of GRUGS — cap smaller so it doesn't crowd the altar */
-  font-size: clamp(48px, 10vw, 128px);
-  line-height: 0.95;
-  margin: 0;
-}
-.hero-scene-mint .tagline { margin: 8px 0 2px; }
-.hero-scene-mint .sub-tag { margin-top: 2px; }
-
-/* Whitelist check */
-.wl-check {
-  padding: 32px;
-  background: var(--stone-2);
-  border: 2px solid var(--wall-2);
-  border-left: 6px solid var(--ember);
-  text-align: center;
-}
-.wl-status {
-  font-size: 24px;
-  margin: 0 0 16px;
-  color: var(--bone);
-}
-.wl-status b { color: var(--torch); font-weight: normal; }
-.wl-status.ok {
-  border: none;
-  color: var(--bone);
-}
-.wl-status.ok b { color: var(--moss); }
-.wl-status.pending b { color: var(--torch); }
-.wl-check.ok { border-left-color: var(--moss); }
-.wl-hint {
-  font-size: 20px;
-  color: var(--bone-dim);
-  margin: 0;
-  line-height: 1.5;
-}
-.wl-hint b { color: var(--torch); font-weight: normal; }
-
-/* ================ MINT (legacy panel — kept for cross-references) ================ */
-.mint-panel {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 48px 40px;
-  background: var(--stone-2);
-  border: 3px double var(--wall-2);
-  text-align: center;
-}
-.mint-count {
-  font-family: 'Press Start 2P', ui-monospace, monospace;
-  font-size: 28px;
-  color: var(--torch);
-  margin: 20px 0 4px;
-}
-.mint-count .of { color: var(--bone-dim); font-size: 20px; }
-.mint-progress {
-  width: 100%;
-  height: 24px;
-  background: var(--stone);
-  border: 2px solid var(--wall-2);
-  position: relative;
-  margin: 16px 0 32px;
-  overflow: hidden;
-}
-.mint-progress-fill {
-  height: 100%;
-  width: 28.47%;
-  background: repeating-linear-gradient(90deg, var(--ember) 0 8px, var(--ember-hot) 8px 10px);
-}
-.mint-facts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin: 20px 0 28px;
-  text-align: left;
-}
-.mint-fact {
-  padding: 14px 16px;
-  background: var(--wall);
-  border: 2px solid var(--wall-2);
-}
-.mint-fact .lbl {
-  display: block;
-  font-family: 'Press Start 2P', ui-monospace, monospace;
-  font-size: 10px;
-  color: var(--torch);
-  letter-spacing: 2px;
-  margin-bottom: 6px;
-}
-.mint-fact .val { font-size: 22px; color: var(--bone); }
-.mint-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-.mint-note { font-size: 18px; color: var(--ash); margin-top: 32px; }
-
-.preview-strip {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin: 20px 0 28px;
-  flex-wrap: wrap;
-}
-.preview-strip .grug-mini {
-  width: 78px;
-  height: 104px;
-  background: var(--stone);
-  border: 2px solid var(--wall-2);
-  overflow: hidden;
-}
-.preview-strip .grug-mini svg { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
-
-/* ================ LOGS ================ */
-.cave-scene.tall { height: 400px; }
-.log-pile-standalone {
-  position: absolute;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 620px;
-  height: 240px;
-  z-index: 3;
-  pointer-events: none;
-}
-.log-pile-standalone::before {
-  content: "";
-  position: absolute;
-  bottom: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 720px;
-  height: 60px;
-  background: radial-gradient(ellipse at center, rgba(0,0,0,0.4) 0%, transparent 60%);
-  pointer-events: none;
-}
-.logs-info-bar {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 40px;
-  align-items: center;
-  padding: 28px 40px;
-  background: var(--stone-2);
-  border: 2px solid var(--wall-2);
-  border-top: none;
-  margin-top: -2px;
-}
-.logs-info-left { text-align: center; }
-.logs-info-right p { margin: 0; }
-.log {
-  position: absolute;
-  overflow: visible;
-}
-.log svg { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
-.log.new-log { animation: log-drop 0.6s ease-out; }
-@keyframes log-drop {
-  0%   { transform: translateY(-40px) rotate(-10deg); opacity: 0; }
-  60%  { transform: translateY(4px) rotate(2deg); opacity: 1; }
-  100% { transform: translateY(0) rotate(0); opacity: 1; }
-}
-.log-pile-info h3 {
-  font-family: 'Press Start 2P', ui-monospace, monospace;
-  font-size: 16px;
-  color: var(--torch);
-  letter-spacing: 2px;
-  margin: 0 0 12px;
-}
-.log-count {
-  font-family: 'Press Start 2P', ui-monospace, monospace;
-  font-size: 40px;
-  color: var(--bone);
-  margin: 8px 0 4px;
-  letter-spacing: 2px;
-}
-.log-goal { color: var(--bone-dim); font-size: 20px; margin: 0 0 20px; }
-.log-desc { color: var(--bone-dim); font-size: 22px; line-height: 1.4; margin: 0; }
 
 /* ================ SMASH ================ */
 .hero-scene-smash .hero-overlay { padding-top: 48px; }
@@ -2220,8 +1744,6 @@ section.chamber { margin-top: 72px; }
   <div class="wordmark" onclick="showTab('home')">GRUGS</div>
   <nav class="tabs" role="tablist">
     <button class="tab active" data-tab="home">home</button>
-    <button class="tab" data-tab="mint">get grug</button>
-    <button class="tab" data-tab="logs">logs</button>
     <button class="tab" data-tab="smash">smash machine</button>
     <a class="tab" href="scanner.html">grug tools</a>
   </nav>
@@ -2302,7 +1824,7 @@ section.chamber { margin-top: 72px; }
 
       <div class="cave-floor"></div>
 
-        <div class="fire-wrap fire-big fire-clickable" id="home-fire" title="">
+        <div class="fire-wrap fire-big" id="home-fire" title="">
           <div class="fire-glow"></div>
           <svg class="fire-svg" viewBox="0 0 28 34" preserveAspectRatio="xMidYMax meet">
             <!-- Ground shadow -->
@@ -2432,69 +1954,25 @@ section.chamber { margin-top: 72px; }
 
     <!-- CTA bar right below the hero, above the first chamber -->
     <div class="cta-bar">
-      <button class="cta cta-lg" onclick="showTab('mint')">GET GRUG</button>
-      <button class="cta cta-secondary cta-lg" onclick="showTab('logs')">LOGS</button>
+      <a class="cta cta-lg" href="https://opensea.io/collection/grugs" target="_blank" rel="noopener noreferrer">GRAB A GRUG</a>
+      <a class="cta cta-secondary cta-lg" href="scanner.html">GRUG TOOLS</a>
     </div>
 
     <section class="chamber">
       <h2 class="chamber-title">grug do what</h2>
       <div class="pillars">
-        <a class="pillar pillar-link" data-tab-link="mint" role="button" tabindex="0">
-          <h3>get grug <span class="pillar-arrow">▸</span></h3>
-          <p>grug come to cave. grug now tribe. small rock, big grug.</p>
+        <a class="pillar pillar-link" href="scanner.html" role="button" tabindex="0">
+          <h3>rug radar <span class="pillar-arrow">▸</span></h3>
+          <p>grug smell rug from mile away. paste contract. grug tell you if safe.</p>
         </a>
-        <a class="pillar pillar-link" data-tab-link="logs" role="button" tabindex="0">
-          <h3>get log <span class="pillar-arrow">▸</span></h3>
-          <p>grug walk to pile. grug bring log back. tribe count wood together.</p>
+        <a class="pillar pillar-link" href="https://opensea.io/collection/grugs" target="_blank" rel="noopener noreferrer" role="button" tabindex="0">
+          <h3>grab a grug <span class="pillar-arrow">▸</span></h3>
+          <p>tribe minted out. small rock on opensea. grug still waiting for you.</p>
         </a>
         <a class="pillar pillar-link" data-tab-link="smash" role="button" tabindex="0">
           <h3>smash machine <span class="pillar-arrow">▸</span></h3>
           <p>machine make bad. grug hit machine. grug feel better after.</p>
         </a>
-      </div>
-    </section>
-
-    <!-- RUG RADAR — hidden until the user finds the easter egg (click the fire 5 times) -->
-    <section class="chamber rug-radar rr-locked" id="rug-radar-section">
-      <div class="rr-header">
-        <div class="rr-radar-icon">
-          <svg viewBox="0 0 32 32">
-            <rect x="2" y="2" width="28" height="28" fill="#0f1a10" stroke="#3a5a3a" stroke-width="1"/>
-            <circle cx="16" cy="16" r="12" fill="none" stroke="#2a4a2a" stroke-width="0.5"/>
-            <circle cx="16" cy="16" r="8"  fill="none" stroke="#2a4a2a" stroke-width="0.5"/>
-            <circle cx="16" cy="16" r="4"  fill="none" stroke="#2a4a2a" stroke-width="0.5"/>
-            <line x1="16" y1="4" x2="16" y2="28" stroke="#2a4a2a" stroke-width="0.5"/>
-            <line x1="4" y1="16" x2="28" y2="16" stroke="#2a4a2a" stroke-width="0.5"/>
-            <g transform-origin="16px 16px">
-              <path d="M16,16 L16,4 A12,12 0 0,1 26.4,10 Z" fill="#5aca5a" opacity="0.4">
-                <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="3s" repeatCount="indefinite"/>
-              </path>
-            </g>
-            <rect x="20" y="8"  width="1" height="1" fill="#ff5a4a"/>
-            <rect x="10" y="20" width="1" height="1" fill="#ffb040"/>
-            <rect x="22" y="22" width="1" height="1" fill="#8ac560"/>
-            <rect x="15" y="15" width="2" height="2" fill="#8ac560"/>
-          </svg>
-        </div>
-        <h2 class="rr-title">RUG RADAR</h2>
-        <span class="rr-secret-badge">secret · you found it</span>
-      </div>
-      <p class="rr-tagline">
-        grug see rug from mile away. every new mint on Robinhood chain get a
-        <b>score out of 100</b>. red bad. green maybe okay. grug still hate machine.
-      </p>
-      <div class="rr-comingsoon">
-        <div class="rr-comingsoon-body">
-          <div class="rr-comingsoon-eye">👁️</div>
-          <h3 class="rr-comingsoon-title">grug watch coming</h3>
-          <p class="rr-comingsoon-sub">
-            grug still building. rug radar go live after mint. for now only tribe with sharp eye know it exist.
-          </p>
-        </div>
-      </div>
-      <div class="rr-access">
-        <span class="rr-access-lock">🪨</span>
-        <b>hold 5+ grug</b> = free unlimited scans, forever. no rate limit, no scan tax. grug tool for tribe.
       </div>
     </section>
 
@@ -2510,203 +1988,6 @@ section.chamber { margin-top: 72px; }
       </div>
     </section>
 
-    <section class="chamber">
-      <h2 class="chamber-title">meet tribe</h2>
-      <div class="grug-grid" id="tribe-grid"></div>
-    </section>
-  </section>
-
-  <!-- MINT -->
-  <section id="mint" class="view">
-    <div class="hero-scene hero-scene-mint" id="mint-scene" aria-hidden="true">
-      <div class="boss-bar">
-        <div class="boss-bar-label">
-          <span class="label">tribe <span class="live sold-out">MINTED OUT</span></span>
-          <span class="values"><span id="mint-bar-count">10,000</span> / 10,000</span>
-        </div>
-        <div class="boss-bar-track">
-          <div class="boss-bar-fill" id="mint-bar-fill" style="width: 100%"></div>
-        </div>
-      </div>
-      <div class="cave-wall-detail"></div>
-      <div class="wall-torch far-left">
-        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
-      </div>
-      <div class="wall-torch left">
-        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
-      </div>
-      <div class="wall-torch right">
-        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
-      </div>
-      <div class="wall-torch far-right">
-        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
-      </div>
-      <div class="cave-floor"></div>
-
-      <!-- The star: a rotating grug on a stone altar -->
-      <div class="mint-altar" id="mint-altar">
-        <div class="altar-grug" id="altar-grug"></div>
-        <div class="altar-stone"></div>
-        <div class="altar-plaque">
-          <div class="plaque-title">GRUG</div>
-          <div class="plaque-sub">legend · 1/100</div>
-        </div>
-      </div>
-
-      <!-- Walkers via JS -->
-
-      <div class="hero-overlay">
-        <h1 class="hero-title">GRUG</h1>
-        <p class="tagline">10,000 grug carved. tribe complete.</p>
-        <p class="sub-tag">mint closed · <a href="https://opensea.io/collection/grugs" target="_blank" rel="noopener" style="color:var(--torch);text-decoration:underline;">grab one on opensea</a></p>
-      </div>
-    </div>
-
-    <!-- MINT WIDGET — talks directly to the Grugs contract on RHC.
-         State transitions handled in JS (see initMintWidget below).
-         All labels default to a "loading" state until the widget reads
-         mintOpen / totalMinted / mintedBy from the chain. -->
-    <section class="chamber mint-widget" id="mint-chamber" style="max-width: 780px; margin-left: auto; margin-right: auto;">
-      <h2 class="chamber-title">mint grug</h2>
-
-      <!-- Live counter -->
-      <div class="mint-live">
-        <div class="mint-live-row">
-          <span class="mint-live-lbl">minted</span>
-          <span class="mint-live-val"><b id="mint-total">—</b> / 10,000</span>
-        </div>
-        <div class="mint-progress"><div class="mint-progress-fill" id="mint-progress-fill" style="width:0%"></div></div>
-      </div>
-
-      <!-- Status line (dynamic: not open / not connected / ready / minting / done / error) -->
-      <p id="mint-status" class="wl-status pending" style="margin-bottom: 4px;">grug wait for wallet.</p>
-      <p id="mint-hint" class="wl-hint">first grug free. extra grug 0.0001 ETH each. grug not care.</p>
-
-      <!-- Quantity + mint control (hidden until wallet+chain+open all satisfied) -->
-      <div id="mint-controls" class="mint-controls" hidden>
-        <div class="qty-row">
-          <button type="button" class="qty-btn" id="qty-minus" aria-label="decrease">−</button>
-          <input type="number" id="qty-input" min="1" max="20" value="1" inputmode="numeric" aria-label="quantity">
-          <button type="button" class="qty-btn" id="qty-plus" aria-label="increase">+</button>
-          <span class="qty-cap">max 20</span>
-        </div>
-        <div class="mint-price-row">
-          <span class="mint-price-lbl">grug want</span>
-          <span class="mint-price-val" id="mint-quote">— ETH</span>
-        </div>
-        <button class="cta cta-lg" id="mint-btn" style="min-width: 260px;">MINT</button>
-      </div>
-
-      <!-- Tx feedback (dynamic) -->
-      <div id="mint-tx" class="mint-tx" hidden></div>
-    </section>
-
-    <section class="chamber" style="max-width: 780px; margin-left: auto; margin-right: auto;">
-      <h2 class="chamber-title">how mint work</h2>
-      <div class="mint-facts">
-        <div class="mint-fact">
-          <span class="lbl">first grug</span>
-          <span class="val">free · 1 per wallet</span>
-        </div>
-        <div class="mint-fact">
-          <span class="lbl">extra grug</span>
-          <span class="val">0.0001 ETH each · unlimited</span>
-        </div>
-        <div class="mint-fact">
-          <span class="lbl">where</span>
-          <span class="val">right here on grugnft.xyz</span>
-        </div>
-        <div class="mint-fact">
-          <span class="lbl">chain</span>
-          <span class="val">robinhood chain</span>
-        </div>
-        <div class="mint-fact">
-          <span class="lbl">reveal</span>
-          <span class="val">instant · your grug at mint</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="chamber" style="max-width: 780px; margin-left: auto; margin-right: auto;">
-      <h2 class="chamber-title">grug rule</h2>
-      <ul class="rule-list">
-        <li>small creator fee on trade. keep grug fire lit.</li>
-        <li>no yield. no stock. no roadmap grug can't keep.</li>
-        <li>grug build community. tribe first. tribe last.</li>
-        <li>contract clear. tribe can read on chain.</li>
-      </ul>
-    </section>
-  </section>
-
-  <!-- LOGS -->
-  <section id="logs" class="view">
-    <div class="hero-scene hero-scene-logs" id="logs-scene" aria-hidden="true">
-      <div class="boss-bar">
-        <div class="boss-bar-label">
-          <span class="label">wood pile <span class="live">LIVE</span></span>
-          <span class="values"><span id="log-bar-count">0</span> / 10,000</span>
-        </div>
-        <div class="boss-bar-track">
-          <div class="boss-bar-fill" id="log-bar-fill" style="width: 0%"></div>
-        </div>
-      </div>
-      <div class="cave-wall-detail"></div>
-      <div class="wall-torch far-left">
-        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
-      </div>
-      <div class="wall-torch left">
-        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
-      </div>
-      <div class="wall-torch right">
-        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
-      </div>
-      <div class="wall-torch far-right">
-        <div class="glow"></div><div class="stick"></div><div class="bracket"></div><div class="flame"></div><div class="flame-inner"></div>
-      </div>
-      <div class="cave-floor"></div>
-
-      <!-- The star: the log pile -->
-      <div class="log-pile-standalone" id="log-pile"></div>
-
-      <!-- Walkers spawned by JS (with logs) -->
-
-      <!-- Overlay text -->
-      <div class="hero-overlay">
-        <h1 class="hero-title">LOGS</h1>
-        <p class="tagline">the wood pile empty.</p>
-        <p class="sub-tag"><span id="log-count">0</span> logs · after mint grug fetch begin.</p>
-      </div>
-    </div>
-
-    <!-- Big "coming soon" banner: logs is not live yet -->
-    <div class="logs-coming-banner">
-      <span class="lcb-eye">👁️</span>
-      <div class="lcb-body">
-        <div class="lcb-title">LOGS ON HOLD</div>
-        <div class="lcb-sub">grug put log mechanic on ice for now. we come back to fire later. tribe below is preview only.</div>
-      </div>
-    </div>
-
-    <section class="chamber logs-preview">
-      <h2 class="chamber-title">your grugs <span class="preview-tag">preview</span></h2>
-      <div class="grug-grid" id="grugs-log-grid"></div>
-    </section>
-
-    <section class="chamber board logs-preview">
-      <h2 class="chamber-title">the log board <span class="preview-tag">preview</span></h2>
-      <div class="board-list board-list-empty">
-        <div class="board-row head">
-          <div class="rank">rank</div>
-          <div class="addr">wallet</div>
-          <div class="count">logs</div>
-        </div>
-        <div class="board-row"><div class="rank">—</div><div class="addr">no wallet yet</div><div class="count">0</div></div>
-        <div class="board-row"><div class="rank">—</div><div class="addr">no wallet yet</div><div class="count">0</div></div>
-        <div class="board-row"><div class="rank">—</div><div class="addr">no wallet yet</div><div class="count">0</div></div>
-        <div class="board-row you"><div class="rank">—</div><div class="addr">you</div><div class="count">0</div></div>
-      </div>
-      <p style="color: var(--ash); font-size: 18px; margin-top: 12px; text-align: center;">top fetcher get title on cave wall. forever. (after mint.)</p>
-    </section>
   </section>
 
   <!-- SMASH -->
@@ -2849,10 +2130,9 @@ section.chamber { margin-top: 72px; }
 </main>
 
 <footer class="hud">
-  <div class="stat"><span>minted</span><b id="hud-tribe">0</b> / 10,000</div>
-  <div class="stat"><span>logs</span><b id="hud-logs">0</b></div>
+  <div class="stat"><span>tribe</span><b id="hud-tribe">10,000</b> / 10,000</div>
   <div class="stat"><span>machines smashed</span><b id="hud-smash">0</b></div>
-  <div class="stat phase"><span>phase</span><b>0 — pre-mint</b></div>
+  <div class="stat phase"><span>phase</span><b>1 — tribe out</b></div>
 </footer>
 
 <!-- Whitelist modal removed from the flow (mint moved to OpenSea, no allowlist).
@@ -3528,7 +2808,7 @@ function emptyGrugsHTML() {
       <div class="empty-grugs-icon">0</div>
       <p class="empty-grugs-title">no grug in cave.</p>
       <p class="empty-grugs-body">you have no grug yet. get grug to see grug here.</p>
-      <button class="cta cta-secondary" style="margin-top: 18px;" onclick="showTab('mint')">GET GRUG</button>
+      <a class="cta cta-secondary" style="margin-top: 18px;" href="https://opensea.io/collection/grugs" target="_blank" rel="noopener noreferrer">GRAB A GRUG</a>
     </div>`;
 }
 function renderGrids() {
@@ -3659,8 +2939,8 @@ function spawnSmashParticles() {
 }
 
 function mockMint(kind) {
-  if (kind === 'wl') { showTab('mint'); return; }   // "get grug" pillar now just jumps to the mint tab
-  else alert('grug wallet not connect. grug not know who you are yet.');
+  // Legacy hook — mint is closed and lives on OpenSea now.
+  window.open('https://opensea.io/collection/grugs', '_blank', 'noopener');
 }
 
 /* ============================================================
@@ -4100,16 +3380,6 @@ function addLogToPile() {
   const w = 78 + Math.floor(Math.random() * 20);
   const dx = -60 + Math.random() * 120;
   placeLog(pileEl, cx + dx - w/2, 22 + Math.random() * 20, w, 22, 'log new-log');
-}
-
-/* ============================================================
-   LOGS SCENE walkers — many, half carrying logs
-   ============================================================ */
-const logsScene = document.getElementById('logs-scene');
-if (logsScene) {
-  decorateScene(logsScene);
-  spawnWalkers(logsScene, 10, { withLogChance: 0.55 });
-  scheduleChat(logsScene);
 }
 
 /* ============================================================
@@ -4828,56 +4098,6 @@ document.addEventListener('pointerdown', (e) => {
   if (walker) grugGrab(walker, e);
 }, { passive: false });
 
-/* ============================================================
-   RUG RADAR EASTER EGG — click the fire 5 times on the home
-   tab to unlock the hidden Rug Radar section. Unlock persists
-   in localStorage so it stays revealed on return visits.
-   ============================================================ */
-(function initRugRadarEasterEgg() {
-  // Per-session easter egg: every refresh resets it, so it stays a discovery
-  // rather than a checkbox. No localStorage persistence.
-  const section = document.getElementById('rug-radar-section');
-  const fire = document.getElementById('home-fire');
-  if (!section || !fire) return;
-
-  let clicks = 0;
-  let resetTimer = null;
-  const REQUIRED = 5;
-  const WINDOW_MS = 4000;
-
-  fire.addEventListener('click', (e) => {
-    e.stopPropagation();
-    // If already unlocked, don't spam the user — just a warm pop sound
-    if (!section.classList.contains('rr-locked')) {
-      try { sound.pop(); } catch (_) {}
-      return;
-    }
-    clicks++;
-    // Visual feedback per click — subtle scale bump on the fire
-    fire.animate(
-      [{ transform: 'translateX(-50%) scale(1)' }, { transform: 'translateX(-50%) scale(1.08)' }, { transform: 'translateX(-50%) scale(1)' }],
-      { duration: 220, easing: 'ease-out' }
-    );
-    try { sound.pop(); } catch (_) {}
-    if (resetTimer) clearTimeout(resetTimer);
-    resetTimer = setTimeout(() => { clicks = 0; }, WINDOW_MS);
-
-    if (clicks >= REQUIRED) {
-      clicks = 0;
-      clearTimeout(resetTimer);
-      // Unlock — remove hidden state, mark just-unlocked for the reveal animation
-      section.classList.remove('rr-locked');
-      section.classList.add('rr-just-unlocked');
-      // No persistence — resets on refresh, keeps the discovery feel
-      try { sound.grunt('aha'); } catch (_) {}
-      // Scroll it into view so the user actually sees what they unlocked
-      setTimeout(() => {
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 200);
-      setTimeout(() => section.classList.remove('rr-just-unlocked'), 1000);
-    }
-  });
-})();
 document.addEventListener('pointermove', grugDragMove, { passive: true });
 document.addEventListener('pointerup', grugDrop, { passive: true });
 document.addEventListener('pointercancel', grugDrop, { passive: true });
@@ -5403,70 +4623,6 @@ async function waitForReceipt(txHash, maxTries = 60) {
   }
   return null;
 }
-
-// ------- Wire up UI events -------
-(function initMintWidget() {
-  const chamber = $('mint-chamber');
-  if (!chamber) return;
-
-  $('qty-plus')?.addEventListener('click', () => {
-    const inp = $('qty-input'); if (!inp) return;
-    inp.value = Math.min(20, (parseInt(inp.value, 10) || 1) + 1);
-    updateQuote();
-  });
-  $('qty-minus')?.addEventListener('click', () => {
-    const inp = $('qty-input'); if (!inp) return;
-    inp.value = Math.max(1, (parseInt(inp.value, 10) || 1) - 1);
-    updateQuote();
-  });
-  $('qty-input')?.addEventListener('input', () => updateQuote());
-  $('mint-btn')?.addEventListener('click', onMintClick);
-  // (Chain-switch is triggered by clicking MINT, no dedicated button.)
-
-  // React to wallet events (accounts / chain changes)
-  if (window.ethereum && window.ethereum.on) {
-    window.ethereum.on('accountsChanged', () => refreshMintUI());
-    window.ethereum.on('chainChanged',    () => refreshMintUI());
-  }
-  document.addEventListener('grug:wallet-connected', refreshMintUI);
-  document.addEventListener('grug:wallet-disconnected', refreshMintUI);
-
-  // First read + slow poll (contract state doesn't change often; poll for
-  // mintOpen flip on drop day and total-minted counter otherwise)
-  refreshMintUI();
-  setInterval(refreshMintUI, 20000);
-})();
-
-/* ============================================================
-   MINT SCENE — altar with rotating grug + walkers
-   ============================================================ */
-const mintScene = document.getElementById('mint-scene');
-if (mintScene) {
-  decorateScene(mintScene);
-  spawnWalkers(mintScene, 8, { withLogChance: 0 });
-  scheduleChat(mintScene);
-}
-let altarIdx = Math.floor(Math.random() * LEGENDARY_GRUGS.length);
-function refreshAltarGrug() {
-  const el = document.getElementById('altar-grug');
-  if (!el) return;
-  el.style.opacity = '0';
-  setTimeout(() => {
-    const pick = LEGENDARY_GRUGS[altarIdx];
-    el.innerHTML = renderGrugSprite(pick.traits);
-    // Assign a caveman name if the legendary pick doesn't have one yet
-    if (!pick.name) pick.name = generateCavemanName();
-    // Update the plaque with the grug's name + number
-    const plaqueTitle = document.querySelector('.altar-plaque .plaque-title');
-    const plaqueSub = document.querySelector('.altar-plaque .plaque-sub');
-    if (plaqueTitle) plaqueTitle.textContent = pick.name;
-    if (plaqueSub) plaqueSub.textContent = 'grug #' + String(pick.id).padStart(4, '0') + ' · legend ' + (altarIdx + 1) + '/100';
-    el.style.opacity = '1';
-    altarIdx = (altarIdx + 1) % LEGENDARY_GRUGS.length;
-  }, 400);
-}
-refreshAltarGrug();
-setInterval(refreshAltarGrug, 6500);
 
 /* ============================================================
    WHITELIST — smash-machine-to-earn-WL mechanic
