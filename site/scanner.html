@@ -1117,6 +1117,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
   .verdict { font-size: 22px; }
 }
 </style>
+<link rel="stylesheet" href="styles/tools-redesign.css">
 </head>
 <body>
 
@@ -1160,6 +1161,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 40px 32px 40px; }
       <span class="chain-switch-label">chain:</span>
       <button type="button" class="chain-chip active" data-chain="rhc" role="tab" aria-selected="true">RHC<span class="badge">ETH</span></button>
       <button type="button" class="chain-chip" data-chain="arc" role="tab" aria-selected="false">Arc<span class="badge">USDC</span></button>
+      <button type="button" class="chain-chip" data-chain="eth" role="tab" aria-selected="false">Ethereum<span class="badge">ETH</span></button>
     </div>
     <label for="addr" class="scan-label">CONTRACT ADDRESS</label>
     <div class="scan-row">
@@ -1412,6 +1414,28 @@ const CHAIN_CONFIG = {
       'currentlyPaused','withdrawExposure','transferBlocked','mutableRoyalty',
       'walletDrainer',
       // OpenSea (chain slug is 'arc')
+      'noMarket','websiteReachable','twitterExists',
+      // Metadata (on-chain tokenURI)
+      'centralArt','unpinned','noRoyalty',
+    ]),
+  },
+  eth: {
+    id: 'eth',
+    label: 'Ethereum',
+    // publicnode.com — CORS-friendly public gateway, no key required.
+    rpc: 'https://ethereum-rpc.publicnode.com',
+    explorer: 'https://etherscan.io/address/',
+    // We treat Etherscan like a UI-only link. Its API needs a paid key at
+    // any real volume, so ETH stays on-chain + OpenSea only. Same graceful
+    // shape as Arc — explorer-dependent signals drop from the denominator.
+    explorerReachable: false,
+    nativeSymbol: 'ETH',
+    availableSignals: new Set([
+      // On-chain (RPC works)
+      'proxy','ownerActive','adminMint','openBaseURI','transferLock',
+      'currentlyPaused','withdrawExposure','transferBlocked','mutableRoyalty',
+      'walletDrainer',
+      // OpenSea (slug is 'ethereum')
       'noMarket','websiteReachable','twitterExists',
       // Metadata (on-chain tokenURI)
       'centralArt','unpinned','noRoyalty',
@@ -2285,14 +2309,16 @@ async function computeRealReport(addr) {
     ? deployerHist.txCount
     : (typeof explorer.deployerTxCount === 'number' ? explorer.deployerTxCount : null);
 
+  // freshWallet is INFORMATIONAL ONLY — a low tx count is common opsec, not
+  // a rug signal on its own. Never score 'bad' here; combined signals
+  // (emptyBalance, freshFunding, priorRug) catch the real pattern.
   let freshState = 'unknown';
   let freshOverride = null;
   if (dTxCount !== null) {
+    freshState = 'good';
     if (dTxCount < 20) {
-      freshState = 'bad';
-      freshOverride = { bad: `deployer wallet has only <b>${dTxCount}</b> transactions. no track record.` };
+      freshOverride = { good: `deployer wallet is new (<b>${dTxCount}</b> transactions). common opsec — grug checks funding + balance instead.` };
     } else {
-      freshState = 'good';
       freshOverride = { good: `deployer wallet has <b>${dTxCount.toLocaleString()}</b> transactions. established history.` };
     }
   } else {
